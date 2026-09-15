@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# API secrets — never commit real keys
+.env
+**/.env
+!**/.env.example
+api/firebase-service-account.json
+**/google-services.json
