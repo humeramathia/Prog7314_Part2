@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/welcomeFragment">
+
+    <fragment
+        android:id="@+id/welcomeFragment"
+        android:name="com.example.prog7314_part2.ui.auth.WelcomeFragment"
+        android:label="@string/app_name">
+        <action
+            android:id="@+id/action_welcome_to_login"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_welcome_to_register"
+            app:destination="@id/registerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.prog7314_part2.ui.auth.LoginFragment"
+        android:label="@string/login">
+        <action
+            android:id="@+id/action_login_to_register"
+            app:destination="@id/registerFragment" />
+        <action
+            android:id="@+id/action_login_to_sport"
+            app:destination="@id/sportSelectFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerFragment"
+        android:name="com.example.prog7314_part2.ui.auth.RegisterFragment"
+        android:label="@string/register">
+        <action
+            android:id="@+id/action_register_to_login"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_register_to_confirm"
+            app:destination="@id/confirmEmailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/confirmEmailFragment"
+        android:name="com.example.prog7314_part2.ui.auth.ConfirmEmailFragment"
+        android:label="@string/confirm_email_title">
+        <argument
+            android:name="email"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_confirm_to_sport"
+            app:destination="@id/sportSelectFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/sportSelectFragment"
+        android:name="com.example.prog7314_part2.ui.auth.SportSelectFragment"
+        android:label="@string/choose_sport">
+        <action
+            android:id="@+id/action_sport_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.prog7314_part2.ui.home.HomeFragment"
+        android:label="@string/home">
+        <action
+            android:id="@+id/action_home_to_settings"
+            app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_home_to_calendar"
+            app:destination="@id/calendarFragment" />
+        <action
+            android:id="@+id/action_home_to_performance"
+            app:destination="@id/performanceFragment" />
+        <action
+            android:id="@+id/action_home_to_learn"
+            app:destination="@id/learnFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/calendarFragment"
+        android:name="com.example.prog7314_part2.ui.calendar.CalendarFragment"
+        android:label="@string/calendar">
+        <action
+            android:id="@+id/action_calendar_to_event"
+            app:destination="@id/eventDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/eventDetailFragment"
+        android:name="com.example.prog7314_part2.ui.calendar.EventDetailFragment"
+        android:label="@string/event_details">
+        <argument
+            android:name="eventId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/performanceFragment"
+        android:name="com.example.prog7314_part2.ui.performance.PerformanceFragment"
+        android:label="@string/performance">
+        <action
+            android:id="@+id/action_performance_to_add"
+            app:destination="@id/addPerformanceFragment" />
+        <action
+            android:id="@+id/action_performance_to_graph"
+            app:destination="@id/monthlyGraphFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addPerformanceFragment"
+        android:name="com.example.prog7314_part2.ui.performance.AddPerformanceFragment"
+        android:label="@string/add_performance" />
+
+    <fragment
+        android:id="@+id/monthlyGraphFragment"
+        android:name="com.example.prog7314_part2.ui.performance.MonthlyGraphFragment"
+        android:label="@string/monthly_graph" />
+
+    <fragment
+        android:id="@+id/learnFragment"
+        android:name="com.example.prog7314_part2.ui.learn.LearnFragment"
+        android:label="@string/learn">
+        <action
+            android:id="@+id/action_learn_to_detail"
+            app:destination="@id/learnDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/learnDetailFragment"
+        android:name="com.example.prog7314_part2.ui.learn.LearnDetailFragment"
+        android:label="@string/learn">
+        <argument
+            android:name="guideId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.prog7314_part2.ui.settings.SettingsFragment"
+        android:label="@string/settings">
+        <action
+            android:id="@+id/action_settings_to_welcome"
+            app:destination="@id/welcomeFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_settings_to_sport"
+            app:destination="@id/sportSelectFragment" />
+    </fragment>
+</navigation>

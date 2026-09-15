@@ -2,4 +2,13 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="teal">#FF0F766E</color>
+    <color name="teal_dark">#FF115E59</color>
+    <color name="amber">#FFF59E0B</color>
+    <color name="slate">#FF0F172A</color>
+    <color name="muted">#FF64748B</color>
+    <color name="background">#FFF8FAFC</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="stroke">#FFE2E8F0</color>
+    <color name="error">#FFDC2626</color>
 </resources>
