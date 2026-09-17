@@ -19,10 +19,51 @@ data class UpdateProfileRequest(
     val darkMode: Boolean? = null
 )
 
+data class MetricDto(
+    val key: String,
+    val label: String
+)
+
 data class SportDto(
     val id: String,
     val sportId: String,
-    val name: String
+    val name: String,
+    val metrics: List<MetricDto> = emptyList()
+)
+
+data class PerformanceSessionDto(
+    val id: String,
+    val userId: String,
+    val sportId: String,
+    val recordedAt: Long,
+    val notes: String,
+    val metrics: Map<String, Double>,
+    val primaryMetric: String,
+    val primaryValue: Double
+)
+
+data class CreatePerformanceRequest(
+    val sportId: String,
+    val recordedAt: Long,
+    val notes: String,
+    val metrics: Map<String, Double>
+)
+
+data class MonthlyPointDto(
+    val date: String,
+    val day: Int,
+    val recordedAt: Long,
+    val sessionId: String,
+    val value: Double
+)
+
+data class MonthlyPerformanceDto(
+    val sportId: String,
+    val year: Int,
+    val month: Int,
+    val metric: String,
+    val metricLabel: String,
+    val points: List<MonthlyPointDto>
 )
 
 data class ApiErrorDto(
