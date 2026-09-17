@@ -11,4 +11,6 @@
     <color name="surface">#FFFFFFFF</color>
     <color name="stroke">#FFE2E8F0</color>
     <color name="error">#FFDC2626</color>
+    <color name="button_text">#FFFFFF</color>
+    <color name="primary_container">#CCFBF1</color>
 </resources>

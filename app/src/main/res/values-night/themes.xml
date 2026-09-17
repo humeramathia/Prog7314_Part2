@@ -1,8 +1,2 @@
-<resources>
-    <style name="Base.Theme.Prog7314_Part2" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/teal</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/amber</item>
-        <item name="android:statusBarColor">@color/teal_dark</item>
-    </style>
-</resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources />

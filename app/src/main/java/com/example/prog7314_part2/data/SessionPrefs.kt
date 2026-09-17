@@ -1,13 +1,21 @@
 package com.example.prog7314_part2.data
 
 import android.content.Context
+import com.google.firebase.auth.FirebaseAuth
 
 class SessionPrefs(context: Context) {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     var isLoggedIn: Boolean
-        get() = prefs.getBoolean(KEY_LOGGED_IN, false)
+        get() {
+            val user = FirebaseAuth.getInstance().currentUser
+
+            return prefs.getBoolean(KEY_LOGGED_IN, false) &&
+                    user != null &&
+                    user.isEmailVerified &&
+                    user.email == email
+        }
         set(value) = prefs.edit().putBoolean(KEY_LOGGED_IN, value).apply()
 
     var email: String
@@ -37,6 +45,7 @@ class SessionPrefs(context: Context) {
     }
 
     fun signOut() {
+        FirebaseAuth.getInstance().signOut()
         prefs.edit()
             .remove(KEY_LOGGED_IN)
             .remove(KEY_EMAIL)

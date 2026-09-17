@@ -39,7 +39,12 @@ object FakeRepository {
     fun latestSession(sportId: String): PerformanceSession? =
         sessionsForSport(sportId).firstOrNull()
 
-    fun addSession(sportId: String, score: Double, notes: String) {
+    fun addSession(
+        sportId: String,
+        score: Double,
+        notes: String,
+        metrics: Map<String, Double> = emptyMap()
+    ) {
         sessions.add(
             0,
             PerformanceSession(
@@ -47,7 +52,8 @@ object FakeRepository {
                 sportId = sportId,
                 recordedAt = System.currentTimeMillis(),
                 score = score,
-                notes = notes
+                notes = notes,
+                metrics = metrics.toMap()
             )
         )
     }

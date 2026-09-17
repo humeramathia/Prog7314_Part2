@@ -27,13 +27,24 @@ class MainActivity : AppCompatActivity() {
         val navHost = supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHost.navController
         binding.bottomNav.setupWithNavController(navController)
-
         val session = (application as SportSphereApp).session
+
         if (savedInstanceState == null && session.isLoggedIn) {
-            val start = if (session.sportId.isBlank()) R.id.sportSelectFragment else R.id.homeFragment
-            navController.navigate(start) {
-                popUpTo(R.id.welcomeFragment) { inclusive = true }
+            val start = if (session.sportId.isBlank()) {
+                R.id.sportSelectFragment
+            } else {
+                R.id.homeFragment
             }
+
+            navController.navigate(
+                start,
+                null,
+                androidx.navigation.navOptions {
+                    popUpTo(R.id.welcomeFragment) {
+                        inclusive = true
+                    }
+                }
+            )
         }
 
         val tabs = setOf(
@@ -49,6 +60,33 @@ class MainActivity : AppCompatActivity() {
             val showToolbar = destination.id !in tabs && destination.id !in hideChrome
             binding.toolbar.visibility = if (showToolbar) View.VISIBLE else View.GONE
             binding.toolbar.title = destination.label
+        }
+    }
+    override fun onResume() {
+        super.onResume()
+
+        val navHost = supportFragmentManager
+            .findFragmentById(R.id.navHostFragment) as NavHostFragment
+        val navController = navHost.navController
+
+        val publicScreens = setOf(
+            R.id.welcomeFragment,
+            R.id.loginFragment,
+            R.id.registerFragment,
+            R.id.confirmEmailFragment
+        )
+
+        val destination = navController.currentDestination?.id ?: return
+        val session = (application as SportSphereApp).session
+
+        if (destination !in publicScreens && !session.isLoggedIn) {
+            navController.navigate(
+                R.id.loginFragment,
+                null,
+                androidx.navigation.navOptions {
+                    popUpTo(R.id.nav_graph) { inclusive = true }
+                }
+            )
         }
     }
 }
