@@ -29,6 +29,8 @@ describe("SportSphere API", () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(6);
     expect(res.body.map((s) => s.id)).toContain("football");
+    const basketball = res.body.find((s) => s.id === "basketball");
+    expect(basketball.metrics.map((m) => m.key)).toEqual(["points", "rebounds"]);
   });
 
   test("GET /api/me creates a profile", async () => {
@@ -77,26 +79,49 @@ describe("SportSphere API", () => {
     expect(res.body.type).toBe("PRACTICE");
   });
 
-  test("POST /api/performance and monthly graph", async () => {
+  test("POST /api/performance stores sport metrics and monthly graph plots by date", async () => {
+    const recordedAt = new Date(2026, 8, 12, 18, 0).getTime();
     const created = await request(app).post("/api/performance").send({
       sportId: "swimming",
-      score: 81,
-      notes: "Good splits"
+      recordedAt,
+      notes: "Good splits",
+      metrics: { distance: 1500, time: 1260 }
     });
     expect(created.status).toBe(201);
-    expect(created.body.userId).toBe("dev-user");
+    expect(created.body.metrics).toEqual({ distance: 1500, time: 1260 });
+    expect(created.body.primaryMetric).toBe("distance");
+    expect(created.body.score).toBeUndefined();
 
-    const list = await request(app).get("/api/performance").query({ sportId: "swimming" });
-    expect(list.body).toHaveLength(1);
+    const basketball = await request(app).post("/api/performance").send({
+      sportId: "basketball",
+      recordedAt,
+      metrics: { points: 22, rebounds: 8 }
+    });
+    expect(basketball.status).toBe(201);
+    expect(basketball.body.metrics).toEqual({ points: 22, rebounds: 8 });
+
+    const rejected = await request(app).post("/api/performance").send({
+      sportId: "basketball",
+      score: 22
+    });
+    expect(rejected.status).toBe(400);
 
     const monthly = await request(app).get("/api/performance/monthly").query({
       sportId: "swimming",
-      year: new Date().getFullYear()
+      year: 2026,
+      month: 9,
+      metric: "distance"
     });
     expect(monthly.status).toBe(200);
-    expect(monthly.body.points).toHaveLength(12);
-    const thisMonth = monthly.body.points[new Date().getMonth()];
-    expect(thisMonth.average).toBe(81);
+    expect(monthly.body.year).toBe(2026);
+    expect(monthly.body.month).toBe(9);
+    expect(monthly.body.metric).toBe("distance");
+    expect(monthly.body.points).toHaveLength(1);
+    expect(monthly.body.points[0]).toMatchObject({
+      date: "2026-09-12",
+      day: 12,
+      value: 1500
+    });
   });
 
   test("GET /api/learn filters by category", async () => {

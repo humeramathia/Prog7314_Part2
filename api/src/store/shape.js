@@ -14,20 +14,33 @@ function parseMillis(value) {
   return Number.isFinite(n) ? n : null;
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function monthlyAverages(sessions, year) {
-  const grouped = Array.from({ length: 12 }, () => []);
-  sessions.forEach((session) => {
-    const date = new Date(session.recordedAt);
-    if (date.getFullYear() !== year) return;
-    grouped[date.getMonth()].push(session.score);
-  });
-  return MONTHS.map((month, index) => {
-    const values = grouped[index];
-    const average = values.length ? values.reduce((sum, n) => sum + n, 0) / values.length : 0;
-    return { month, average: Math.round(average * 10) / 10 };
-  });
+function isoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-module.exports = { publicDoc, publicList, parseMillis, monthlyAverages };
+function inYearMonth(recordedAt, year, month) {
+  const date = new Date(recordedAt);
+  return date.getFullYear() === year && date.getMonth() === month - 1;
+}
+
+function monthByDate(sessions, year, month, metricKey, readValue) {
+  return sessions
+    .filter((session) => inYearMonth(session.recordedAt, year, month))
+    .sort((a, b) => a.recordedAt - b.recordedAt)
+    .map((session) => {
+      const date = new Date(session.recordedAt);
+      return {
+        date: isoDate(date),
+        day: date.getDate(),
+        recordedAt: session.recordedAt,
+        sessionId: session.id,
+        value: readValue(session, metricKey)
+      };
+    })
+    .filter((point) => Number.isFinite(point.value));
+}
+
+module.exports = { publicDoc, publicList, parseMillis, isoDate, inYearMonth, monthByDate };

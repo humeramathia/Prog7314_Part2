@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
 import com.example.prog7314_part2.data.FakeRepository
+import com.example.prog7314_part2.data.SportMetrics
 import com.example.prog7314_part2.databinding.FragmentHomeBinding
 import com.example.prog7314_part2.ui.session
 import java.text.SimpleDateFormat
@@ -41,7 +42,7 @@ class HomeFragment : Fragment() {
         }
 
         val latest = FakeRepository.latestSession(session.sportId)
-        binding.latestScoreValue.text = latest?.let { "${it.score.toInt()}  ·  ${it.notes}" }
+        binding.latestScoreValue.text = latest?.let { SportMetrics.summary(it.sportId, it.metrics) }
             ?: getString(R.string.empty_history)
 
         binding.btnSettings.setOnClickListener {

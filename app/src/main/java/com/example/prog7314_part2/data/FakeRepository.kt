@@ -39,35 +39,31 @@ object FakeRepository {
     fun latestSession(sportId: String): PerformanceSession? =
         sessionsForSport(sportId).firstOrNull()
 
-    fun addSession(
-        sportId: String,
-        score: Double,
-        notes: String,
-        metrics: Map<String, Double> = emptyMap()
-    ) {
+    fun addSession(sportId: String, metrics: Map<String, Double>, notes: String, recordedAt: Long = System.currentTimeMillis()) {
         sessions.add(
             0,
             PerformanceSession(
                 id = UUID.randomUUID().toString(),
                 sportId = sportId,
-                recordedAt = System.currentTimeMillis(),
-                score = score,
-                notes = notes,
-                metrics = metrics.toMap()
+                recordedAt = recordedAt,
+                metrics = metrics,
+                notes = notes
             )
         )
     }
 
-    fun monthlyAverages(sportId: String): List<Pair<String, Float>> {
-        val labels = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun")
-        val grouped = sessionsForSport(sportId).groupBy {
-            Calendar.getInstance().apply { timeInMillis = it.recordedAt }.get(Calendar.MONTH)
-        }
-        return labels.mapIndexed { index, label ->
-            val values = grouped[index].orEmpty()
-            val avg = if (values.isEmpty()) 0f else values.map { it.score.toFloat() }.average().toFloat()
-            label to avg
-        }
+    fun monthSeries(sportId: String, year: Int, month: Int, metricKey: String = SportMetrics.primaryKey(sportId)): List<Pair<String, Float>> {
+        return sessionsForSport(sportId)
+            .filter {
+                val cal = Calendar.getInstance().apply { timeInMillis = it.recordedAt }
+                cal.get(Calendar.YEAR) == year && cal.get(Calendar.MONTH) == month
+            }
+            .sortedBy { it.recordedAt }
+            .mapNotNull { session ->
+                val value = session.metrics[metricKey] ?: return@mapNotNull null
+                val day = Calendar.getInstance().apply { timeInMillis = session.recordedAt }.get(Calendar.DAY_OF_MONTH)
+                day.toString() to value.toFloat()
+            }
     }
 
     fun guidesFor(sportId: String, category: LearnCategory?): List<LearnGuide> {
@@ -103,14 +99,14 @@ object FakeRepository {
                 id = "${sport.id}-s1",
                 sportId = sport.id,
                 recordedAt = now - day * 3,
-                score = 72.0 + index,
+                metrics = SportMetrics.sample(sport.id, 72.0 + index),
                 notes = "Solid session."
             )
             sessions += PerformanceSession(
                 id = "${sport.id}-s2",
                 sportId = sport.id,
                 recordedAt = now - day * 18,
-                score = 64.0 + index,
+                metrics = SportMetrics.sample(sport.id, 64.0 + index),
                 notes = "Need more recovery work."
             )
             LearnCategory.entries.forEach { category ->

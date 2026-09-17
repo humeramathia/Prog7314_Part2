@@ -25,9 +25,12 @@
     <string name="learn">Learn</string>
     <string name="settings">Settings</string>
     <string name="next_practice">Next practice</string>
-    <string name="latest_score">Latest score</string>
+    <string name="latest_score">Latest session</string>
     <string name="add_performance">Add performance</string>
     <string name="month">Month</string>
+    <string name="previous_month">Prev</string>
+    <string name="next_month">Next</string>
+    <string name="empty_month_graph">No sessions in this month</string>
     <string name="agenda">Agenda</string>
     <string name="event_details">Event details</string>
     <string name="history">History</string>

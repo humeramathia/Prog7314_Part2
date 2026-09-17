@@ -2,7 +2,6 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
     android:background="@color/background">
 
     <LinearLayout
@@ -19,26 +18,19 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/sportTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@color/slate"
-            android:textSize="16sp" />
-
         <LinearLayout
-            android:id="@+id/metricsContainer"
+            android:id="@+id/metricFields"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             android:orientation="vertical" />
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/notesLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Notes (optional)">
+            android:layout_marginTop="12dp"
+            android:hint="Notes">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/notesInput"
@@ -47,7 +39,6 @@
                 android:gravity="top"
                 android:inputType="textMultiLine"
                 android:minLines="3" />
-
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -56,6 +47,5 @@
             android:layout_height="56dp"
             android:layout_marginTop="24dp"
             android:text="@string/save" />
-
     </LinearLayout>
 </ScrollView>
