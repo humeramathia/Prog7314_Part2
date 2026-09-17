@@ -28,6 +28,11 @@ import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.UserProfileDto
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class LoginFragment : Fragment() {
 
@@ -176,7 +181,7 @@ class LoginFragment : Fragment() {
                         refreshedUser.displayName.orEmpty()
                     )
 
-                    goNext()
+                    syncProfileAndContinue()
                 }
             }
     }
@@ -303,7 +308,7 @@ class LoginFragment : Fragment() {
                                 user.displayName.orEmpty()
                             )
 
-                            goNext()
+                            syncProfileAndContinue()
                         }
                 }
 
@@ -360,6 +365,55 @@ class LoginFragment : Fragment() {
                     )
                 }
             }
+    }
+
+    private fun syncProfileAndContinue() {
+        val screen = _binding ?: return
+
+        setLoading(true)
+
+        ApiClient.service.getMyProfile().enqueue(
+            object : Callback<UserProfileDto> {
+
+                override fun onResponse(
+                    call: Call<UserProfileDto>,
+                    response: Response<UserProfileDto>
+                ) {
+                    if (_binding !== screen) return
+
+                    val profile = response.body()
+
+                    if (!response.isSuccessful || profile == null) {
+                        setLoading(false)
+                        showMessage(
+                            "Could not load your profile. " +
+                                    "Check that the API is running."
+                        )
+                        return
+                    }
+
+                    val localSession = session()
+                    localSession.sportId = profile.sportId
+                    localSession.sportName = profile.sportName
+
+                    setLoading(false)
+                    goNext()
+                }
+
+                override fun onFailure(
+                    call: Call<UserProfileDto>,
+                    error: Throwable
+                ) {
+                    if (_binding !== screen || call.isCanceled) return
+
+                    setLoading(false)
+                    showMessage(
+                        "Could not connect to the API. " +
+                                "Check that it is running on port 3000."
+                    )
+                }
+            }
+        )
     }
 
     private fun goNext() {
