@@ -18,19 +18,12 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/scoreLayout"
+        <LinearLayout
+            android:id="@+id/metricFields"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:hint="Score">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/scoreInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
+            android:orientation="vertical" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/notesLayout"

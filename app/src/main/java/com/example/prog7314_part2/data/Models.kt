@@ -21,7 +21,7 @@ data class PerformanceSession(
     val id: String,
     val sportId: String,
     val recordedAt: Long,
-    val score: Double,
+    val metrics: Map<String, Double>,
     val notes: String
 )
 

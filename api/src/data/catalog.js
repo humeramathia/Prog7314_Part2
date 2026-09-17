@@ -1,3 +1,5 @@
+const { withSportMetrics } = require("./metrics");
+
 const SPORTS = [
   { id: "football", sportId: "football", name: "Football" },
   { id: "cricket", sportId: "cricket", name: "Cricket" },
@@ -5,7 +7,7 @@ const SPORTS = [
   { id: "basketball", sportId: "basketball", name: "Basketball" },
   { id: "swimming", sportId: "swimming", name: "Swimming" },
   { id: "athletics", sportId: "athletics", name: "Athletics" }
-];
+].map(withSportMetrics);
 
 const CATEGORIES = ["RULES", "TECHNIQUES", "TRAINING", "SAFETY"];
 

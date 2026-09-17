@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.prog7314_part2.data.PerformanceSession
+import com.example.prog7314_part2.data.SportMetrics
 import com.example.prog7314_part2.databinding.ItemSessionBinding
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -25,7 +26,10 @@ class SessionAdapter(
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val session = sessions[position]
         holder.binding.sessionDate.text = format.format(Date(session.recordedAt))
-        holder.binding.sessionScore.text = "${session.score.toInt()}  ·  ${session.notes}"
+        holder.binding.sessionScore.text = buildString {
+            append(SportMetrics.summary(session.sportId, session.metrics))
+            if (session.notes.isNotBlank()) append("  ·  ").append(session.notes)
+        }
     }
 
     override fun getItemCount(): Int = sessions.size

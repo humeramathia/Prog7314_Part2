@@ -42,3 +42,20 @@ Authenticated (`Authorization: Bearer <Firebase ID token>`):
 - `DELETE /api/performance/:sessionId`
 - `GET /api/learn`
 - `GET /api/learn/:guideId`
+
+## Performance body
+
+`POST /api/performance` stores sport-specific metrics, not a generic score.
+
+```json
+{
+  "sportId": "basketball",
+  "recordedAt": 1789228800000,
+  "notes": "Home fixture",
+  "metrics": { "points": 22, "rebounds": 8 }
+}
+```
+
+Swimming example: `{ "distance": 1500, "time": 1260 }` (metres and seconds).
+
+`GET /api/performance/monthly?sportId=basketball&year=2026&month=9&metric=points` returns that month’s sessions plotted by date. `month` is 1-12. `metric` defaults to the sport’s first field.
