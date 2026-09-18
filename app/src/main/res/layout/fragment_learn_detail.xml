@@ -1,38 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
 
+    <ScrollView
+        android:id="@+id/detailScroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <ImageView
+                android:id="@+id/guideImage"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginBottom="16dp"
+                android:background="@color/stroke"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/guideTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/slate"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/guideCategory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/teal"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/guideBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/slate"
+                android:textSize="16sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOpenVideo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/open_video"
+                android:visibility="gone" />
+        </LinearLayout>
+    </ScrollView>
+
+    <ProgressBar
+        android:id="@+id/detailLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
     <LinearLayout
+        android:id="@+id/detailErrorGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:gravity="center"
+        android:padding="24dp"
+        android:visibility="gone">
 
         <TextView
-            android:id="@+id/guideTitle"
-            android:layout_width="match_parent"
+            android:id="@+id/detailErrorText"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/slate"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:gravity="center"
+            android:text="@string/error_load_guide"
+            android:textColor="@color/error" />
 
-        <TextView
-            android:id="@+id/guideCategory"
-            android:layout_width="match_parent"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRetryDetail"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@color/teal"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/guideBody"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:lineSpacingExtra="4dp"
-            android:textColor="@color/slate"
-            android:textSize="16sp" />
+            android:layout_marginTop="12dp"
+            android:text="@string/retry" />
     </LinearLayout>
-</ScrollView>
+</FrameLayout>
