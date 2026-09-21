@@ -14,7 +14,7 @@ npm test
 npm start
 ```
 
-`GET http://localhost:3000/health` should return `{ "ok": true }`.
+`GET http://localhost:3000/health` should return `{ "ok": true, "version": "1.0.0" }`.
 
 For a first local run, keep `SKIP_AUTH=true` in `api/.env`.
 
