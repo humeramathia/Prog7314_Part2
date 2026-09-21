@@ -8,4 +8,5 @@
     android:layout_marginBottom="8dp"
     android:textColor="@color/slate"
     android:textSize="14sp"
-    android:textStyle="bold" />
+    android:textStyle="bold"
+    android:contentDescription="@string/agenda" />
