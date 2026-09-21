@@ -13,7 +13,7 @@ npm run seed
 npm start
 ```
 
-`GET http://localhost:3000/health` should return `{ "ok": true }`.
+`GET http://localhost:3000/health` should return `{ "ok": true, "version": "1.0.0" }`.
 
 For a first run without Firebase, keep `SKIP_AUTH=true` in `.env`. Hosted Render uses `SKIP_AUTH=false`. After you push `Humera`, connect the repo in Render (`render.yaml`) and set `COSMOS_*` plus `FIREBASE_SERVICE_ACCOUNT` in the dashboard. Health: `https://sportsphere-st10276384.onrender.com/health`.
 
