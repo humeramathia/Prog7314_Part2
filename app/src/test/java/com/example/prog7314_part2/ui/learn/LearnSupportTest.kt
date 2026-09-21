@@ -138,4 +138,9 @@ class LearnSupportTest {
         assertFalse(LearnSupport.isImageUrl("https://cdn.example.com/clip.mp4"))
         assertFalse(LearnSupport.isImageUrl(null))
     }
+
+    @Test
+    fun categoriesMatchLearnChips() {
+        assertEquals(listOf("RULES", "TECHNIQUES", "TRAINING", "SAFETY"), LearnSupport.CATEGORIES)
+    }
 }
