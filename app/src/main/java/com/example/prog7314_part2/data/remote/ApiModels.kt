@@ -11,8 +11,8 @@ package com.example.prog7314_part2.data.remote
  *    data layer and are mapped to domain models in
  *    [com.example.prog7314_part2.data.remote.Mappers].
  *
- * If you rename a property, keep the shape of `api/src/routes/*.js`
- * responses in mind or add a `@SerializedName` annotation.
+ * If you rename a property, keep the shape of the API responses in
+ * mind (see `api/src/routes/`) or add a `@SerializedName` annotation.
  */
 
 /** Response of `GET /api/me` and `PATCH /api/me`. */
