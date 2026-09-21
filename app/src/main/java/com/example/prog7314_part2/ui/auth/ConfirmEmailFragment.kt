@@ -1,6 +1,7 @@
 package com.example.prog7314_part2.ui.auth
 
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +20,7 @@ class ConfirmEmailFragment : Fragment() {
     private val auth = FirebaseAuth.getInstance()
     private var checking = false
     private var openedInbox = false
+    private var lastResendAt = 0L
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -113,6 +115,14 @@ class ConfirmEmailFragment : Fragment() {
             return
         }
 
+        val waitMs = RESEND_COOLDOWN_MS - (SystemClock.elapsedRealtime() - lastResendAt)
+        if (lastResendAt > 0L && waitMs > 0L) {
+            val seconds = ((waitMs + 999) / 1000).toInt()
+            showMessage("Wait $seconds seconds before sending another email.")
+            return
+        }
+
+        lastResendAt = SystemClock.elapsedRealtime()
         setLoading(true)
         EmailVerification.send(user) { _, message ->
             if (_binding !== screen) return@send
@@ -157,5 +167,9 @@ class ConfirmEmailFragment : Fragment() {
     override fun onDestroyView() {
         _binding = null
         super.onDestroyView()
+    }
+
+    companion object {
+        private const val RESEND_COOLDOWN_MS = 60_000L
     }
 }

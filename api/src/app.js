@@ -7,7 +7,9 @@ const sportsRouter = require("./routes/sports");
 const eventsRouter = require("./routes/events");
 const performanceRouter = require("./routes/performance");
 const learnRouter = require("./routes/learn");
+const authRouter = require("./routes/auth");
 const { verifyEmailPage } = require("./pages/verifyEmailPage");
+const { verifiedPage } = require("./pages/verifiedPage");
 
 function createApp(store) {
   const app = express();
@@ -35,7 +37,12 @@ function createApp(store) {
   };
   app.get("/verify-email", verifyEmailHtml);
   app.get("/auth/action", verifyEmailHtml);
+  app.get("/verified", (_req, res) => {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(verifiedPage());
+  });
 
+  app.use("/api/auth", authRouter);
   app.use("/api/me", requireAuth, meRouter);
   app.use("/api/sports", requireAuth, sportsRouter);
   app.use("/api/events", requireAuth, eventsRouter);

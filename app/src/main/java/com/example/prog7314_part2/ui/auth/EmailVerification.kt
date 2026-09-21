@@ -3,45 +3,44 @@ package com.example.prog7314_part2.ui.auth
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.SendVerificationResponse
+import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 object EmailVerification {
 
     const val VERIFY_URL = "https://sportsphere-st10276384.onrender.com/verify-email"
+    const val CONTINUE_URL = VERIFY_URL
 
     fun send(user: FirebaseUser, onComplete: (ok: Boolean, message: String) -> Unit) {
         val settings = ActionCodeSettings.newBuilder()
-            .setUrl(VERIFY_URL)
+            .setUrl(CONTINUE_URL)
             .setHandleCodeInApp(false)
+            .setAndroidPackageName("com.example.prog7314_part2", false, null)
             .build()
 
+        // One Firebase send only. A second attempt on failure is what triggered
+        // "We have blocked all requests from this device".
         user.sendEmailVerification(settings)
-            .addOnCompleteListener { withContinueUrl ->
-                if (withContinueUrl.isSuccessful) {
+            .addOnCompleteListener { result ->
+                if (result.isSuccessful) {
                     onComplete(true, sentMessage())
                     return@addOnCompleteListener
                 }
 
-                user.sendEmailVerification()
-                    .addOnCompleteListener { fallback ->
-                        if (fallback.isSuccessful) {
-                            onComplete(true, sentMessage())
-                            return@addOnCompleteListener
-                        }
-                        val detail = fallback.exception?.localizedMessage
-                            ?: withContinueUrl.exception?.localizedMessage
-                            ?: ""
-                        onComplete(
-                            false,
-                            if (detail.isBlank()) {
-                                "Could not send the email. Wait a minute and tap Resend."
-                            } else {
-                                "Could not send the email: $detail"
-                            }
-                        )
-                    }
+                val error = result.exception
+                if (isRateLimited(error)) {
+                    sendViaApi(onComplete)
+                    return@addOnCompleteListener
+                }
+
+                onComplete(false, describeSendError(error))
             }
     }
 
@@ -106,6 +105,50 @@ object EmailVerification {
             false
         }
     }
+
+    fun describeSendError(error: Throwable?): String =
+        EmailVerificationMessages.describeSendError(error?.localizedMessage.orEmpty())
+
+    fun describeSendError(detail: String): String =
+        EmailVerificationMessages.describeSendError(detail)
+
+    private fun sendViaApi(onComplete: (ok: Boolean, message: String) -> Unit) {
+        ApiClient.service.sendVerificationEmail().enqueue(
+            object : Callback<SendVerificationResponse> {
+                override fun onResponse(
+                    call: Call<SendVerificationResponse>,
+                    response: Response<SendVerificationResponse>
+                ) {
+                    val body = response.body()
+                    if (response.isSuccessful && body?.ok == true) {
+                        onComplete(true, sentMessage())
+                        return
+                    }
+                    val raw = body?.error
+                        ?: response.errorBody()?.string().orEmpty()
+                    onComplete(
+                        false,
+                        describeSendError(raw.ifBlank { "TOO_MANY_ATTEMPTS_TRY_LATER" })
+                    )
+                }
+
+                override fun onFailure(
+                    call: Call<SendVerificationResponse>,
+                    error: Throwable
+                ) {
+                    if (call.isCanceled) return
+                    onComplete(
+                        false,
+                        describeSendError("TOO_MANY_ATTEMPTS_TRY_LATER")
+                    )
+                }
+            }
+        )
+    }
+
+    private fun isRateLimited(error: Throwable?): Boolean =
+        error is FirebaseTooManyRequestsException ||
+            EmailVerificationMessages.isRateLimited(error?.localizedMessage.orEmpty())
 
     private fun sentMessage(): String =
         "Verification email sent. In Gmail, long-press the button, copy the link, and open it in Chrome — not the in-app browser."

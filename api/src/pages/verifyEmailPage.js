@@ -37,7 +37,7 @@ function verifyEmailPage(fallbackApiKey) {
     if (mode && mode !== "verifyEmail") {
       show("This link is not an email verification link.", "err");
     } else if (!oobCode) {
-      show("Gmail opened a stripped link. Long-press the button in the email, copy the link, and paste it into Chrome. Then return to SportSphere and tap I have confirmed.", "err");
+      show("If you just confirmed, return to SportSphere and tap I have confirmed. If Gmail opened a broken page, long-press the button in the email, copy the full link, and paste it into Chrome.", "ok");
     } else if (!apiKey) {
       show("The verification link is missing the Firebase API key. Open the app, tap Resend, or use Continue with Google.", "err");
     } else {

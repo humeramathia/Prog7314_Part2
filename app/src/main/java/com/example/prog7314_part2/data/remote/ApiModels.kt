@@ -90,3 +90,9 @@ data class CalendarEventDto(
 data class ApiErrorDto(
     val error: String
 )
+
+data class SendVerificationResponse(
+    val ok: Boolean = false,
+    val email: String? = null,
+    val error: String? = null
+)

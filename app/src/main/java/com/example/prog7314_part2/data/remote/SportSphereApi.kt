@@ -11,6 +11,9 @@ import retrofit2.http.Query
 
 interface SportSphereApi {
 
+    @POST("api/auth/send-verification")
+    fun sendVerificationEmail(): Call<SendVerificationResponse>
+
     @GET("api/me")
     fun getMyProfile(): Call<UserProfileDto>
 
