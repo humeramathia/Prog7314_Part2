@@ -7,6 +7,7 @@ const sportsRouter = require("./routes/sports");
 const eventsRouter = require("./routes/events");
 const performanceRouter = require("./routes/performance");
 const learnRouter = require("./routes/learn");
+const { verifyEmailPage } = require("./pages/verifyEmailPage");
 
 function createApp(store) {
   const app = express();
@@ -26,6 +27,14 @@ function createApp(store) {
       firebaseAdmin: firebaseReady()
     });
   });
+
+  const verifyEmailHtml = (req, res) => {
+    const key = process.env.FIREBASE_WEB_API_KEY || "AIzaSyAGvb3cS_XxE0LCsSpVXLtVkL7c5KoC5MU";
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(verifyEmailPage(key));
+  };
+  app.get("/verify-email", verifyEmailHtml);
+  app.get("/auth/action", verifyEmailHtml);
 
   app.use("/api/me", requireAuth, meRouter);
   app.use("/api/sports", requireAuth, sportsRouter);

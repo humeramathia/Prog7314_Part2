@@ -14,11 +14,11 @@
     <string name="have_account">Already have an account? Log in</string>
     <string name="accept_terms">I accept the terms</string>
     <string name="confirm_email_title">Confirm your email</string>
-    <string name="confirm_email_body">We sent a link to %1$s.\n\n1. Open that inbox (check Spam).\n2. Tap Verify / Confirm in the email.\n3. Come back here — this screen checks automatically.\n\nUse a personal Gmail if campus mail blocks Firebase.</string>
+    <string name="confirm_email_body">We sent a link to %1$s.\n\nDo not open it inside Gmail’s built-in browser (that shows “page mode is invalid”).\n\nLong-press the button in the email → Copy link → paste into Chrome.\nThen return here and tap I have confirmed.\n\nOr use Continue with Google on the login screen instead.</string>
+    <string name="confirm_email_not_yet">Not verified yet. Copy the email link into Chrome, wait for “Email verified”, then tap here again.</string>
     <string name="resend_email">Resend email</string>
     <string name="i_have_confirmed">I have confirmed</string>
     <string name="open_email_app">Open email app</string>
-    <string name="confirm_email_not_yet">Not verified yet. Open the Verify link in the email first, then return here.</string>
     <string name="choose_sport">Choose your sport</string>
     <string name="error_load_sports">Could not load sports. Check that the API is running, then tap Retry.</string>
     <string name="empty_sports">No sports available yet</string>

@@ -41,9 +41,7 @@ class ConfirmEmailFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (openedInbox) {
-            checkVerification(quiet = true)
-        }
+        checkVerification(quiet = true)
     }
 
     private fun checkVerification(quiet: Boolean) {

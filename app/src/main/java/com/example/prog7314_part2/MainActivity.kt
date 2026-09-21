@@ -1,13 +1,16 @@
 package com.example.prog7314_part2
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.prog7314_part2.databinding.ActivityMainBinding
+import com.example.prog7314_part2.ui.auth.EmailVerification
 
 class MainActivity : AppCompatActivity() {
 
@@ -65,6 +68,19 @@ class MainActivity : AppCompatActivity() {
             val showToolbar = destination.id !in tabs && destination.id !in hideChrome
             binding.toolbar.visibility = if (showToolbar) View.VISIBLE else View.GONE
             binding.toolbar.title = destination.label
+        }
+        handleEmailLink(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleEmailLink(intent)
+    }
+
+    private fun handleEmailLink(intent: Intent?) {
+        EmailVerification.applyCodeFrom(intent?.data) { _, message ->
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
         }
     }
     override fun onResume() {

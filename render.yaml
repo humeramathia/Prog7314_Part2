@@ -18,6 +18,8 @@ services:
         value: "false"
       - key: FIREBASE_PROJECT_ID
         value: sportsphere-st10276384
+      - key: FIREBASE_WEB_API_KEY
+        value: AIzaSyAGvb3cS_XxE0LCsSpVXLtVkL7c5KoC5MU
       - key: COSMOS_DATABASE
         value: sportsphere
       - key: COSMOS_ENDPOINT
