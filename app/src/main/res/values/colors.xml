@@ -13,4 +13,5 @@
     <color name="error">#FFDC2626</color>
     <color name="button_text">#FFFFFF</color>
     <color name="primary_container">#CCFBF1</color>
+    <color name="event_marker">#FF0F766E</color>
 </resources>
