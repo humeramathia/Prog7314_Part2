@@ -49,4 +49,32 @@ interface SportSphereApi {
     fun deletePerformance(
         @Path("sessionId") sessionId: String
     ): Call<Void>
+
+    @GET("api/learn")
+    fun getLearn(
+        @Query("sportId") sportId: String,
+        @Query("category") category: String? = null
+    ): Call<List<LearnGuideDto>>
+
+    @GET("api/learn/{guideId}")
+    fun getLearnGuide(
+        @Path("guideId") guideId: String
+    ): Call<LearnGuideDto>
+
+    @GET("api/events")
+    fun getEvents(
+        @Query("sportId") sportId: String,
+        @Query("from") from: Long? = null,
+        @Query("to") to: Long? = null
+    ): Call<List<CalendarEventDto>>
+
+    @GET("api/events/next")
+    fun getNextEvent(
+        @Query("sportId") sportId: String
+    ): Call<CalendarEventDto>
+
+    @GET("api/events/{eventId}")
+    fun getEvent(
+        @Path("eventId") eventId: String
+    ): Call<CalendarEventDto>
 }

@@ -66,6 +66,27 @@ data class MonthlyPerformanceDto(
     val points: List<MonthlyPointDto>
 )
 
+data class LearnGuideDto(
+    val id: String,
+    val sportId: String,
+    val category: String,
+    val title: String,
+    val body: String,
+    val mediaUrl: String? = null
+)
+
+data class CalendarEventDto(
+    val id: String,
+    val sportId: String,
+    val title: String,
+    val type: String,
+    val startsAt: Long,
+    val endsAt: Long? = null,
+    val location: String? = null,
+    val description: String? = null,
+    val notes: String? = null
+)
+
 data class ApiErrorDto(
     val error: String
 )

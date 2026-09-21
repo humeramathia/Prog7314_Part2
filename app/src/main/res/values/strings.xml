@@ -50,6 +50,11 @@
     <string name="passwords_mismatch">Passwords do not match</string>
     <string name="invalid_email">Enter a valid email</string>
     <string name="error_retry">Something went wrong. Retry</string>
+    <string name="retry">Retry</string>
+    <string name="open_video">Open video</string>
+    <string name="error_load_learn">Could not load guides. Check your connection and try again.</string>
+    <string name="error_load_guide">Could not load this guide. Check your connection and try again.</string>
+    <string name="all_categories">All</string>
     <string name="coming_poe">Final POE</string>
     <string name="nav_home">Home</string>
     <string name="nav_calendar">Calendar</string>

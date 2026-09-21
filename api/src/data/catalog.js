@@ -26,6 +26,18 @@ function beginnerBody(sport, category) {
   }
 }
 
+function mediaUrlFor(sportId, category) {
+  // Optional illustration/video per guide. RULES and TRAINING guides ship
+  // with no media so the app's "no image/video" path stays exercised too.
+  if (category === "TECHNIQUES") {
+    return `https://picsum.photos/seed/${sportId}-techniques/800/450`;
+  }
+  if (category === "SAFETY") {
+    return "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+  }
+  return null;
+}
+
 function seedDocuments(now = Date.now()) {
   const day = 86_400_000;
   const events = [];
@@ -58,7 +70,8 @@ function seedDocuments(now = Date.now()) {
         sportId: sport.id,
         category,
         title: `${sport.name} ${category.toLowerCase()}`,
-        body: beginnerBody(sport.name, category)
+        body: beginnerBody(sport.name, category),
+        mediaUrl: mediaUrlFor(sport.id, category)
       });
     });
   });
