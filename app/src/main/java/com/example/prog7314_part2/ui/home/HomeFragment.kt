@@ -20,23 +20,42 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * The dashboard the user lands on after login.
+ *
+ * Displays two tiles — "Next practice" and "Latest session" — and links
+ * to each detailed tab. Both tiles pull their data from the API on
+ * every entry; failures leave the placeholder text in place instead of
+ * showing an error, because the four bottom-nav tabs already surface
+ * connectivity problems in-context.
+ */
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+
     private var nextCall: Call<CalendarEventDto>? = null
     private var latestCall: Call<List<PerformanceSessionDto>>? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val session = session()
+
+        // Personalised greeting; falls back to "athlete" when no display
+        // name is available (e.g. Google account with no profile name).
         val name = session.displayName.ifBlank { "athlete" }
         binding.greeting.text = "Hi, $name"
         binding.sportChip.text = session.sportName.ifBlank { getString(R.string.choose_sport) }
+
+        // Placeholder copy until the API responses land.
         binding.nextPracticeTitle.text = getString(R.string.empty_events)
         binding.nextPracticeWhen.text = ""
         binding.latestScoreValue.text = getString(R.string.empty_history)
@@ -57,6 +76,10 @@ class HomeFragment : Fragment() {
         loadDashboard(session.sportId)
     }
 
+    /**
+     * Fires the two dashboard requests in parallel. Both silently
+     * short-circuit on failure — the tiles keep their placeholder copy.
+     */
     private fun loadDashboard(sportId: String) {
         val screen = binding
         if (sportId.isBlank()) return
@@ -64,6 +87,7 @@ class HomeFragment : Fragment() {
         nextCall?.cancel()
         latestCall?.cancel()
 
+        // Next practice tile.
         val upcoming = ApiClient.service.getNextEvent(sportId)
         nextCall = upcoming
         upcoming.enqueue(object : Callback<CalendarEventDto> {
@@ -81,6 +105,8 @@ class HomeFragment : Fragment() {
             }
         })
 
+        // Latest performance tile. `maxByOrNull` handles the "no sessions
+        // yet" case gracefully by returning null.
         val history = ApiClient.service.getPerformance(sportId)
         latestCall = history
         history.enqueue(object : Callback<List<PerformanceSessionDto>> {

@@ -22,11 +22,24 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * Onboarding screen where the user picks the one sport the whole app
+ * will be scoped to. Also reachable from Settings for changing the
+ * selection later.
+ *
+ * If `GET /api/sports` fails we degrade to the built-in
+ * [FakeRepository.sports] catalogue so the screen is never empty. The
+ * selection is persisted through `PATCH /api/me`; when that also fails
+ * we save the choice on device only and continue with a warning toast.
+ */
 class SportSelectFragment : Fragment() {
 
     private var _binding: FragmentSportSelectBinding? = null
     private val binding get() = _binding!!
+
+    /** Currently highlighted sport in the list. */
     private var selected: Sport? = null
+
     private var sportsCall: Call<List<SportDto>>? = null
     private var updateCall: Call<UserProfileDto>? = null
 
@@ -47,6 +60,11 @@ class SportSelectFragment : Fragment() {
         loadSports()
     }
 
+    /**
+     * Pulls the sport catalogue from the API. On any failure — non-200,
+     * empty list, or thrown exception — we fall back to [FakeRepository]
+     * so the picker still works offline.
+     */
     private fun loadSports() {
         val screen = _binding ?: return
         selected = null
@@ -63,6 +81,8 @@ class SportSelectFragment : Fragment() {
                 if (_binding !== screen) return
                 screen.sportsLoading.isVisible = false
                 val sports = response.body()
+                    // Prefer `sportId` (canonical) but fall back to `id`
+                    // for older seed data that lacked the alias.
                     ?.map { Sport(it.sportId.ifBlank { it.id }, it.name) }
                     ?.filter { it.id.isNotBlank() && it.name.isNotBlank() }
                     .orEmpty()
@@ -81,6 +101,7 @@ class SportSelectFragment : Fragment() {
         })
     }
 
+    /** Shows a small error banner and switches the list to the local catalogue. */
     private fun showFallback(message: String) {
         val screen = _binding ?: return
         screen.sportsErrorGroup.isVisible = true
@@ -88,6 +109,7 @@ class SportSelectFragment : Fragment() {
         bindSports(FakeRepository.sports)
     }
 
+    /** Renders the list and pre-selects whatever the user picked last time. */
     private fun bindSports(sports: List<Sport>) {
         val screen = _binding ?: return
         selected = sports.find { it.id == session().sportId }
@@ -98,6 +120,11 @@ class SportSelectFragment : Fragment() {
         screen.btnContinue.isEnabled = selected != null
     }
 
+    /**
+     * Persists the pick to the API and, on success, navigates to Home.
+     * If the API call fails we still save locally so the user is not
+     * stranded on this screen every time the network hiccups.
+     */
     private fun saveSelectedSport() {
         val screen = binding
         val sport = selected ?: return
@@ -127,6 +154,7 @@ class SportSelectFragment : Fragment() {
         })
     }
 
+    /** Falls back to a local-only save, warns the user, then continues. */
     private fun finishWithLocalSport(sport: Sport, message: String) {
         session().sportId = sport.id
         session().sportName = sport.name

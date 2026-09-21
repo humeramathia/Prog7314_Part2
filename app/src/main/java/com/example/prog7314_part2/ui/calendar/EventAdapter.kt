@@ -10,6 +10,16 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * RecyclerView adapter that renders a mixed list of date-header rows
+ * and event cards for the Calendar screen.
+ *
+ * Events are grouped by day; whenever the day changes as we iterate a
+ * sorted event list we prepend a header row for that day, then append
+ * one card per event under it.
+ *
+ * @param onClick Called when the user taps an event card.
+ */
 class EventAdapter(
     private val onClick: (CalendarEvent) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -27,22 +37,22 @@ class EventAdapter(
         private const val TYPE_EVENT = 1
     }
 
+    /**
+     * Replaces the current data set with [events] and rebuilds the
+     * flat item list of day headers + event cards.
+     */
     fun submit(events: List<CalendarEvent>) {
         items.clear()
 
         var lastDate = ""
-
         for (event in events.sortedBy { it.startsAt }) {
             val date = dateFormat.format(Date(event.startsAt))
-
             if (date != lastDate) {
                 items.add(CalendarItem.DateHeader(date))
                 lastDate = date
             }
-
             items.add(CalendarItem.EventItem(event))
         }
-
         notifyDataSetChanged()
     }
 
@@ -57,17 +67,11 @@ class EventAdapter(
         parent: ViewGroup,
         viewType: Int
     ): RecyclerView.ViewHolder {
-
         val inflater = LayoutInflater.from(parent.context)
-
         return if (viewType == TYPE_DATE_HEADER) {
-            DateHeaderHolder(
-                ItemEventDateHeaderBinding.inflate(inflater, parent, false)
-            )
+            DateHeaderHolder(ItemEventDateHeaderBinding.inflate(inflater, parent, false))
         } else {
-            EventHolder(
-                ItemEventBinding.inflate(inflater, parent, false)
-            )
+            EventHolder(ItemEventBinding.inflate(inflater, parent, false))
         }
     }
 
@@ -76,7 +80,6 @@ class EventAdapter(
         position: Int
     ) {
         when (val item = items[position]) {
-
             is CalendarItem.DateHeader -> {
                 (holder as DateHeaderHolder)
                     .binding.eventDateHeader.text = item.date
@@ -87,6 +90,7 @@ class EventAdapter(
                 val eventHolder = holder as EventHolder
 
                 eventHolder.binding.eventTitle.text = event.title
+                // Convert SOCIAL_EVENT/PRACTICE/ANNOUNCEMENT to a human label.
                 eventHolder.binding.eventType.text =
                     event.type.name.replace("_", " ")
                 eventHolder.binding.eventMeta.text =
@@ -94,9 +98,7 @@ class EventAdapter(
                 eventHolder.binding.eventLocation.text =
                     event.location
 
-                eventHolder.itemView.setOnClickListener {
-                    onClick(event)
-                }
+                eventHolder.itemView.setOnClickListener { onClick(event) }
             }
         }
     }
@@ -111,6 +113,7 @@ class EventAdapter(
         val binding: ItemEventBinding
     ) : RecyclerView.ViewHolder(binding.root)
 
+    /** Sealed hierarchy for the two row types this adapter renders. */
     sealed class CalendarItem {
         data class DateHeader(val date: String) : CalendarItem()
         data class EventItem(val event: CalendarEvent) : CalendarItem()

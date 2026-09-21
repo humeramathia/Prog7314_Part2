@@ -13,13 +13,35 @@ import com.example.prog7314_part2.databinding.FragmentConfirmEmailBinding
 import com.example.prog7314_part2.ui.session
 import com.google.firebase.auth.FirebaseAuth
 
+/**
+ * Post-registration / pre-login screen shown when the current Firebase
+ * user has not yet clicked the verification link in their inbox.
+ *
+ * The screen provides three actions:
+ *  - **I have confirmed** — reloads the Firebase user and, if verified,
+ *    hydrates the local session and continues into the app.
+ *  - **Resend email** — throttled to one send per [RESEND_COOLDOWN_MS];
+ *    delegates the actual send to [EmailVerification.send].
+ *  - **Open email app** — best-effort intent that launches the default
+ *    mail client.
+ *
+ * On resume we also silently poll for verification so a user who taps
+ * the link in Chrome and returns via the recents switcher is moved
+ * forward automatically.
+ */
 class ConfirmEmailFragment : Fragment() {
 
     private var _binding: FragmentConfirmEmailBinding? = null
     private val binding get() = _binding!!
     private val auth = FirebaseAuth.getInstance()
+
+    /** Prevents concurrent Firebase user-reload calls. */
     private var checking = false
+
+    /** Tracks whether the user has left for their inbox at least once. */
     private var openedInbox = false
+
+    /** Elapsed-realtime timestamp of the last resend attempt. */
     private var lastResendAt = 0L
 
     override fun onCreateView(
@@ -32,6 +54,8 @@ class ConfirmEmailFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // Prefer Firebase's live email over the nav argument in case the
+        // user got here from Login (where only the argument is populated).
         val email = auth.currentUser?.email
             ?: arguments?.getString("email").orEmpty()
 
@@ -43,9 +67,18 @@ class ConfirmEmailFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        // Silent check — if the user tapped the link elsewhere while we
+        // were paused, we can skip straight to the next screen.
         checkVerification(quiet = true)
     }
 
+    /**
+     * Reloads the current Firebase user and either continues into the
+     * app when verified, or shows a hint otherwise.
+     *
+     * @param quiet When true, suppresses toasts and loading spinners so
+     *   the poll on [onResume] is invisible to the user.
+     */
     private fun checkVerification(quiet: Boolean) {
         val screen = binding
         if (checking) return
@@ -68,7 +101,6 @@ class ConfirmEmailFragment : Fragment() {
                 if (!quiet) returnToLogin()
                 return@refreshVerified
             }
-
             if (error != null) {
                 if (!quiet) {
                     showMessage(error.ifBlank { "Could not check verification. Check your connection." })
@@ -87,11 +119,18 @@ class ConfirmEmailFragment : Fragment() {
         }
     }
 
+    /**
+     * Called only when the reloaded Firebase user reports
+     * `isEmailVerified == true`. Writes the account to the local
+     * session and navigates onward to Sport Select or Home.
+     */
     private fun continueAfterVerified() {
         val refreshedUser = auth.currentUser ?: return
         val localSession = session()
         val email = refreshedUser.email.orEmpty()
 
+        // Different account than last time on this device → drop the
+        // cached sport so we don't inherit someone else's pick.
         if (localSession.email != email) {
             localSession.sportId = ""
             localSession.sportName = ""
@@ -107,6 +146,11 @@ class ConfirmEmailFragment : Fragment() {
         findNavController().navigate(destination)
     }
 
+    /**
+     * Sends a new verification email, subject to a client-side cooldown
+     * that shields the account from Firebase's harsher device-level
+     * rate limits ("blocked all requests from this device").
+     */
     private fun resendEmail() {
         val screen = binding
         val user = auth.currentUser
@@ -131,6 +175,7 @@ class ConfirmEmailFragment : Fragment() {
         }
     }
 
+    /** Best-effort launch of the user's default email app. */
     private fun openEmailApp() {
         openedInbox = true
         val opened = context?.let { EmailVerification.openInbox(it) } == true
@@ -139,6 +184,10 @@ class ConfirmEmailFragment : Fragment() {
         }
     }
 
+    /**
+     * Sent back to Login with the whole nav-graph popped so the user
+     * cannot accidentally back-navigate into this screen from Login.
+     */
     private fun returnToLogin() {
         showMessage("Please log in again to verify your account.")
         findNavController().navigate(
@@ -170,6 +219,7 @@ class ConfirmEmailFragment : Fragment() {
     }
 
     companion object {
+        /** Minimum time between two "Resend email" taps. */
         private const val RESEND_COOLDOWN_MS = 60_000L
     }
 }

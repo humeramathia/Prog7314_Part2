@@ -9,12 +9,23 @@ import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
 import com.example.prog7314_part2.databinding.FragmentWelcomeBinding
 
+/**
+ * The first screen a brand-new user sees.
+ *
+ * It's intentionally trivial — just two entry points into the auth flow:
+ * "Get started" (register a new account) and "Log in" (returning user).
+ * All navigation targets are declared in `nav_graph.xml`.
+ */
 class WelcomeFragment : Fragment() {
 
     private var _binding: FragmentWelcomeBinding? = null
     private val binding get() = _binding!!
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentWelcomeBinding.inflate(inflater, container, false)
         return binding.root
     }

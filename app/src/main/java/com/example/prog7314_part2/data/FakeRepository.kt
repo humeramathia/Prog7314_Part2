@@ -3,6 +3,18 @@ package com.example.prog7314_part2.data
 import java.util.Calendar
 import java.util.UUID
 
+/**
+ * In-memory fallback dataset used when the hosted API is unreachable.
+ *
+ * The Sport Select screen calls into [sports] when `GET /api/sports`
+ * fails so the picker is never a blank screen. The rest of the maps
+ * (events, sessions, guides) were kept from an earlier prototype and
+ * are only exercised by the unit tests in `FakeRepositoryTest`.
+ *
+ * The IDs here must match `api/src/data/catalog.js` so any local
+ * `sportId` written to preferences is still valid when the API comes
+ * back online.
+ */
 object FakeRepository {
 
     val sports = listOf(
@@ -22,24 +34,40 @@ object FakeRepository {
         seed()
     }
 
+    /** Every event for [sportId] in ascending start-time order. */
     fun eventsForSport(sportId: String): List<CalendarEvent> =
         events.filter { it.sportId == sportId }.sortedBy { it.startsAt }
 
     fun eventById(id: String): CalendarEvent? = events.find { it.id == id }
 
+    /**
+     * The next upcoming event, or — if all seeded events are in the past —
+     * the most recent one. Keeps the Home tile populated during demos.
+     */
     fun nextEvent(sportId: String): CalendarEvent? {
         val now = System.currentTimeMillis()
         return eventsForSport(sportId).firstOrNull { it.startsAt >= now }
             ?: eventsForSport(sportId).lastOrNull()
     }
 
+    /** Sessions for a sport, newest first. */
     fun sessionsForSport(sportId: String): List<PerformanceSession> =
-        sessions.filter { it.sportId == sportId }.sortedByDescending { it.recordedAt }
+        sessions.filter { it.sportId == sportId }
+            .sortedByDescending { it.recordedAt }
 
     fun latestSession(sportId: String): PerformanceSession? =
         sessionsForSport(sportId).firstOrNull()
 
-    fun addSession(sportId: String, metrics: Map<String, Double>, notes: String, recordedAt: Long = System.currentTimeMillis()) {
+    /**
+     * Appends a session to the in-memory list. Used by exploratory tests
+     * — no production code path writes into this object.
+     */
+    fun addSession(
+        sportId: String,
+        metrics: Map<String, Double>,
+        notes: String,
+        recordedAt: Long = System.currentTimeMillis()
+    ) {
         sessions.add(
             0,
             PerformanceSession(
@@ -52,7 +80,16 @@ object FakeRepository {
         )
     }
 
-    fun monthSeries(sportId: String, year: Int, month: Int, metricKey: String = SportMetrics.primaryKey(sportId)): List<Pair<String, Float>> {
+    /**
+     * Points for the monthly graph fallback: `(dayLabel, value)` pairs for
+     * every session in [year]/[month] that has a [metricKey] value.
+     */
+    fun monthSeries(
+        sportId: String,
+        year: Int,
+        month: Int,
+        metricKey: String = SportMetrics.primaryKey(sportId)
+    ): List<Pair<String, Float>> {
         return sessionsForSport(sportId)
             .filter {
                 val cal = Calendar.getInstance().apply { timeInMillis = it.recordedAt }
@@ -61,11 +98,17 @@ object FakeRepository {
             .sortedBy { it.recordedAt }
             .mapNotNull { session ->
                 val value = session.metrics[metricKey] ?: return@mapNotNull null
-                val day = Calendar.getInstance().apply { timeInMillis = session.recordedAt }.get(Calendar.DAY_OF_MONTH)
+                val day = Calendar.getInstance()
+                    .apply { timeInMillis = session.recordedAt }
+                    .get(Calendar.DAY_OF_MONTH)
                 day.toString() to value.toFloat()
             }
     }
 
+    /**
+     * Learn guides for [sportId], optionally narrowed to a single
+     * [category]. Returns an empty list when nothing matches.
+     */
     fun guidesFor(sportId: String, category: LearnCategory?): List<LearnGuide> {
         val filtered = guides.filter { it.sportId == sportId }
         return if (category == null) filtered else filtered.filter { it.category == category }
@@ -73,6 +116,11 @@ object FakeRepository {
 
     fun guideById(id: String): LearnGuide? = guides.find { it.id == id }
 
+    /**
+     * Populates one practice, one social event, one announcement, two
+     * sessions, and four learn guides per sport. Times are offset from
+     * "now" so demos always show a mix of past and future dates.
+     */
     private fun seed() {
         val now = System.currentTimeMillis()
         val day = 86_400_000L
@@ -133,6 +181,7 @@ object FakeRepository {
         }
     }
 
+    /** Boiler-plate beginner tips per category. Kept short for the tile UI. */
     private fun beginnerBody(sport: String, category: LearnCategory): String = when (category) {
         LearnCategory.RULES ->
             "$sport beginners should learn the scoring system, playing area, and basic fouls first. " +
@@ -149,6 +198,7 @@ object FakeRepository {
     }
 }
 
+/** Lower-case display label for a category (used in seeded titles). */
 fun LearnCategory.label(): String = when (this) {
     LearnCategory.RULES -> "rules"
     LearnCategory.TECHNIQUES -> "techniques"

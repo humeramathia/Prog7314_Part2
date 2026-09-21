@@ -18,6 +18,14 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * The Performance tab: a history list plus two action buttons for the
+ * "add a session" and "monthly graph" screens.
+ *
+ * The list is reloaded on every `onResume` so a newly-added session
+ * from [AddPerformanceFragment] shows up immediately once the user
+ * pops back to this screen.
+ */
 class PerformanceFragment : Fragment() {
 
     private var _binding: FragmentPerformanceBinding? = null
@@ -46,9 +54,15 @@ class PerformanceFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        // Refresh on every resume so a saved session from the Add
+        // screen appears without a manual pull.
         loadHistory()
     }
 
+    /**
+     * Loads the history for the current sport. On failure we swap the
+     * empty text for an error message and reveal a Retry button.
+     */
     private fun loadHistory() {
         val screen = _binding ?: return
         val sportId = session().sportId
@@ -76,6 +90,7 @@ class PerformanceFragment : Fragment() {
                     showError()
                     return
                 }
+                // Newest first, mapped to the domain model.
                 val sessions = response.body()
                     .orEmpty()
                     .sortedByDescending { it.recordedAt }

@@ -21,17 +21,36 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/**
+ * The Calendar tab. Shows a system month view and an agenda list that
+ * can be filtered by day or by a full agenda view.
+ *
+ * The screen loads all events for the chosen sport once, then filters
+ * locally as the user taps different days or switches tabs. This keeps
+ * navigation instant even on slow networks.
+ */
 class CalendarFragment : Fragment() {
 
     private var _binding: FragmentCalendarBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: EventAdapter
+
+    /** True → agenda tab active (show all events, no day filter). */
     private var agendaOnly = false
+
+    /** Selected day-of-month in the month view, in epoch millis. Null → no filter. */
     private var selectedDay: Long? = null
+
+    /** Full unfiltered event list from the last API response. */
     private var allEvents: List<CalendarEvent> = emptyList()
+
     private var eventsCall: Call<List<CalendarEventDto>>? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentCalendarBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -47,6 +66,7 @@ class CalendarFragment : Fragment() {
         binding.eventList.adapter = adapter
         binding.retryButton.setOnClickListener { loadEvents() }
 
+        // Two-tab switcher between the month view and a flat agenda list.
         binding.calendarTabs.addTab(binding.calendarTabs.newTab().setText(R.string.month))
         binding.calendarTabs.addTab(binding.calendarTabs.newTab().setText(R.string.agenda))
         binding.calendarTabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -58,14 +78,21 @@ class CalendarFragment : Fragment() {
             override fun onTabUnselected(tab: TabLayout.Tab) = Unit
             override fun onTabReselected(tab: TabLayout.Tab) = Unit
         })
+
         binding.monthView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val cal = Calendar.getInstance().apply { set(year, month, dayOfMonth) }
             selectedDay = cal.timeInMillis
             showFiltered()
         }
+
         loadEvents()
     }
 
+    /**
+     * Fetches every event for the current sport from the API. The API
+     * already sorts by `startsAt`, so we only need to re-render locally
+     * when the tab or the selected day changes.
+     */
     private fun loadEvents() {
         val screen = _binding ?: return
         val sportId = session().sportId
@@ -102,6 +129,7 @@ class CalendarFragment : Fragment() {
         })
     }
 
+    /** Empties the list and swaps the empty text for a retry prompt. */
     private fun showError() {
         val screen = _binding ?: return
         allEvents = emptyList()
@@ -111,10 +139,17 @@ class CalendarFragment : Fragment() {
         screen.retryButton.isVisible = true
     }
 
+    /**
+     * Recomputes the visible event list from [allEvents] using the
+     * current [agendaOnly] and [selectedDay] filters, and also updates
+     * the month-view's content-description with the list of event days
+     * for accessibility.
+     */
     private fun showFiltered() {
         val screen = _binding ?: return
         screen.retryButton.isVisible = false
         screen.emptyEvents.text = getString(R.string.empty_events)
+
         val items = if (agendaOnly) {
             allEvents
         } else if (selectedDay != null) {
@@ -127,6 +162,7 @@ class CalendarFragment : Fragment() {
         adapter.submit(items)
         screen.emptyEvents.isVisible = items.isEmpty()
 
+        // Build a comma-separated list of days with events for screen readers.
         val days = allEvents
             .map {
                 Calendar.getInstance().apply { timeInMillis = it.startsAt }.get(Calendar.DAY_OF_MONTH)
@@ -138,6 +174,7 @@ class CalendarFragment : Fragment() {
             else getString(R.string.event_days_hint, days.joinToString(", "))
     }
 
+    /** Truncates a timestamp to the start of its calendar day (device TZ). */
     private fun startOfDay(millis: Long): Long {
         return Calendar.getInstance().apply {
             timeInMillis = millis
