@@ -27,8 +27,10 @@ class EventDetailFragment : Fragment() {
         binding.detailTitle.text = event.title
         binding.detailType.text = event.type.name
         binding.detailWhen.text = "Start: ${format.format(Date(event.startsAt))}"
-        binding.detailLocation.text = "Venue: ${event.location}"
-        binding.detailNotes.text = "Notes: ${event.notes}"
+        binding.detailLocation.text =
+            if (event.location.isBlank()) "" else "Venue: ${event.location}"
+        binding.detailNotes.text =
+            if (event.notes.isBlank()) "" else "Notes: ${event.notes}"
     }
 
     override fun onDestroyView() {
