@@ -1,0 +1,11 @@
+{
+  "auth": {
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "SportSphere",
+        "supportEmail": "humeramathia1211@gmail.com"
+      }
+    }
+  }
+}

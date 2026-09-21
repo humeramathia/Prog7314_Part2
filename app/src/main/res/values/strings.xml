@@ -18,6 +18,8 @@
     <string name="resend_email">Resend email</string>
     <string name="i_have_confirmed">I have confirmed</string>
     <string name="choose_sport">Choose your sport</string>
+    <string name="error_load_sports">Could not load sports. Check that the API is running, then tap Retry.</string>
+    <string name="empty_sports">No sports available yet</string>
     <string name="continue_label">Continue</string>
     <string name="home">Home</string>
     <string name="calendar">Calendar</string>
@@ -44,6 +46,13 @@
     <string name="selected_sport">Selected sport</string>
     <string name="dark_mode">Dark mode</string>
     <string name="empty_events">No practices or events this month</string>
+    <string name="event_start">Starts: %1$s</string>
+    <string name="event_end">Ends: %1$s</string>
+    <string name="event_venue">Venue: %1$s</string>
+    <string name="event_notes">Notes: %1$s</string>
+    <string name="event_days_hint">Event days: %1$s</string>
+    <string name="add_to_calendar">Add to phone calendar</string>
+    <string name="error_load_performance">Could not load sessions. Check your connection and try again.</string>
     <string name="empty_learn">No guides in this category yet</string>
     <string name="empty_history">No sessions recorded yet</string>
     <string name="required_field">This field is required</string>

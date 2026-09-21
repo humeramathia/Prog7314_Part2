@@ -15,7 +15,7 @@ npm start
 
 `GET http://localhost:3000/health` should return `{ "ok": true }`.
 
-For a first run without Firebase, keep `SKIP_AUTH=true` in `.env`. For the POE demo, set `SKIP_AUTH=false`, add `firebase-service-account.json`, and send a real ID token from the app.
+For a first run without Firebase, keep `SKIP_AUTH=true` in `.env`. Hosted Render uses `SKIP_AUTH=false`. After you push `Humera`, connect the repo in Render (`render.yaml`) and set `COSMOS_*` plus `FIREBASE_SERVICE_ACCOUNT` in the dashboard. Health: `https://sportsphere-st10276384.onrender.com/health`.
 
 ## Endpoints
 
@@ -59,3 +59,7 @@ Authenticated (`Authorization: Bearer <Firebase ID token>`):
 Swimming example: `{ "distance": 1500, "time": 1260 }` (metres and seconds).
 
 `GET /api/performance/monthly?sportId=basketball&year=2026&month=9&metric=points` returns that month’s sessions plotted by date. `month` is 1-12. `metric` defaults to the sport’s first field.
+
+## Event types
+
+`type` must be `PRACTICE`, `SOCIAL_EVENT`, or `ANNOUNCEMENT`. Legacy `EVENT` is stored as `SOCIAL_EVENT`. Optional fields: `endsAt` (epoch millis), `description`.

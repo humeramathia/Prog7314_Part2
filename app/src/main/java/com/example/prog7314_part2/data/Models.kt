@@ -11,11 +11,13 @@ data class CalendarEvent(
     val title: String,
     val type: EventType,
     val startsAt: Long,
+    val endsAt: Long? = null,
     val location: String,
+    val description: String = "",
     val notes: String
 )
 
-enum class EventType { PRACTICE, EVENT }
+enum class EventType { PRACTICE, SOCIAL_EVENT, ANNOUNCEMENT }
 
 data class PerformanceSession(
     val id: String,

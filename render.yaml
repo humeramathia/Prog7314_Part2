@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: sportsphere-st10276384
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: api
+    buildCommand: npm install
+    startCommand: node src/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: SKIP_AUTH
+        value: "false"
+      - key: FIREBASE_PROJECT_ID
+        value: sportsphere-st10276384
+      - key: COSMOS_DATABASE
+        value: sportsphere
+      - key: COSMOS_ENDPOINT
+        sync: false
+      - key: COSMOS_KEY
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false

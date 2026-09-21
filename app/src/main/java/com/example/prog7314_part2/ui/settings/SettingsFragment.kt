@@ -8,8 +8,15 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.UpdateProfileRequest
+import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.example.prog7314_part2.databinding.FragmentSettingsBinding
 import com.example.prog7314_part2.ui.session
+import com.google.firebase.auth.FirebaseAuth
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class SettingsFragment : Fragment() {
 
@@ -34,8 +41,15 @@ class SettingsFragment : Fragment() {
             AppCompatDelegate.setDefaultNightMode(
                 if (checked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
             )
+            ApiClient.service.updateMyProfile(UpdateProfileRequest(darkMode = checked)).enqueue(
+                object : Callback<UserProfileDto> {
+                    override fun onResponse(call: Call<UserProfileDto>, response: Response<UserProfileDto>) = Unit
+                    override fun onFailure(call: Call<UserProfileDto>, t: Throwable) = Unit
+                }
+            )
         }
         binding.btnLogout.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
             session.signOut()
             findNavController().navigate(R.id.action_settings_to_welcome)
         }

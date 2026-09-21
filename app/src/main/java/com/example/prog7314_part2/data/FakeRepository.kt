@@ -90,10 +90,22 @@ object FakeRepository {
                 id = "${sport.id}-event",
                 sportId = sport.id,
                 title = "${sport.name} inter-campus fixture",
-                type = EventType.EVENT,
+                type = EventType.SOCIAL_EVENT,
                 startsAt = now + day * (9 + index),
+                endsAt = now + day * (9 + index) + 10_800_000L,
                 location = "Main stadium",
+                description = "Friendly fixture against another campus side.",
                 notes = "Arrive 45 minutes before start. Team photo at the gate."
+            )
+            events += CalendarEvent(
+                id = "${sport.id}-announcement",
+                sportId = sport.id,
+                title = "${sport.name} kit collection",
+                type = EventType.ANNOUNCEMENT,
+                startsAt = now + day * (4 + index),
+                location = "Clubhouse",
+                description = "Collect numbered kit and confirm your availability.",
+                notes = "Bring student card."
             )
             sessions += PerformanceSession(
                 id = "${sport.id}-s1",

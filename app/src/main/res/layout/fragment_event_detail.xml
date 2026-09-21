@@ -58,4 +58,12 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:textColor="@color/slate" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAddToCalendar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="@string/add_to_calendar"
+        android:visibility="gone" />
 </LinearLayout>

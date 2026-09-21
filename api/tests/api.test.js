@@ -64,6 +64,7 @@ describe("SportSphere API", () => {
     const detail = await request(app).get(`/api/events/${next.body.id}`);
     expect(detail.status).toBe(200);
     expect(detail.body.title).toBe(next.body.title);
+    expect(["PRACTICE", "SOCIAL_EVENT", "ANNOUNCEMENT"]).toContain(detail.body.type);
   });
 
   test("POST /api/events creates a practice", async () => {
@@ -77,6 +78,18 @@ describe("SportSphere API", () => {
     expect(res.status).toBe(201);
     expect(res.body.id).toBeTruthy();
     expect(res.body.type).toBe("PRACTICE");
+
+    const social = await request(app).post("/api/events").send({
+      sportId: "cricket",
+      title: "Club social",
+      type: "SOCIAL_EVENT",
+      startsAt: Date.now() + 172_800_000,
+      endsAt: Date.now() + 176_400_000,
+      description: "End-of-term braai"
+    });
+    expect(social.status).toBe(201);
+    expect(social.body.type).toBe("SOCIAL_EVENT");
+    expect(social.body.description).toBe("End-of-term braai");
   });
 
   test("POST /api/performance stores sport metrics and monthly graph plots by date", async () => {

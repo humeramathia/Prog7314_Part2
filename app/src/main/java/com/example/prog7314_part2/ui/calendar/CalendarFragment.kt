@@ -9,11 +9,17 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.prog7314_part2.R
-import com.example.prog7314_part2.data.FakeRepository
+import com.example.prog7314_part2.data.CalendarEvent
+import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.CalendarEventDto
+import com.example.prog7314_part2.data.remote.toLocal
 import com.example.prog7314_part2.databinding.FragmentCalendarBinding
 import com.example.prog7314_part2.ui.session
 import com.google.android.material.tabs.TabLayout
 import java.util.Calendar
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class CalendarFragment : Fragment() {
 
@@ -22,8 +28,8 @@ class CalendarFragment : Fragment() {
     private lateinit var adapter: EventAdapter
     private var agendaOnly = false
     private var selectedDay: Long? = null
-
-    private var loadFailed = false
+    private var allEvents: List<CalendarEvent> = emptyList()
+    private var eventsCall: Call<List<CalendarEventDto>>? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCalendarBinding.inflate(inflater, container, false)
@@ -39,11 +45,7 @@ class CalendarFragment : Fragment() {
         }
         binding.eventList.layoutManager = LinearLayoutManager(requireContext())
         binding.eventList.adapter = adapter
-
-        binding.retryButton.setOnClickListener {
-            loadFailed = false
-            render()
-        }
+        binding.retryButton.setOnClickListener { loadEvents() }
 
         binding.calendarTabs.addTab(binding.calendarTabs.newTab().setText(R.string.month))
         binding.calendarTabs.addTab(binding.calendarTabs.newTab().setText(R.string.agenda))
@@ -51,7 +53,7 @@ class CalendarFragment : Fragment() {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 agendaOnly = tab.position == 1
                 binding.monthView.isVisible = !agendaOnly
-                render()
+                showFiltered()
             }
             override fun onTabUnselected(tab: TabLayout.Tab) = Unit
             override fun onTabReselected(tab: TabLayout.Tab) = Unit
@@ -59,28 +61,83 @@ class CalendarFragment : Fragment() {
         binding.monthView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val cal = Calendar.getInstance().apply { set(year, month, dayOfMonth) }
             selectedDay = cal.timeInMillis
-            render()
+            showFiltered()
         }
-        render()
+        loadEvents()
     }
 
-    private fun render() {
+    private fun loadEvents() {
+        val screen = _binding ?: return
         val sportId = session().sportId
-        val all = FakeRepository.eventsForSport(sportId)
+        screen.retryButton.isVisible = false
+        screen.emptyEvents.isVisible = false
 
+        if (sportId.isBlank()) {
+            allEvents = emptyList()
+            showFiltered()
+            return
+        }
+
+        eventsCall?.cancel()
+        val call = ApiClient.service.getEvents(sportId)
+        eventsCall = call
+        call.enqueue(object : Callback<List<CalendarEventDto>> {
+            override fun onResponse(
+                call: Call<List<CalendarEventDto>>,
+                response: Response<List<CalendarEventDto>>
+            ) {
+                if (_binding !== screen) return
+                if (!response.isSuccessful) {
+                    showError()
+                    return
+                }
+                allEvents = response.body().orEmpty().map { it.toLocal() }
+                showFiltered()
+            }
+
+            override fun onFailure(call: Call<List<CalendarEventDto>>, error: Throwable) {
+                if (_binding !== screen || call.isCanceled) return
+                showError()
+            }
+        })
+    }
+
+    private fun showError() {
+        val screen = _binding ?: return
+        allEvents = emptyList()
+        adapter.submit(emptyList())
+        screen.emptyEvents.text = getString(R.string.error_retry)
+        screen.emptyEvents.isVisible = true
+        screen.retryButton.isVisible = true
+    }
+
+    private fun showFiltered() {
+        val screen = _binding ?: return
+        screen.retryButton.isVisible = false
+        screen.emptyEvents.text = getString(R.string.empty_events)
         val items = if (agendaOnly) {
-            all
+            allEvents
         } else if (selectedDay != null) {
             val dayStart = startOfDay(selectedDay!!)
             val dayEnd = dayStart + 86_400_000L
-            all.filter { it.startsAt in dayStart until dayEnd }
+            allEvents.filter { it.startsAt in dayStart until dayEnd }
         } else {
-            all
+            allEvents
         }
-
         adapter.submit(items)
-        binding.emptyEvents.isVisible = items.isEmpty()
+        screen.emptyEvents.isVisible = items.isEmpty()
+
+        val days = allEvents
+            .map {
+                Calendar.getInstance().apply { timeInMillis = it.startsAt }.get(Calendar.DAY_OF_MONTH)
+            }
+            .distinct()
+            .sorted()
+        screen.emptyEvents.contentDescription =
+            if (days.isEmpty()) getString(R.string.empty_events)
+            else getString(R.string.event_days_hint, days.joinToString(", "))
     }
+
     private fun startOfDay(millis: Long): Long {
         return Calendar.getInstance().apply {
             timeInMillis = millis
@@ -92,6 +149,8 @@ class CalendarFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        eventsCall?.cancel()
+        eventsCall = null
         super.onDestroyView()
         _binding = null
     }

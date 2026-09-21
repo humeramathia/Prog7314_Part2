@@ -38,6 +38,32 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Write local google-services.json placeholder
+        run: |
+          cat > app/google-services.json <<'EOF'
+          {
+            "project_info": {
+              "project_number": "0",
+              "project_id": "sportsphere-local",
+              "storage_bucket": "sportsphere-local.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:0:android:0",
+                  "android_client_info": {
+                    "package_name": "com.example.prog7314_part2"
+                  }
+                },
+                "oauth_client": [{ "client_id": "local-placeholder.apps.googleusercontent.com", "client_type": 3 }],
+                "api_key": [{ "current_key": "local-placeholder" }],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --stacktrace
 

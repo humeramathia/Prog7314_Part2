@@ -50,7 +50,9 @@ function seedDocuments(now = Date.now()) {
       title: `${sport.name} squad practice`,
       type: "PRACTICE",
       startsAt: now + day * (2 + index),
+      endsAt: now + day * (2 + index) + 7_200_000,
       location: "Campus courts",
+      description: "Squad session covering set pieces and match tempo.",
       notes: "Bring kit and water. Warm-up starts 15 minutes early.",
       createdBy: "seed"
     });
@@ -58,10 +60,23 @@ function seedDocuments(now = Date.now()) {
       id: `${sport.id}-event`,
       sportId: sport.id,
       title: `${sport.name} inter-campus fixture`,
-      type: "EVENT",
+      type: "SOCIAL_EVENT",
       startsAt: now + day * (9 + index),
+      endsAt: now + day * (9 + index) + 10_800_000,
       location: "Main stadium",
+      description: "Friendly fixture against another campus side.",
       notes: "Arrive 45 minutes before start. Team photo at the gate.",
+      createdBy: "seed"
+    });
+    events.push({
+      id: `${sport.id}-announcement`,
+      sportId: sport.id,
+      title: `${sport.name} kit collection`,
+      type: "ANNOUNCEMENT",
+      startsAt: now + day * (4 + index),
+      location: "Clubhouse",
+      description: "Collect numbered kit and confirm your availability.",
+      notes: "Bring student card.",
       createdBy: "seed"
     });
     CATEGORIES.forEach((category) => {

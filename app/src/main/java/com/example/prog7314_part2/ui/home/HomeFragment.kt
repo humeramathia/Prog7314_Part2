@@ -7,18 +7,25 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
-import com.example.prog7314_part2.data.FakeRepository
-import com.example.prog7314_part2.data.SportMetrics
+import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.CalendarEventDto
+import com.example.prog7314_part2.data.remote.PerformanceSessionDto
+import com.example.prog7314_part2.data.remote.summaryLine
 import com.example.prog7314_part2.databinding.FragmentHomeBinding
 import com.example.prog7314_part2.ui.session
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    private var nextCall: Call<CalendarEventDto>? = null
+    private var latestCall: Call<List<PerformanceSessionDto>>? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -30,20 +37,9 @@ class HomeFragment : Fragment() {
         val name = session.displayName.ifBlank { "athlete" }
         binding.greeting.text = "Hi, $name"
         binding.sportChip.text = session.sportName.ifBlank { getString(R.string.choose_sport) }
-
-        val next = FakeRepository.nextEvent(session.sportId)
-        if (next == null) {
-            binding.nextPracticeTitle.text = getString(R.string.empty_events)
-            binding.nextPracticeWhen.text = ""
-        } else {
-            binding.nextPracticeTitle.text = next.title
-            val format = SimpleDateFormat("EEE d MMM, HH:mm", Locale.getDefault())
-            binding.nextPracticeWhen.text = format.format(Date(next.startsAt))
-        }
-
-        val latest = FakeRepository.latestSession(session.sportId)
-        binding.latestScoreValue.text = latest?.let { SportMetrics.summary(it.sportId, it.metrics) }
-            ?: getString(R.string.empty_history)
+        binding.nextPracticeTitle.text = getString(R.string.empty_events)
+        binding.nextPracticeWhen.text = ""
+        binding.latestScoreValue.text = getString(R.string.empty_history)
 
         binding.btnSettings.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_settings)
@@ -57,9 +53,57 @@ class HomeFragment : Fragment() {
         binding.btnLearn.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_learn)
         }
+
+        loadDashboard(session.sportId)
+    }
+
+    private fun loadDashboard(sportId: String) {
+        val screen = binding
+        if (sportId.isBlank()) return
+
+        nextCall?.cancel()
+        latestCall?.cancel()
+
+        val upcoming = ApiClient.service.getNextEvent(sportId)
+        nextCall = upcoming
+        upcoming.enqueue(object : Callback<CalendarEventDto> {
+            override fun onResponse(call: Call<CalendarEventDto>, response: Response<CalendarEventDto>) {
+                if (_binding !== screen) return
+                val event = response.body()
+                if (!response.isSuccessful || event == null) return
+                val format = SimpleDateFormat("EEE d MMM, HH:mm", Locale.getDefault())
+                screen.nextPracticeTitle.text = event.title
+                screen.nextPracticeWhen.text = format.format(Date(event.startsAt))
+            }
+
+            override fun onFailure(call: Call<CalendarEventDto>, t: Throwable) {
+                if (_binding !== screen || call.isCanceled) return
+            }
+        })
+
+        val history = ApiClient.service.getPerformance(sportId)
+        latestCall = history
+        history.enqueue(object : Callback<List<PerformanceSessionDto>> {
+            override fun onResponse(
+                call: Call<List<PerformanceSessionDto>>,
+                response: Response<List<PerformanceSessionDto>>
+            ) {
+                if (_binding !== screen) return
+                val latest = response.body().orEmpty().maxByOrNull { it.recordedAt } ?: return
+                screen.latestScoreValue.text = latest.summaryLine()
+            }
+
+            override fun onFailure(call: Call<List<PerformanceSessionDto>>, t: Throwable) {
+                if (_binding !== screen || call.isCanceled) return
+            }
+        })
     }
 
     override fun onDestroyView() {
+        nextCall?.cancel()
+        latestCall?.cancel()
+        nextCall = null
+        latestCall = null
         super.onDestroyView()
         _binding = null
     }

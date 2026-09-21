@@ -15,10 +15,13 @@ function createApp(store) {
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/health", (req, res) => {
+    const { firebaseReady } = require("./firebase");
     res.json({
       ok: true,
       service: "sportsphere-api",
-      store: store.kind
+      store: store.kind,
+      skipAuth: require("./config").config.skipAuth,
+      firebaseAdmin: firebaseReady()
     });
   });
 

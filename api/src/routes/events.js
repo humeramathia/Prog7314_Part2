@@ -3,7 +3,14 @@ const { randomUUID } = require("crypto");
 const { asyncHandler, HttpError } = require("../httpError");
 const { publicDoc, publicList, parseMillis } = require("../store/shape");
 
-const TYPES = new Set(["PRACTICE", "EVENT"]);
+const TYPES = new Set(["PRACTICE", "SOCIAL_EVENT", "ANNOUNCEMENT"]);
+
+function normalizeType(value) {
+  const type = String(value || "").toUpperCase();
+  if (type === "EVENT") return "SOCIAL_EVENT";
+  return type;
+}
+
 const router = express.Router();
 
 router.get(
@@ -46,10 +53,10 @@ router.post(
     const body = req.body || {};
     const sportId = String(body.sportId || "").trim();
     const title = String(body.title || "").trim();
-    const type = String(body.type || "").toUpperCase();
+    const type = normalizeType(body.type);
     const startsAt = parseMillis(body.startsAt);
     if (!sportId || !title || !TYPES.has(type) || startsAt == null) {
-      throw new HttpError(400, "sportId, title, type (PRACTICE|EVENT) and startsAt are required");
+      throw new HttpError(400, "sportId, title, type (PRACTICE|SOCIAL_EVENT|ANNOUNCEMENT) and startsAt are required");
     }
     const sport = await req.app.locals.store.getSport(sportId);
     if (!sport) throw new HttpError(400, "Unknown sportId");
@@ -60,7 +67,9 @@ router.post(
       title,
       type,
       startsAt,
+      endsAt: parseMillis(body.endsAt),
       location: String(body.location || "").trim(),
+      description: String(body.description || "").trim(),
       notes: String(body.notes || "").trim(),
       createdBy: req.user.uid
     };
@@ -77,15 +86,21 @@ router.put(
     const body = req.body || {};
     if (body.title !== undefined) existing.title = String(body.title).trim();
     if (body.location !== undefined) existing.location = String(body.location).trim();
+    if (body.description !== undefined) existing.description = String(body.description).trim();
     if (body.notes !== undefined) existing.notes = String(body.notes).trim();
     if (body.startsAt !== undefined) {
       const startsAt = parseMillis(body.startsAt);
       if (startsAt == null) throw new HttpError(400, "startsAt must be epoch millis");
       existing.startsAt = startsAt;
     }
+    if (body.endsAt !== undefined) {
+      existing.endsAt = body.endsAt == null || body.endsAt === "" ? null : parseMillis(body.endsAt);
+    }
     if (body.type !== undefined) {
-      const type = String(body.type).toUpperCase();
-      if (!TYPES.has(type)) throw new HttpError(400, "type must be PRACTICE or EVENT");
+      const type = normalizeType(body.type);
+      if (!TYPES.has(type)) {
+        throw new HttpError(400, "type must be PRACTICE, SOCIAL_EVENT or ANNOUNCEMENT");
+      }
       existing.type = type;
     }
     res.json(publicDoc(await store.upsertEvent(existing)));
