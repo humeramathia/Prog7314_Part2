@@ -37,4 +37,19 @@ class MappersTest {
         assertEquals(2_000L, local.endsAt)
         assertEquals("Warm-up", local.description)
     }
+
+    @Test
+    fun sessionSummaryIncludesNotes() {
+        val dto = PerformanceSessionDto(
+            id = "s1",
+            userId = "u1",
+            sportId = "basketball",
+            recordedAt = 1_000L,
+            notes = "Home fixture",
+            metrics = mapOf("points" to 22.0, "rebounds" to 8.0),
+            primaryMetric = "points",
+            primaryValue = 22.0
+        )
+        assertEquals("22 points  ·  8 rebounds  ·  Home fixture", dto.summaryLine())
+    }
 }
