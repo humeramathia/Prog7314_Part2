@@ -30,11 +30,27 @@
         android:textColor="@color/muted" />
 
     <TextView
+        android:id="@+id/detailEnd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/muted"
+        android:visibility="gone"/>
+
+    <TextView
         android:id="@+id/detailLocation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:textColor="@color/muted" />
+
+    <TextView
+        android:id="@+id/detailDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/slate"
+        android:visibility="gone"/>
 
     <TextView
         android:id="@+id/detailNotes"

@@ -26,9 +26,11 @@ class EventDetailFragment : Fragment() {
         val format = SimpleDateFormat("EEEE d MMMM yyyy, HH:mm", Locale.getDefault())
         binding.detailTitle.text = event.title
         binding.detailType.text = event.type.name
-        binding.detailWhen.text = format.format(Date(event.startsAt))
-        binding.detailLocation.text = event.location
-        binding.detailNotes.text = event.notes
+        binding.detailWhen.text = "Start: ${format.format(Date(event.startsAt))}"
+        binding.detailLocation.text =
+            if (event.location.isBlank()) "" else "Venue: ${event.location}"
+        binding.detailNotes.text =
+            if (event.notes.isBlank()) "" else "Notes: ${event.notes}"
     }
 
     override fun onDestroyView() {
