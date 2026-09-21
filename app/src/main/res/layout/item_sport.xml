@@ -13,6 +13,7 @@
         android:id="@+id/sportName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/choose_sport"
         android:padding="18dp"
         android:textColor="@color/slate"
         android:textSize="16sp" />
