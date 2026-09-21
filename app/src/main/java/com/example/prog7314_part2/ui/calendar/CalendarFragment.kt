@@ -23,6 +23,8 @@ class CalendarFragment : Fragment() {
     private var agendaOnly = false
     private var selectedDay: Long? = null
 
+    private var loadFailed = false
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCalendarBinding.inflate(inflater, container, false)
         return binding.root
@@ -37,6 +39,11 @@ class CalendarFragment : Fragment() {
         }
         binding.eventList.layoutManager = LinearLayoutManager(requireContext())
         binding.eventList.adapter = adapter
+
+        binding.retryButton.setOnClickListener {
+            loadFailed = false
+            render()
+        }
 
         binding.calendarTabs.addTab(binding.calendarTabs.newTab().setText(R.string.month))
         binding.calendarTabs.addTab(binding.calendarTabs.newTab().setText(R.string.agenda))
