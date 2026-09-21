@@ -21,6 +21,7 @@ import retrofit2.Response
 class SettingsFragment : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
+    private var darkModeCall: Call<UserProfileDto>? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -41,7 +42,10 @@ class SettingsFragment : Fragment() {
             AppCompatDelegate.setDefaultNightMode(
                 if (checked) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
             )
-            ApiClient.service.updateMyProfile(UpdateProfileRequest(darkMode = checked)).enqueue(
+            darkModeCall?.cancel()
+            val call = ApiClient.service.updateMyProfile(UpdateProfileRequest(darkMode = checked))
+            darkModeCall = call
+            call.enqueue(
                 object : Callback<UserProfileDto> {
                     override fun onResponse(call: Call<UserProfileDto>, response: Response<UserProfileDto>) = Unit
                     override fun onFailure(call: Call<UserProfileDto>, t: Throwable) = Unit
@@ -56,6 +60,8 @@ class SettingsFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        darkModeCall?.cancel()
+        darkModeCall = null
         super.onDestroyView()
         _binding = null
     }
