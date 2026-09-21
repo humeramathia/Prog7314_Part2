@@ -69,4 +69,6 @@
     <string name="nav_calendar">Calendar</string>
     <string name="nav_performance">Performance</string>
     <string name="nav_learn">Learn</string>
+    <string name="cd_sport_chip">Selected sport</string>
+    <string name="cd_latest_session">Latest performance session</string>
 </resources>
