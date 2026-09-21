@@ -159,7 +159,7 @@ class LoginFragment : Fragment() {
 
                     if (!refreshedUser.isEmailVerified) {
                         findNavController().navigate(
-                            R.id.confirmEmailFragment,
+                            R.id.action_login_to_confirm,
                             Bundle().apply {
                                 putString("email", refreshedUser.email.orEmpty())
                             }
@@ -287,7 +287,7 @@ class LoginFragment : Fragment() {
                             // Verified Google users skip the confirmation screen.
                             if (!user.isEmailVerified) {
                                 findNavController().navigate(
-                                    R.id.confirmEmailFragment,
+                                    R.id.action_login_to_confirm,
                                     Bundle().apply {
                                         putString("email", user.email.orEmpty())
                                     }

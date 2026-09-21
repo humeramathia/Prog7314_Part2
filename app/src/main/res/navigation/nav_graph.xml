@@ -33,6 +33,9 @@
             app:destination="@id/homeFragment"
             app:popUpTo="@id/welcomeFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_login_to_confirm"
+            app:destination="@id/confirmEmailFragment" />
     </fragment>
 
     <fragment
@@ -53,10 +56,16 @@
         android:label="@string/confirm_email_title">
         <argument
             android:name="email"
-            app:argType="string" />
+            app:argType="string"
+            android:defaultValue="" />
         <action
             android:id="@+id/action_confirm_to_sport"
             app:destination="@id/sportSelectFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_confirm_to_home"
+            app:destination="@id/homeFragment"
             app:popUpTo="@id/welcomeFragment"
             app:popUpToInclusive="true" />
     </fragment>

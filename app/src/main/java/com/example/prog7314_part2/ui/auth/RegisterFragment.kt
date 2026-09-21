@@ -120,32 +120,15 @@ class RegisterFragment : Fragment() {
                             )
                         }
 
-                        // Still send verification if the profile update failed.
-                        user.sendEmailVerification()
-                            .addOnCompleteListener emailComplete@{ emailResult ->
-                                if (_binding !== screen) return@emailComplete
-
-                                setLoading(false)
-
-                                if (emailResult.isSuccessful) {
-                                    showMessage(
-                                        "Verification email sent. Check your inbox and spam."
-                                    )
-                                } else {
-                                    showMessage(
-                                        "Account created, but the email could not be sent. " +
-                                                "Use Resend on the next screen."
-                                    )
-                                }
-
-                                // Do not mark the local session as logged in yet.
-                                findNavController().navigate(
-                                    R.id.action_register_to_confirm,
-                                    Bundle().apply {
-                                        putString("email", email)
-                                    }
-                                )
-                            }
+                        EmailVerification.send(user) { _, message ->
+                            if (_binding !== screen) return@send
+                            setLoading(false)
+                            showMessage(message)
+                            findNavController().navigate(
+                                R.id.action_register_to_confirm,
+                                Bundle().apply { putString("email", email) }
+                            )
+                        }
                     }
             }
     }

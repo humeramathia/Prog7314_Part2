@@ -17,6 +17,8 @@ class ConfirmEmailFragment : Fragment() {
     private var _binding: FragmentConfirmEmailBinding? = null
     private val binding get() = _binding!!
     private val auth = FirebaseAuth.getInstance()
+    private var checking = false
+    private var openedInbox = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,109 +33,109 @@ class ConfirmEmailFragment : Fragment() {
         val email = auth.currentUser?.email
             ?: arguments?.getString("email").orEmpty()
 
-        binding.confirmBody.text =
-            getString(R.string.confirm_email_body, email)
-
-        binding.btnConfirmed.setOnClickListener { checkVerification() }
+        binding.confirmBody.text = getString(R.string.confirm_email_body, email)
+        binding.btnConfirmed.setOnClickListener { checkVerification(quiet = false) }
         binding.btnResend.setOnClickListener { resendEmail() }
+        binding.btnOpenEmail.setOnClickListener { openEmailApp() }
     }
 
-    private fun checkVerification() {
-        val screen = binding
-        val user = auth.currentUser
+    override fun onResume() {
+        super.onResume()
+        if (openedInbox) {
+            checkVerification(quiet = true)
+        }
+    }
 
+    private fun checkVerification(quiet: Boolean) {
+        val screen = binding
+        if (checking) return
+
+        val user = auth.currentUser
         if (user == null) {
-            returnToLogin()
+            if (!quiet) returnToLogin()
             return
         }
 
-        setLoading(true)
+        checking = true
+        if (!quiet) setLoading(true)
 
-        user.reload().addOnCompleteListener reloadComplete@{ result ->
-            if (_binding !== screen) return@reloadComplete
+        EmailVerification.refreshVerified { verified, error ->
+            if (_binding !== screen) return@refreshVerified
+            checking = false
+            setLoading(false)
 
-            if (!result.isSuccessful) {
-                setLoading(false)
-                showMessage("Could not check verification. Check your connection.")
-                return@reloadComplete
+            if (error == "signed-out") {
+                if (!quiet) returnToLogin()
+                return@refreshVerified
             }
 
-            val refreshedUser = auth.currentUser
-
-            if (refreshedUser == null) {
-                setLoading(false)
-                returnToLogin()
-                return@reloadComplete
-            }
-
-            if (!refreshedUser.isEmailVerified) {
-                setLoading(false)
-                showMessage(
-                    "Your email is not verified yet. Open the link in your email first."
-                )
-                return@reloadComplete
-            }
-
-            refreshedUser.getIdToken(true)
-                .addOnCompleteListener tokenComplete@{ tokenResult ->
-                    if (_binding !== screen) return@tokenComplete
-
-                    setLoading(false)
-
-                    if (!tokenResult.isSuccessful) {
-                        showMessage("Could not refresh your session. Please try again.")
-                        return@tokenComplete
-                    }
-
-                    val localSession = session()
-                    val email = refreshedUser.email.orEmpty()
-
-                    if (localSession.email != email) {
-                        localSession.sportId = ""
-                        localSession.sportName = ""
-                    }
-
-                    localSession.signIn(
-                        email,
-                        refreshedUser.displayName.orEmpty()
-                    )
-
-                    findNavController().navigate(R.id.action_confirm_to_sport)
+            if (error != null) {
+                if (!quiet) {
+                    showMessage(error.ifBlank { "Could not check verification. Check your connection." })
                 }
+                return@refreshVerified
+            }
+
+            if (!verified) {
+                if (!quiet) {
+                    showMessage(getString(R.string.confirm_email_not_yet))
+                }
+                return@refreshVerified
+            }
+
+            continueAfterVerified()
         }
+    }
+
+    private fun continueAfterVerified() {
+        val refreshedUser = auth.currentUser ?: return
+        val localSession = session()
+        val email = refreshedUser.email.orEmpty()
+
+        if (localSession.email != email) {
+            localSession.sportId = ""
+            localSession.sportName = ""
+        }
+
+        localSession.signIn(email, refreshedUser.displayName.orEmpty())
+
+        val destination = if (localSession.sportId.isBlank()) {
+            R.id.action_confirm_to_sport
+        } else {
+            R.id.action_confirm_to_home
+        }
+        findNavController().navigate(destination)
     }
 
     private fun resendEmail() {
         val screen = binding
         val user = auth.currentUser
-
         if (user == null) {
             returnToLogin()
             return
         }
 
         setLoading(true)
+        EmailVerification.send(user) { _, message ->
+            if (_binding !== screen) return@send
+            setLoading(false)
+            showMessage(message)
+        }
+    }
 
-        user.sendEmailVerification()
-            .addOnCompleteListener resendComplete@{ result ->
-                if (_binding !== screen) return@resendComplete
-
-                setLoading(false)
-
-                if (result.isSuccessful) {
-                    showMessage("Verification email sent. Check your inbox and spam.")
-                } else {
-                    showMessage(
-                        "Could not resend the email. Wait a little and try again."
-                    )
-                }
-            }
+    private fun openEmailApp() {
+        openedInbox = true
+        val opened = context?.let { EmailVerification.openInbox(it) } == true
+        if (!opened) {
+            showMessage("Open Gmail or your mail app, then tap the Verify link.")
+        }
     }
 
     private fun returnToLogin() {
         showMessage("Please log in again to verify your account.")
-
-        findNavController().navigate(R.id.loginFragment, null,
+        findNavController().navigate(
+            R.id.loginFragment,
+            null,
             androidx.navigation.navOptions {
                 popUpTo(R.id.nav_graph) { inclusive = true }
             }
@@ -144,6 +146,7 @@ class ConfirmEmailFragment : Fragment() {
         _binding?.apply {
             btnConfirmed.isEnabled = !loading
             btnResend.isEnabled = !loading
+            btnOpenEmail.isEnabled = !loading
         }
     }
 
