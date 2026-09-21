@@ -53,7 +53,12 @@ class MainActivity : AppCompatActivity() {
             R.id.performanceFragment,
             R.id.learnFragment
         )
-        val hideChrome = setOf(R.id.welcomeFragment)
+        val hideChrome = setOf(
+            R.id.welcomeFragment,
+            R.id.loginFragment,
+            R.id.registerFragment,
+            R.id.confirmEmailFragment
+        )
         binding.toolbar.setNavigationOnClickListener { navController.navigateUp() }
         navController.addOnDestinationChangedListener { _, destination, _ ->
             binding.bottomNav.visibility = if (destination.id in tabs) View.VISIBLE else View.GONE
