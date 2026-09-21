@@ -18,15 +18,17 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"")
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"") // emulator → local API
     }
 
     buildTypes {
         debug {
+            // Physical device debug still uses 10.0.2.2; point a device at the hosted URL if needed.
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"")
         }
         release {
             isMinifyEnabled = false
+            // POE demo / signed builds talk to the hosted Render API.
             buildConfigField("String", "API_BASE_URL", "\"https://sportsphere-st10276384.onrender.com/\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
