@@ -28,6 +28,8 @@ android {
         }
         release {
             isMinifyEnabled = false
+            // Debug keystore so a physical phone can install the POE APK (not Play Store).
+            signingConfig = signingConfigs.getByName("debug")
             // POE demo / signed builds talk to the hosted Render API.
             buildConfigField("String", "API_BASE_URL", "\"https://sportsphere-st10276384.onrender.com/\"")
             proguardFiles(
