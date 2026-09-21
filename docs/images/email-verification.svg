@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="470" height="1024" viewBox="0 0 470 1024" role="img" aria-labelledby="title description">
+  <title id="title">SportSphere email verification message</title>
+  <description id="description">Dark-mode email showing a SportSphere Firebase verification link with the private action code hidden.</description>
+  <rect width="470" height="1024" fill="#111113"/>
+
+  <g fill="#f4f4f5" font-family="Arial, Helvetica, sans-serif">
+    <text x="65" y="46" font-size="22" font-weight="700">7:09</text>
+    <path d="M27 82 L15 94 L27 106" fill="none" stroke="#f4f4f5" stroke-width="3"/>
+    <rect x="300" y="83" width="15" height="20" rx="2" fill="none" stroke="#f4f4f5" stroke-width="2"/>
+    <path d="M298 82 H317 M304 78 H312" fill="none" stroke="#f4f4f5" stroke-width="2"/>
+    <rect x="358" y="84" width="23" height="17" rx="2" fill="none" stroke="#f4f4f5" stroke-width="2"/>
+    <path d="M359 86 L369.5 94 L380 86" fill="none" stroke="#f4f4f5" stroke-width="2"/>
+    <text x="425" y="100" font-size="24">...</text>
+
+    <text x="19" y="148" font-size="25">Verify your email for SportSphere</text>
+    <rect x="19" y="164" width="39" height="24" rx="5" fill="#2c2d31" stroke="#6b6c72"/>
+    <text x="25" y="181" fill="#c7c7ca" font-size="13">Junk</text>
+    <path d="M434 165 L438 176 L450 176 L440 183 L444 194 L434 187 L424 194 L428 183 L418 176 L430 176 Z" fill="none" stroke="#9b9ba0" stroke-width="2"/>
+
+    <circle cx="42" cy="258" r="23" fill="#dd3b91"/>
+    <text x="32" y="268" font-size="29">N</text>
+    <text x="83" y="250" font-size="15">noreply</text>
+    <text x="146" y="250" fill="#b8b8bc" font-size="13">7:08 PM</text>
+    <text x="83" y="274" fill="#d5d5d8" font-size="13">to me v</text>
+    <path d="M394 245 H378 L384 239 M378 245 L384 251" fill="none" stroke="#f4f4f5" stroke-width="2"/>
+    <text x="425" y="260" font-size="20">...</text>
+
+    <text x="10" y="322" font-size="13">Hello Humera,</text>
+    <text x="10" y="351" font-size="13">Follow this link to verify your email address.</text>
+    <text x="10" y="382" fill="#7fa8df" font-size="13" text-decoration="underline">https://sportsphere-st10276384.firebaseapp.com/__/auth/action?</text>
+    <text x="10" y="402" fill="#7fa8df" font-size="13" text-decoration="underline">mode=verifyEmail&amp;private-action-code</text>
+
+    <path d="M8 415 C110 408,185 422,280 412 S390 420,456 410" fill="none" stroke="#d6c300" stroke-width="11" stroke-linecap="round"/>
+    <path d="M7 425 C102 418,196 434,292 422 S388 430,458 419" fill="none" stroke="#d6c300" stroke-width="8" stroke-linecap="round"/>
+
+    <text x="10" y="463" font-size="13">If you didn't ask to verify this address, you can ignore this email.</text>
+    <text x="10" y="492" font-size="13">Thanks,</text>
+    <text x="10" y="521" font-size="13">Your SportSphere team</text>
+
+    <rect x="10" y="924" width="220" height="52" rx="26" fill="none" stroke="#55565b"/>
+    <path d="M102 950 H87 L93 944 M87 950 L93 956" fill="none" stroke="#f4f4f5" stroke-width="2"/>
+    <text x="108" y="957" font-size="17">Reply</text>
+    <rect x="238" y="924" width="222" height="52" rx="26" fill="none" stroke="#55565b"/>
+    <path d="M326 950 H341 L335 944 M341 950 L335 956" fill="none" stroke="#f4f4f5" stroke-width="2"/>
+    <text x="349" y="957" font-size="17">Forward</text>
+  </g>
+</svg>
