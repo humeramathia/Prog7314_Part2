@@ -21,6 +21,7 @@ class CalendarFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: EventAdapter
     private var agendaOnly = false
+    private var selectedDay: Long? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCalendarBinding.inflate(inflater, container, false)
@@ -50,27 +51,29 @@ class CalendarFragment : Fragment() {
         })
         binding.monthView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val cal = Calendar.getInstance().apply { set(year, month, dayOfMonth) }
-            render(cal.timeInMillis)
+            selectedDay = cal.timeInMillis
+            render()
         }
         render()
     }
 
-    private fun render(selectedDay: Long? = null) {
+    private fun render() {
         val sportId = session().sportId
         val all = FakeRepository.eventsForSport(sportId)
+
         val items = if (agendaOnly) {
             all
         } else if (selectedDay != null) {
-            val dayStart = startOfDay(selectedDay)
+            val dayStart = startOfDay(selectedDay!!)
             val dayEnd = dayStart + 86_400_000L
             all.filter { it.startsAt in dayStart until dayEnd }
         } else {
             all
         }
+
         adapter.submit(items)
         binding.emptyEvents.isVisible = items.isEmpty()
     }
-
     private fun startOfDay(millis: Long): Long {
         return Calendar.getInstance().apply {
             timeInMillis = millis

@@ -32,7 +32,9 @@ class EventAdapter(
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val event = items[position]
         holder.binding.eventTitle.text = event.title
-        holder.binding.eventMeta.text = "${event.type.name.lowercase()}  ·  ${format.format(Date(event.startsAt))}"
+        holder.binding.eventType.text = event.type.name.replace("_", " ")
+        holder.binding.eventMeta.text = format.format(Date(event.startsAt))
+        holder.binding.eventLocation.text = event.location
         holder.itemView.setOnClickListener { onClick(event) }
     }
 
