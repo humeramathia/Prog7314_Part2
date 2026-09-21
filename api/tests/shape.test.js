@@ -13,3 +13,10 @@ test("monthByDate returns sessions in a year/month plotted by date", () => {
   expect(points[1]).toMatchObject({ date: "2026-09-17", day: 17, value: 24 });
   expect(inYearMonth(sessions[2].recordedAt, 2026, 9)).toBe(false);
 });
+
+test("parseMillis rejects blank values", () => {
+  const { parseMillis } = require("../src/store/shape");
+  expect(parseMillis("")).toBeNull();
+  expect(parseMillis("abc")).toBeNull();
+  expect(parseMillis(1_700_000_000_000)).toBe(1_700_000_000_000);
+});
