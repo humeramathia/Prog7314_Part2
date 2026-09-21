@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.data.SportMetrics
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.CreatePerformanceRequest
 import com.example.prog7314_part2.data.remote.MetricDto
@@ -66,6 +67,10 @@ class AddPerformanceFragment : Fragment() {
             return
         }
 
+        // Render the fields immediately from the local metric schema so the
+        // screen is never a dead end when the API is asleep or offline.
+        renderLocalMetrics(sportId)
+
         val call = ApiClient.service.getSport(sportId)
         sportCall = call
 
@@ -80,20 +85,11 @@ class AddPerformanceFragment : Fragment() {
                 val metrics = response.body()?.metrics.orEmpty()
 
                 if (!response.isSuccessful || metrics.isEmpty()) {
-                    showMessage(
-                        "Could not load the performance fields."
-                    )
+                    // Local fallback fields are already on screen.
                     return
                 }
 
-                screen.metricFields.removeAllViews()
-                inputs.clear()
-
-                metrics.forEach { metric ->
-                    addMetricInput(metric)
-                }
-
-                screen.btnSave.isEnabled = true
+                renderApiMetrics(metrics)
             }
 
             override fun onFailure(
@@ -101,13 +97,33 @@ class AddPerformanceFragment : Fragment() {
                 error: Throwable
             ) {
                 if (_binding !== screen || call.isCanceled) return
-
-                showMessage(
-                    "Could not connect to the API. " +
-                            "Check that it is running."
-                )
+                // Local fallback fields are already on screen; nothing to do.
             }
         })
+    }
+
+    private fun renderLocalMetrics(sportId: String) {
+        val screen = _binding ?: return
+        screen.metricFields.removeAllViews()
+        inputs.clear()
+        SportMetrics.fields(sportId).forEach { field ->
+            addMetricInput(MetricDto(field.key, field.label))
+        }
+        screen.btnSave.isEnabled = inputs.isNotEmpty()
+    }
+
+    private fun renderApiMetrics(metrics: List<MetricDto>) {
+        val screen = _binding ?: return
+        val currentKeys = inputs.keys.toList()
+        val apiKeys = metrics.map { it.key }
+        // Skip rebuild when the API returns exactly the same fields we
+        // already showed from the local schema; keeps any typed values.
+        if (currentKeys == apiKeys) return
+
+        screen.metricFields.removeAllViews()
+        inputs.clear()
+        metrics.forEach { addMetricInput(it) }
+        screen.btnSave.isEnabled = inputs.isNotEmpty()
     }
 
     private fun addMetricInput(metric: MetricDto) {
