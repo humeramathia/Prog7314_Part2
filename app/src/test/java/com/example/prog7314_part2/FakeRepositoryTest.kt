@@ -15,4 +15,11 @@ class FakeRepositoryTest {
         assertTrue(FakeRepository.eventsForSport("football").isNotEmpty())
         assertTrue(FakeRepository.guidesFor("football", null).isNotEmpty())
     }
+
+    @Test
+    fun footballSeedIncludesSocialAndAnnouncement() {
+        val types = FakeRepository.eventsForSport("football").map { it.type }.toSet()
+        assertTrue(types.contains(com.example.prog7314_part2.data.EventType.SOCIAL_EVENT))
+        assertTrue(types.contains(com.example.prog7314_part2.data.EventType.ANNOUNCEMENT))
+    }
 }
