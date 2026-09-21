@@ -40,6 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:contentDescription="@string/cd_sport_chip"
             android:textColor="@color/teal"
             android:textSize="14sp" />
 
@@ -48,6 +49,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
+            android:contentDescription="@string/next_practice"
             app:cardBackgroundColor="@color/surface"
             app:cardCornerRadius="16dp"
             app:strokeColor="@color/stroke"
@@ -89,6 +91,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:contentDescription="@string/cd_latest_session"
             app:cardBackgroundColor="@color/surface"
             app:cardCornerRadius="16dp"
             app:strokeColor="@color/stroke"
