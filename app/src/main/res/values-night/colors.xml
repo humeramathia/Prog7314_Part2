@@ -1,8 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="teal">#FF5EEAD4</color>
+    <color name="teal_dark">#FF115E59</color>
+    <color name="amber">#FFFBBF24</color>
+
+    <color name="slate">#FFF1F5F9</color>
+    <color name="muted">#FFCBD5E1</color>
+
     <color name="background">#FF0F172A</color>
     <color name="surface">#FF1E293B</color>
-    <color name="stroke">#FF334155</color>
-    <color name="slate">#FFF8FAFC</color>
-    <color name="muted">#FF94A3B8</color>
+    <color name="stroke">#FF64748B</color>
+    <color name="event_marker">#FF5EEAD4</color>
+
+    <color name="error">#FFFCA5A5</color>
+    <color name="button_text">#FF042F2E</color>
+    <color name="primary_container">#FF134E4A</color>
 </resources>
