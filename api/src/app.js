@@ -11,14 +11,16 @@ const learnRouter = require("./routes/learn");
 function createApp(store) {
   const app = express();
   app.locals.store = store;
-  app.use(cors());
+  app.use(cors({ origin: true }));
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/health", (req, res) => {
     const { firebaseReady } = require("./firebase");
+    const { version } = require("../package.json");
     res.json({
       ok: true,
       service: "sportsphere-api",
+      version,
       store: store.kind,
       skipAuth: require("./config").config.skipAuth,
       firebaseAdmin: firebaseReady()
