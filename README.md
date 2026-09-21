@@ -1,5 +1,116 @@
 # SportSphere
 
+## Project demonstration
+
+Watch the complete SportSphere demonstration:
+
+**[SportSphere application demo — YouTube](https://youtu.be/tjFNfCUy-mA)**
+
+## PROG7314 - Group Members
+
+<table>
+  <thead>
+    <tr>
+      <th>Group member</th>
+      <th>Student number</th>
+      <th>Responsibilities and contribution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Humera Mathia</strong><br>Group Leader</td>
+      <td><code>ST10276384</code></td>
+      <td>
+        <ul>
+          <li>Designed and implemented the Android user interface.</li>
+          <li>Created the Node.js and Express REST API.</li>
+          <li>Integrated the REST API with the Android application.</li>
+          <li>Wired the screens and Retrofit service to the hosted API.</li>
+          <li>Configured and integrated the Azure Cosmos DB database.</li>
+          <li>Prepared and maintained the project README documentation.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Mohammed Ba Yazed</strong></td>
+      <td><code>ST10174227</code></td>
+      <td>
+        <p><strong>Authentication Path A — Email and password</strong></p>
+        <ul>
+          <li>Built registration with display name, email, password, password confirmation, and acceptance of the terms and conditions.</li>
+          <li>Added inline validation for empty fields, invalid email addresses, short passwords, and passwords that do not match.</li>
+          <li>Created accounts with Firebase <code>createUserWithEmailAndPassword</code>.</li>
+          <li>Implemented Firebase email verification without allowing the user to continue directly to Home.</li>
+          <li>Built the confirmation screen with <strong>Resend</strong>, <strong>Open email app</strong>, and <strong>I have confirmed</strong> actions.</li>
+          <li>Kept unverified users in the confirmation flow until Firebase reports that the address is verified.</li>
+          <li>Implemented email/password login and redirected unverified accounts back to confirmation.</li>
+          <li>Used Firebase's authenticated session and ID token for API access.</li>
+          <li>Added <code>Authorization: Bearer &lt;token&gt;</code> to Retrofit requests through the OkHttp interceptor.</li>
+          <li>Handled first-time sport selection and profile updates through <code>PATCH /api/me</code> before entering Home.</li>
+        </ul>
+        <p><strong>Authentication Path B — Google SSO</strong></p>
+        <ul>
+          <li>Added the <strong>Continue with Google</strong> login option.</li>
+          <li>Connected Android Credential Manager and the Google account picker to Firebase Authentication.</li>
+          <li>Skipped the confirmation screen for Google accounts whose email is already verified.</li>
+          <li>Used the same Firebase ID-token and Bearer-header flow as email/password authentication.</li>
+          <li>Directed users without a saved profile or selected sport to Sport Select; returning users with a sport continue to Home.</li>
+          <li>Configured Firebase SHA-1 requirements for emulator and physical-device signing keys.</li>
+        </ul>
+        <p><strong>User-defined feature — Performance tracking and monthly graph</strong></p>
+        <ul>
+          <li>Built sport-specific performance forms instead of using a generic score field.</li>
+          <li>Loaded metric definitions from <code>GET /api/sports/:sportId</code>; for example, swimming uses distance/time while basketball uses points/rebounds.</li>
+          <li>Validated required metric fields and prevented empty submissions.</li>
+          <li>Saved sessions through <code>POST /api/performance</code> and persisted them in Cosmos DB.</li>
+          <li>Displayed chronological user history from <code>GET /api/performance?sportId=...</code>.</li>
+          <li>Built the monthly graph using <code>GET /api/performance/monthly?sportId=&amp;year=&amp;month=&amp;metric=</code>.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Imraan Nordien</strong></td>
+      <td><code>ST10434419</code></td>
+      <td>
+        <p><strong>Calendar and event details</strong></p>
+        <ul>
+          <li>Built the Calendar bottom-navigation screen.</li>
+          <li>Implemented the month view and teal event indicators on dates containing events.</li>
+          <li>Added the agenda view with events grouped by date.</li>
+          <li>Displayed each event's title, time, type, and venue.</li>
+          <li>Supported <code>PRACTICE</code>, <code>SOCIAL_EVENT</code>, and <code>ANNOUNCEMENT</code> type chips.</li>
+          <li>Applied the amber selected-state styling used throughout SportSphere.</li>
+          <li>Added safe empty-month and failed-load states with a Retry action.</li>
+          <li>Built Event Details with title, type, start/end time, venue, description, and notes.</li>
+          <li>Added the option to insert an event into the phone's calendar.</li>
+          <li>Maintained correct back navigation and bottom-navigation behaviour.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Lilitha Mlobi</strong></td>
+      <td><code>ST10454944</code></td>
+      <td>
+        <p><strong>Learn and resource details</strong></p>
+        <ul>
+          <li>Built the Learn bottom-navigation screen.</li>
+          <li>Implemented Rules, Techniques, Training, and Safety category chips with an amber selected state.</li>
+          <li>Filtered learning resources by the user's selected sport and category.</li>
+          <li>Displayed resource titles and short body previews.</li>
+          <li>Added safe empty-category and failed-load states with a Retry action.</li>
+          <li>Built Resource Details with title, category, body, optional image, and optional video link from <code>mediaUrl</code>.</li>
+          <li>Maintained correct back navigation and bottom-navigation behaviour.</li>
+        </ul>
+        <p><strong>Quality assurance</strong></p>
+        <ul>
+          <li>Configured GitHub Actions workflows.</li>
+          <li>Created and maintained unit tests for the project.</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 SportSphere is a native Android sports companion application built for PROG7314 / OPSC7312 Part 2. It gives athletes one place to choose a sport, view events, record sport-specific performance, follow monthly progress, read learning material, and manage their account.
 
 The Android application uses Firebase Authentication and communicates with a custom Node.js REST API. The production API is hosted on Render, while application data is stored in Azure Cosmos DB.
@@ -12,12 +123,14 @@ The Android application uses Firebase Authentication and communicates with a cus
 | Target SDK | 36 |
 | Production API | <https://sportsphere-st10276384.onrender.com/> |
 | API health check | <https://sportsphere-st10276384.onrender.com/health> |
-| Repository | <https://github.com/humeramathia/Prog7314_Part2> |
+| Repository | <https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia> |
 
 > SportSphere is not an Expo or React Native project. The mobile client in `app/` is a native Kotlin Android application.
 
 ## Table of contents
 
+- [Project demonstration](#project-demonstration)
+- [PROG7314 - Group Members](#prog7314---group-members)
 - [Overview](#overview)
 - [Main features](#main-features)
 - [Technology stack](#technology-stack)
