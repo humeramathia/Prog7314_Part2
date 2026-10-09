@@ -6,6 +6,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -134,4 +135,23 @@ interface SportSphereApi {
     fun getEvent(
         @Path("eventId") eventId: String
     ): Call<CalendarEventDto>
+
+    /** Creates an event owned by the signed-in user. */
+    @POST("api/events")
+    fun createEvent(
+        @Body request: UpsertEventRequest
+    ): Call<CalendarEventDto>
+
+    /** Updates an event the signed-in user organised. */
+    @PUT("api/events/{eventId}")
+    fun updateEvent(
+        @Path("eventId") eventId: String,
+        @Body request: UpsertEventRequest
+    ): Call<CalendarEventDto>
+
+    /** Deletes an event the signed-in user organised. Returns HTTP 204. */
+    @DELETE("api/events/{eventId}")
+    fun deleteEvent(
+        @Path("eventId") eventId: String
+    ): Call<Void>
 }

@@ -106,6 +106,9 @@
         <action
             android:id="@+id/action_calendar_to_event"
             app:destination="@id/eventDetailFragment" />
+        <action
+            android:id="@+id/action_calendar_to_edit"
+            app:destination="@id/editEventFragment" />
     </fragment>
 
     <fragment
@@ -115,6 +118,19 @@
         <argument
             android:name="eventId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_event_to_edit"
+            app:destination="@id/editEventFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/editEventFragment"
+        android:name="com.example.prog7314_part2.ui.calendar.EditEventFragment"
+        android:label="@string/add_event">
+        <argument
+            android:name="eventId"
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
     <fragment

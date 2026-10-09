@@ -2,6 +2,7 @@ const express = require("express");
 const { randomUUID } = require("crypto");
 const { asyncHandler, HttpError } = require("../httpError");
 const { publicDoc, publicList, parseMillis } = require("../store/shape");
+const { LIMITS, clipped, assertLength } = require("../limits");
 
 const TYPES = new Set(["PRACTICE", "SOCIAL_EVENT", "ANNOUNCEMENT"]);
 
@@ -9,6 +10,41 @@ function normalizeType(value) {
   const type = String(value || "").toUpperCase();
   if (type === "EVENT") return "SOCIAL_EVENT";
   return type;
+}
+
+function canManageEvent(event, uid) {
+  if (!event || !uid) return false;
+  if (!event.createdBy || event.createdBy === "seed") return false;
+  return event.createdBy === uid;
+}
+
+function applyTextFields(target, body) {
+  if (body.title !== undefined) {
+    const title = clipped(body.title);
+    const error = assertLength(title, LIMITS.title, "title");
+    if (error) return error;
+    if (!title) return "title is required";
+    target.title = title;
+  }
+  if (body.location !== undefined) {
+    const location = clipped(body.location);
+    const error = assertLength(location, LIMITS.location, "location");
+    if (error) return error;
+    target.location = location;
+  }
+  if (body.description !== undefined) {
+    const description = clipped(body.description);
+    const error = assertLength(description, LIMITS.description, "description");
+    if (error) return error;
+    target.description = description;
+  }
+  if (body.notes !== undefined) {
+    const notes = clipped(body.notes);
+    const error = assertLength(notes, LIMITS.notes, "notes");
+    if (error) return error;
+    target.notes = notes;
+  }
+  return null;
 }
 
 const router = express.Router();
@@ -52,12 +88,19 @@ router.post(
   asyncHandler(async (req, res) => {
     const body = req.body || {};
     const sportId = String(body.sportId || "").trim();
-    const title = String(body.title || "").trim();
+    const title = clipped(body.title);
     const type = normalizeType(body.type);
     const startsAt = parseMillis(body.startsAt);
     if (!sportId || !title || !TYPES.has(type) || startsAt == null) {
       throw new HttpError(400, "sportId, title, type (PRACTICE|SOCIAL_EVENT|ANNOUNCEMENT) and startsAt are required");
     }
+    const lengthError =
+      assertLength(title, LIMITS.title, "title") ||
+      assertLength(body.location, LIMITS.location, "location") ||
+      assertLength(body.description, LIMITS.description, "description") ||
+      assertLength(body.notes, LIMITS.notes, "notes");
+    if (lengthError) throw new HttpError(400, lengthError);
+
     const sport = await req.app.locals.store.getSport(sportId);
     if (!sport) throw new HttpError(400, "Unknown sportId");
 
@@ -68,9 +111,9 @@ router.post(
       type,
       startsAt,
       endsAt: parseMillis(body.endsAt),
-      location: String(body.location || "").trim(),
-      description: String(body.description || "").trim(),
-      notes: String(body.notes || "").trim(),
+      location: clipped(body.location),
+      description: clipped(body.description),
+      notes: clipped(body.notes),
       createdBy: req.user.uid
     };
     res.status(201).json(publicDoc(await req.app.locals.store.upsertEvent(event)));
@@ -83,11 +126,12 @@ router.put(
     const store = req.app.locals.store;
     const existing = await store.getEvent(req.params.eventId);
     if (!existing) throw new HttpError(404, "Event not found");
+    if (!canManageEvent(existing, req.user.uid)) {
+      throw new HttpError(403, "Only the organiser can edit this event");
+    }
     const body = req.body || {};
-    if (body.title !== undefined) existing.title = String(body.title).trim();
-    if (body.location !== undefined) existing.location = String(body.location).trim();
-    if (body.description !== undefined) existing.description = String(body.description).trim();
-    if (body.notes !== undefined) existing.notes = String(body.notes).trim();
+    const textError = applyTextFields(existing, body);
+    if (textError) throw new HttpError(400, textError);
     if (body.startsAt !== undefined) {
       const startsAt = parseMillis(body.startsAt);
       if (startsAt == null) throw new HttpError(400, "startsAt must be epoch millis");
@@ -110,7 +154,13 @@ router.put(
 router.delete(
   "/:eventId",
   asyncHandler(async (req, res) => {
-    const deleted = await req.app.locals.store.deleteEvent(req.params.eventId);
+    const store = req.app.locals.store;
+    const existing = await store.getEvent(req.params.eventId);
+    if (!existing) throw new HttpError(404, "Event not found");
+    if (!canManageEvent(existing, req.user.uid)) {
+      throw new HttpError(403, "Only the organiser can delete this event");
+    }
+    const deleted = await store.deleteEvent(req.params.eventId);
     if (!deleted) throw new HttpError(404, "Event not found");
     res.status(204).send();
   })

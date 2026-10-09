@@ -18,13 +18,18 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"") // emulator → local API
+        val hostedApi = "https://sportsphere-st10276384.onrender.com/"
+        val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: hostedApi
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
         debug {
-            // Physical device debug still uses 10.0.2.2; point a device at the hosted URL if needed.
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"")
+            // Debug uses the hosted API so a physical phone works without
+            // 10.0.2.2. Override locally with -PapiBaseUrl=http://10.0.2.2:3000/
+            val hostedApi = "https://sportsphere-st10276384.onrender.com/"
+            val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: hostedApi
+            buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         }
         release {
             isMinifyEnabled = false

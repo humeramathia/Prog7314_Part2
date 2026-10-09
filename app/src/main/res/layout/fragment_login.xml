@@ -12,9 +12,25 @@
         android:orientation="vertical"
         android:padding="24dp">
 
+        <View
+            android:layout_width="72dp"
+            android:layout_height="6dp"
+            android:background="@drawable/bg_pitch_stripe" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/login_kicker"
+            android:textAllCaps="true"
+            android:textColor="@color/teal"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="@string/login"
             android:textColor="@color/slate"
             android:textSize="28sp"

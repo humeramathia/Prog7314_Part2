@@ -37,7 +37,8 @@ fun CalendarEventDto.toLocal(): CalendarEvent {
         endsAt = endsAt,
         location = location.orEmpty(),
         description = description.orEmpty(),
-        notes = notes.orEmpty()
+        notes = notes.orEmpty(),
+        createdBy = createdBy.orEmpty()
     )
 }
 

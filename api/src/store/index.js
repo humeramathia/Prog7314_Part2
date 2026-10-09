@@ -3,7 +3,16 @@ const { createCosmosStore } = require("./cosmosStore");
 const { createMemoryStore } = require("./memoryStore");
 const { seedDocuments } = require("../data/catalog");
 
+function requirePersistentStore(nodeEnv, cosmosEnabled) {
+  if (nodeEnv === "production" && !cosmosEnabled) {
+    throw new Error(
+      "COSMOS_KEY is required in production. The API will not start with an in-memory store."
+    );
+  }
+}
+
 async function createStore() {
+  requirePersistentStore(config.nodeEnv, config.cosmos.enabled);
   if (config.cosmos.enabled) {
     return createCosmosStore();
   }
@@ -20,4 +29,4 @@ async function seedStore(store) {
   for (const guide of learning) await store.upsertLearning(guide);
 }
 
-module.exports = { createStore, seedStore };
+module.exports = { createStore, seedStore, requirePersistentStore };

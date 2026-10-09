@@ -11,7 +11,8 @@ import java.util.Date
 import java.util.Locale
 
 class SessionAdapter(
-    private val sessions: List<PerformanceSession>
+    private val sessions: List<PerformanceSession>,
+    private val onDelete: (PerformanceSession) -> Unit
 ) : RecyclerView.Adapter<SessionAdapter.Holder>() {
 
     private val format = SimpleDateFormat("d MMM yyyy", Locale.getDefault())
@@ -30,6 +31,7 @@ class SessionAdapter(
             append(SportMetrics.summary(session.sportId, session.metrics))
             if (session.notes.isNotBlank()) append("  ·  ").append(session.notes)
         }
+        holder.binding.btnDeleteSession.setOnClickListener { onDelete(session) }
     }
 
     override fun getItemCount(): Int = sessions.size

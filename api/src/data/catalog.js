@@ -1,4 +1,6 @@
 const { withSportMetrics } = require("./metrics");
+const { seedEvents } = require("./events");
+const { seedGuides } = require("./guides");
 
 const SPORTS = [
   { id: "football", sportId: "football", name: "Football" },
@@ -11,87 +13,12 @@ const SPORTS = [
 
 const CATEGORIES = ["RULES", "TECHNIQUES", "TRAINING", "SAFETY"];
 
-function beginnerBody(sport, category) {
-  switch (category) {
-    case "RULES":
-      return `${sport} beginners should learn the scoring system, playing area, and basic fouls first. Know when play starts and stops, and what counts as a legal action.`;
-    case "TECHNIQUES":
-      return `Start with stance, grip, and a repeatable movement. Practice slowly, then add speed once the pattern feels consistent.`;
-    case "TRAINING":
-      return `Train twice a week: one skill session and one fitness session. Keep a short log of what you practised and how it felt.`;
-    case "SAFETY":
-      return `Warm up, wear the right kit, and stop if you feel sharp pain. Hydrate, check the surface, and tell a coach about any injury.`;
-    default:
-      return "";
-  }
-}
-
-function mediaUrlFor(sportId, category) {
-  // Optional illustration/video per guide. RULES and TRAINING guides ship
-  // with no media so the app's "no image/video" path stays exercised too.
-  if (category === "TECHNIQUES") {
-    return `https://picsum.photos/seed/${sportId}-techniques/800/450`;
-  }
-  if (category === "SAFETY") {
-    return "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-  }
-  return null;
-}
-
 function seedDocuments(now = Date.now()) {
-  const day = 86_400_000;
-  const events = [];
-  const learning = [];
-
-  SPORTS.forEach((sport, index) => {
-    events.push({
-      id: `${sport.id}-practice`,
-      sportId: sport.id,
-      title: `${sport.name} squad practice`,
-      type: "PRACTICE",
-      startsAt: now + day * (2 + index),
-      endsAt: now + day * (2 + index) + 7_200_000,
-      location: "Campus courts",
-      description: "Squad session covering set pieces and match tempo.",
-      notes: "Bring kit and water. Warm-up starts 15 minutes early.",
-      createdBy: "seed"
-    });
-    events.push({
-      id: `${sport.id}-event`,
-      sportId: sport.id,
-      title: `${sport.name} inter-campus fixture`,
-      type: "SOCIAL_EVENT",
-      startsAt: now + day * (9 + index),
-      endsAt: now + day * (9 + index) + 10_800_000,
-      location: "Main stadium",
-      description: "Friendly fixture against another campus side.",
-      notes: "Arrive 45 minutes before start. Team photo at the gate.",
-      createdBy: "seed"
-    });
-    events.push({
-      id: `${sport.id}-announcement`,
-      sportId: sport.id,
-      title: `${sport.name} kit collection`,
-      type: "ANNOUNCEMENT",
-      startsAt: now + day * (4 + index),
-      location: "Clubhouse",
-      description: "Collect numbered kit and confirm your availability.",
-      notes: "Bring student card.",
-      createdBy: "seed"
-    });
-    CATEGORIES.forEach((category) => {
-      learning.push({
-        id: `${sport.id}-${category.toLowerCase()}`,
-        sportId: sport.id,
-        category,
-        title: `${sport.name} ${category.toLowerCase()}`,
-        body: beginnerBody(sport.name, category),
-        mediaUrl: mediaUrlFor(sport.id, category)
-      });
-    });
-  });
-
-  return { sports: SPORTS, events, learning };
+  return {
+    sports: SPORTS,
+    events: seedEvents(now),
+    learning: seedGuides()
+  };
 }
 
 module.exports = { SPORTS, CATEGORIES, seedDocuments };

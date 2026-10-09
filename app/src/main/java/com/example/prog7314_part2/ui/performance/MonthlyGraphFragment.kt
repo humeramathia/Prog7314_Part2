@@ -6,11 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.core.content.res.ResourcesCompat
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.data.SportMetrics
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.MonthlyPerformanceDto
 import com.example.prog7314_part2.databinding.FragmentMonthlyGraphBinding
 import com.example.prog7314_part2.ui.session
+import com.google.android.material.chip.Chip
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -25,6 +28,7 @@ class MonthlyGraphFragment : Fragment() {
 
     private val visibleMonth = Calendar.getInstance()
     private var graphCall: Call<MonthlyPerformanceDto>? = null
+    private var selectedMetric: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +69,40 @@ class MonthlyGraphFragment : Fragment() {
             loadGraph()
         }
 
+        bindMetricChips()
         loadGraph()
+    }
+
+    private fun bindMetricChips() {
+        val sportId = session().sportId
+        val fields = SportMetrics.fields(sportId)
+        selectedMetric = SportMetrics.primaryKey(sportId)
+        binding.metricChips.removeAllViews()
+        binding.metricChips.isSingleSelection = true
+        fields.forEach { field ->
+            val chip = Chip(requireContext()).apply {
+                text = field.label
+                isCheckable = true
+                isChecked = field.key == selectedMetric
+                tag = field.key
+                chipBackgroundColor = ResourcesCompat.getColorStateList(
+                    resources,
+                    R.color.chip_background_selector,
+                    null
+                )
+                setTextColor(
+                    ResourcesCompat.getColorStateList(resources, R.color.chip_text_selector, null)
+                )
+            }
+            binding.metricChips.addView(chip)
+        }
+        binding.metricChips.setOnCheckedStateChangeListener { group, checkedIds ->
+            val chipId = checkedIds.firstOrNull() ?: return@setOnCheckedStateChangeListener
+            val key = group.findViewById<Chip>(chipId).tag as? String ?: return@setOnCheckedStateChangeListener
+            if (key == selectedMetric) return@setOnCheckedStateChangeListener
+            selectedMetric = key
+            loadGraph()
+        }
     }
 
     private fun loadGraph() {
@@ -90,7 +127,8 @@ class MonthlyGraphFragment : Fragment() {
         val call = ApiClient.service.getMonthlyPerformance(
             sportId = sportId,
             year = year,
-            month = month
+            month = month,
+            metric = selectedMetric.ifBlank { null }
         )
 
         graphCall = call

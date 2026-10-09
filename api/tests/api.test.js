@@ -40,6 +40,11 @@ describe("SportSphere API", () => {
     expect(res.body.email).toBe("dev@sportsphere.app");
   });
 
+  test("PATCH /api/me rejects an overlong display name", async () => {
+    const res = await request(app).patch("/api/me").send({ displayName: "x".repeat(61) });
+    expect(res.status).toBe(400);
+  });
+
   test("PATCH /api/me saves selected sport", async () => {
     const res = await request(app).patch("/api/me").send({ sportId: "tennis" });
     expect(res.status).toBe(200);
@@ -151,6 +156,6 @@ describe("SportSphere API", () => {
 
     const detail = await request(app).get(`/api/learn/${safety.body[0].id}`);
     expect(detail.status).toBe(200);
-    expect(detail.body.body).toContain("Warm up");
+    expect(detail.body.body).toMatch(/ankle/i);
   });
 });

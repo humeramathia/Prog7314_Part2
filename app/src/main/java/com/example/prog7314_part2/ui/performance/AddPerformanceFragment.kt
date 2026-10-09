@@ -18,8 +18,12 @@ import com.example.prog7314_part2.data.remote.PerformanceSessionDto
 import com.example.prog7314_part2.data.remote.SportDto
 import com.example.prog7314_part2.databinding.FragmentAddPerformanceBinding
 import com.example.prog7314_part2.ui.session
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -34,6 +38,7 @@ class AddPerformanceFragment : Fragment() {
 
     private var sportCall: Call<SportDto>? = null
     private var saveCall: Call<PerformanceSessionDto>? = null
+    private var recordedAt = System.currentTimeMillis()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,8 +59,29 @@ class AddPerformanceFragment : Fragment() {
     ) {
         binding.btnSave.isEnabled = false
         binding.btnSave.setOnClickListener { save() }
+        binding.btnPickDate.setOnClickListener { pickDate() }
+        renderDate()
 
         loadMetricFields()
+    }
+
+    private fun pickDate() {
+        val picker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText(getString(R.string.session_date))
+            .setSelection(recordedAt)
+            .build()
+        picker.addOnPositiveButtonClickListener { millis ->
+            recordedAt = millis
+            renderDate()
+        }
+        picker.show(parentFragmentManager, "session_date")
+    }
+
+    private fun renderDate() {
+        binding.btnPickDate.text = SimpleDateFormat(
+            "EEE d MMM yyyy",
+            Locale.getDefault()
+        ).format(Date(recordedAt))
     }
 
     private fun loadMetricFields() {
@@ -198,7 +224,7 @@ class AddPerformanceFragment : Fragment() {
 
         val request = CreatePerformanceRequest(
             sportId = session().sportId,
-            recordedAt = System.currentTimeMillis(),
+            recordedAt = recordedAt,
             notes = screen.notesInput.text
                 ?.toString()
                 .orEmpty()

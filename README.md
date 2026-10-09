@@ -177,31 +177,34 @@ The application uses sport-specific performance fields instead of one generic sc
 - Email verification before an email/password account can enter the app
 - Firebase ID tokens attached to protected API requests
 - Local session protection and account-aware sport selection
-- Logout and dark-mode preferences in Settings
+- Logout, editable display name, and dark-mode preferences in Settings
+- Dark mode is stored on the server and applied again on the next login
 
 ### Sport selection
 
 - A catalog of six supported sports is loaded from the API
 - Each sport defines its own performance metrics
-- A local `FakeRepository` provides a fallback sport list if the API is temporarily unavailable
+- Sport selection is saved through `PATCH /api/me`; if the API is down the user stays on the picker and can retry
 
 ### Calendar
 
-- Sport-specific events
+- Sport-specific fixtures with teal markers on days that have events
 - Event types: `PRACTICE`, `SOCIAL_EVENT`, and `ANNOUNCEMENT`
+- Create, edit, and delete fixtures you organised; seeded club events stay read-only
 - Event detail screen
 - Add an event to the phone's calendar with Android's calendar insert intent
 
 ### Performance
 
-- Add and remove personal performance sessions
+- Add and delete personal performance sessions
+- Choose the session date instead of always stamping "now"
 - Store sport-specific metrics and optional notes
 - View previous sessions
-- Display monthly data in a custom bar chart
+- Display monthly data in a custom bar chart, with a metric selector
 
 ### Learn
 
-- Learning material filtered by sport
+- Sport-specific learning material (not a shared template with the sport name swapped in)
 - Categories: `RULES`, `TECHNIQUES`, `TRAINING`, and `SAFETY`
 - Support for image or video links through `mediaUrl`
 
@@ -239,15 +242,7 @@ Render: SportSphere Express API
                                         learning
 ```
 
-For local development, the Android emulator uses `10.0.2.2`, Android's special alias for the host computer:
-
-```text
-Android emulator (debug build)
-        |
-        | HTTP http://10.0.2.2:3000/
-        v
-Node.js API running on the development computer
-```
+By default the Android app talks to the hosted Render API, including debug builds on a physical phone. To run the emulator against a local Node process, rebuild with `-PapiBaseUrl=http://10.0.2.2:3000/` (`10.0.2.2` is Android's alias for the host computer).
 
 The app follows a single-activity structure. `MainActivity` hosts Navigation Component fragments and the bottom navigation bar. Retrofit provides typed API calls, while an OkHttp interceptor obtains the current Firebase ID token and adds it to requests.
 
@@ -406,7 +401,7 @@ SKIP_AUTH=true
 
 Never enable `SKIP_AUTH` in a public or production deployment.
 
-If a valid `COSMOS_KEY` is not configured locally, the API uses its in-memory store. This is useful for development, but data disappears when the Node process restarts.
+If a valid `COSMOS_KEY` is not configured locally, the API uses its in-memory store and `/health` reports `"store": "memory"`. This is useful for development, but data disappears when the Node process restarts. Production (`NODE_ENV=production`) refuses to start without Cosmos so a hosted API cannot silently lose data.
 
 ## How to run the project
 
@@ -464,13 +459,13 @@ An expected development response resembles:
 5. Start an Android emulator.
 6. Select the emulator in the device list and click **Run**.
 
-The debug build uses:
+Debug and release both use the hosted Render API by default so a physical phone can sign in without `10.0.2.2`. To point an emulator at a local Node process instead:
 
-```text
-http://10.0.2.2:3000/
+```powershell
+.\gradlew.bat assembleDebug -PapiBaseUrl=http://10.0.2.2:3000/
 ```
 
-Do not replace `10.0.2.2` with `localhost`. Inside an emulator, `localhost` means the emulator itself, while `10.0.2.2` routes to the development computer.
+Do not replace `10.0.2.2` with `localhost` inside an emulator. `localhost` means the emulator itself, while `10.0.2.2` routes to the development computer.
 
 Useful Gradle commands:
 
@@ -501,7 +496,7 @@ The physical-device build uses the hosted Render API, so the phone and developme
 #### Android Studio
 
 1. Open **Build → Select Build Variant**.
-2. Select the `release` variant for `app`.
+2. Select the `debug` or `release` variant for `app`. Both talk to Render, so a physical phone works with either.
 3. Choose the physical phone in the device selector.
 4. Click **Run**.
 
@@ -538,7 +533,7 @@ The APK is created at:
 app/build/outputs/apk/release/app-release.apk
 ```
 
-> Use the `release` build on a physical device. The current `debug` build points to `10.0.2.2`, which is an emulator-only host alias.
+> Debug and release both use the hosted Render URL, so a physical phone works with either variant. Use `-PapiBaseUrl=http://10.0.2.2:3000/` only when you want an emulator to talk to a local API.
 
 ## Physical-device implementation
 
@@ -549,31 +544,12 @@ Running on a phone required more than producing an APK. The app must use a netwo
 `app/build.gradle.kts` creates `BuildConfig.API_BASE_URL` with a different value for each build type:
 
 ```kotlin
-buildTypes {
-    debug {
-        buildConfigField(
-            "String",
-            "API_BASE_URL",
-            "\"http://10.0.2.2:3000/\""
-        )
-    }
-    release {
-        isMinifyEnabled = false
-        signingConfig = signingConfigs.getByName("debug")
-        buildConfigField(
-            "String",
-            "API_BASE_URL",
-            "\"https://sportsphere-st10276384.onrender.com/\""
-        )
-    }
-}
+val hostedApi = "https://sportsphere-st10276384.onrender.com/"
+val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: hostedApi
+buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
 ```
 
-This distinction is essential:
-
-- `10.0.2.2` is provided by the Android emulator and points back to the computer running the emulator.
-- A physical device cannot use `10.0.2.2` to reach that computer.
-- The release build therefore uses the public Render HTTPS URL.
+Both debug and release use the public Render HTTPS URL so a physical phone can reach the API. `10.0.2.2` is an emulator-only alias and is no longer the default debug address.
 
 No URL has to be entered by the user. Gradle places the correct value in the generated `BuildConfig` class when it builds the selected variant.
 
@@ -592,9 +568,9 @@ val service: SportSphereApi by lazy {
 }
 ```
 
-All interface paths in `SportSphereApi.kt`, such as `api/me` and `api/performance`, are relative to this base URL. Selecting `release` therefore redirects the complete API client to Render.
+All interface paths in `SportSphereApi.kt`, such as `api/me` and `api/performance`, are relative to this base URL, so debug and release both talk to Render unless `apiBaseUrl` is overridden.
 
-The OkHttp client uses 15-second connect, read, and write timeouts. These allow a reasonable amount of time for a free Render service to wake up without leaving the interface waiting indefinitely.
+The OkHttp client uses 60-second connect, read, and write timeouts. A free Render service can take longer than 15 seconds to wake after idle, so the longer window covers the first request after a cold start.
 
 ### 3. Android internet permission
 
@@ -829,8 +805,8 @@ private fun handleEmailLink(intent: Intent?) {
 | Environment | Base URL |
 | --- | --- |
 | Local computer | `http://localhost:3000/` |
-| Android emulator | `http://10.0.2.2:3000/` |
-| Production | `https://sportsphere-st10276384.onrender.com/` |
+| Android emulator (optional local API) | `http://10.0.2.2:3000/` via `-PapiBaseUrl` |
+| Android app default (debug and release) | `https://sportsphere-st10276384.onrender.com/` |
 
 ### Authentication
 
@@ -888,7 +864,7 @@ When local `SKIP_AUTH=true`, the middleware uses the configured development iden
 | `PUT` | `/api/events/:eventId` | Update an event |
 | `DELETE` | `/api/events/:eventId` | Delete an event |
 
-The Android interface currently reads events. Event create, update, and delete routes are available on the API but are not exposed through the current mobile UI.
+The Android calendar can create fixtures and can edit or delete fixtures the signed-in user organised. Seeded club events (`createdBy: "seed"`) stay read-only. Text fields are length-limited on the API.
 
 ### Performance endpoints
 

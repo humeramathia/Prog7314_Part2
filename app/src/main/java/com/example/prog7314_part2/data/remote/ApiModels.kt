@@ -123,6 +123,19 @@ data class CalendarEventDto(
     val endsAt: Long? = null,
     val location: String? = null,
     val description: String? = null,
+    val notes: String? = null,
+    val createdBy: String? = null
+)
+
+/** Body for `POST /api/events` and `PUT /api/events/:id`. */
+data class UpsertEventRequest(
+    val sportId: String? = null,
+    val title: String? = null,
+    val type: String? = null,
+    val startsAt: Long? = null,
+    val endsAt: Long? = null,
+    val location: String? = null,
+    val description: String? = null,
     val notes: String? = null
 )
 

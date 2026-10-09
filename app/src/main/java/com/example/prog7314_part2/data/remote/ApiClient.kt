@@ -11,27 +11,26 @@ import java.util.concurrent.TimeUnit
  * stack.
  *
  * The base URL comes from a `buildConfigField` declared in
- * `app/build.gradle.kts`, so debug builds talk to
- * `http://10.0.2.2:3000/` (the emulator's alias for the developer PC)
- * and release builds talk to the hosted API on Render.
+ * `app/build.gradle.kts`. Debug and release both talk to the hosted
+ * Render API so a physical phone works; pass `-PapiBaseUrl=` to point
+ * an emulator at a local Node process.
  */
 object ApiClient {
 
     /**
      * HTTP stack shared by every Retrofit call.
      *
-     * The 15 s timeouts are chosen to cover Render's cold-start latency
-     * without blocking the UI for a full minute when the network is
-     * genuinely down.
+     * The 60 s timeouts cover a Render free-tier cold start, which often
+     * takes longer than 15 s after the service has been idle.
      */
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             // Attaches the Firebase ID token to every request; see
             // [FirebaseAuthInterceptor].
             .addInterceptor(FirebaseAuthInterceptor())
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 

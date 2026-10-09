@@ -34,7 +34,9 @@ data class CalendarEvent(
     /** Long-form description. Optional; may be blank. */
     val description: String = "",
     /** Coach/organiser notes shown beneath the description. */
-    val notes: String
+    val notes: String,
+    /** Firebase uid of the organiser, or `seed` for catalog fixtures. */
+    val createdBy: String = ""
 )
 
 /** Types of calendar entries the API produces. Ordered by frequency in the UI. */

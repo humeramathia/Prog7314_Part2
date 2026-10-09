@@ -3,6 +3,7 @@ const { randomUUID } = require("crypto");
 const { asyncHandler, HttpError } = require("../httpError");
 const { publicDoc, publicList, parseMillis, inYearMonth, monthByDate } = require("../store/shape");
 const { parseMetrics, metricsFor, primaryMetricKey, metricValue } = require("../data/metrics");
+const { LIMITS, clipped, assertLength } = require("../limits");
 
 const router = express.Router();
 
@@ -80,13 +81,17 @@ router.post(
     const parsed = parseMetrics(sportId, body);
     if (parsed.error) throw new HttpError(400, parsed.error);
 
+    const notes = clipped(body.notes);
+    const notesError = assertLength(notes, LIMITS.notes, "notes");
+    if (notesError) throw new HttpError(400, notesError);
+
     const recordedAt = parseMillis(body.recordedAt) ?? Date.now();
     const session = {
       id: randomUUID(),
       userId: req.user.uid,
       sportId,
       recordedAt,
-      notes: String(body.notes || "").trim(),
+      notes,
       metrics: parsed.metrics,
       primaryMetric: parsed.primaryMetric,
       primaryValue: parsed.primaryValue

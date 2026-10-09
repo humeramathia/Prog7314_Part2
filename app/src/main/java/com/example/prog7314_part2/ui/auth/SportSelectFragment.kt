@@ -10,7 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.prog7314_part2.R
-import com.example.prog7314_part2.data.FakeRepository
 import com.example.prog7314_part2.data.Sport
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.SportDto
@@ -27,19 +26,17 @@ import retrofit2.Response
  * will be scoped to. Also reachable from Settings for changing the
  * selection later.
  *
- * If `GET /api/sports` fails we degrade to the built-in
- * [FakeRepository.sports] catalogue so the screen is never empty. The
- * selection is persisted through `PATCH /api/me`; when that also fails
- * we save the choice on device only and continue with a warning toast.
+ * The catalogue comes from `GET /api/sports`. If that call fails we
+ * show an error and Retry — we do not fall back to a local fake list,
+ * because a local-only save would send the user back to this screen
+ * on the next login.
  */
 class SportSelectFragment : Fragment() {
 
     private var _binding: FragmentSportSelectBinding? = null
     private val binding get() = _binding!!
 
-    /** Currently highlighted sport in the list. */
     private var selected: Sport? = null
-
     private var sportsCall: Call<List<SportDto>>? = null
     private var updateCall: Call<UserProfileDto>? = null
 
@@ -60,11 +57,6 @@ class SportSelectFragment : Fragment() {
         loadSports()
     }
 
-    /**
-     * Pulls the sport catalogue from the API. On any failure — non-200,
-     * empty list, or thrown exception — we fall back to [FakeRepository]
-     * so the picker still works offline.
-     */
     private fun loadSports() {
         val screen = _binding ?: return
         selected = null
@@ -81,13 +73,11 @@ class SportSelectFragment : Fragment() {
                 if (_binding !== screen) return
                 screen.sportsLoading.isVisible = false
                 val sports = response.body()
-                    // Prefer `sportId` (canonical) but fall back to `id`
-                    // for older seed data that lacked the alias.
                     ?.map { Sport(it.sportId.ifBlank { it.id }, it.name) }
                     ?.filter { it.id.isNotBlank() && it.name.isNotBlank() }
                     .orEmpty()
                 if (!response.isSuccessful || sports.isEmpty()) {
-                    showFallback(getString(R.string.error_load_sports))
+                    showError(getString(R.string.error_load_sports))
                     return
                 }
                 bindSports(sports)
@@ -96,20 +86,20 @@ class SportSelectFragment : Fragment() {
             override fun onFailure(call: Call<List<SportDto>>, error: Throwable) {
                 if (_binding !== screen || call.isCanceled) return
                 screen.sportsLoading.isVisible = false
-                showFallback(getString(R.string.error_load_sports))
+                showError(ProfileSync.UNAVAILABLE)
             }
         })
     }
 
-    /** Shows a small error banner and switches the list to the local catalogue. */
-    private fun showFallback(message: String) {
+    private fun showError(message: String) {
         val screen = _binding ?: return
+        selected = null
+        screen.sportList.adapter = SportAdapter(emptyList(), "") {}
+        screen.btnContinue.isEnabled = false
         screen.sportsErrorGroup.isVisible = true
         screen.sportsErrorText.text = message
-        bindSports(FakeRepository.sports)
     }
 
-    /** Renders the list and pre-selects whatever the user picked last time. */
     private fun bindSports(sports: List<Sport>) {
         val screen = _binding ?: return
         selected = sports.find { it.id == session().sportId }
@@ -120,11 +110,6 @@ class SportSelectFragment : Fragment() {
         screen.btnContinue.isEnabled = selected != null
     }
 
-    /**
-     * Persists the pick to the API and, on success, navigates to Home.
-     * If the API call fails we still save locally so the user is not
-     * stranded on this screen every time the network hiccups.
-     */
     private fun saveSelectedSport() {
         val screen = binding
         val sport = selected ?: return
@@ -138,29 +123,21 @@ class SportSelectFragment : Fragment() {
                 if (_binding !== screen) return
                 val profile = response.body()
                 if (!response.isSuccessful || profile == null) {
-                    finishWithLocalSport(sport, "Sport saved on this device. Could not reach the API profile.")
+                    setLoading(false)
+                    showMessage(getString(R.string.error_save_sport))
                     return
                 }
-                session().sportId = profile.sportId
-                session().sportName = profile.sportName
+                ProfileSync.apply(session(), profile)
                 setLoading(false)
                 findNavController().navigate(R.id.action_sport_to_home)
             }
 
             override fun onFailure(call: Call<UserProfileDto>, error: Throwable) {
                 if (_binding !== screen || call.isCanceled) return
-                finishWithLocalSport(sport, "Sport saved on this device. Start the API on port 3000 to sync.")
+                setLoading(false)
+                showMessage(ProfileSync.UNAVAILABLE)
             }
         })
-    }
-
-    /** Falls back to a local-only save, warns the user, then continues. */
-    private fun finishWithLocalSport(sport: Sport, message: String) {
-        session().sportId = sport.id
-        session().sportName = sport.name
-        setLoading(false)
-        showMessage(message)
-        findNavController().navigate(R.id.action_sport_to_home)
     }
 
     private fun setLoading(loading: Boolean) {

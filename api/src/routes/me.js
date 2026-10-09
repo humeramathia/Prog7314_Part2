@@ -1,6 +1,7 @@
 const express = require("express");
-const { asyncHandler } = require("../httpError");
+const { asyncHandler, HttpError } = require("../httpError");
 const { publicDoc } = require("../store/shape");
+const { LIMITS, clipped, assertLength } = require("../limits");
 
 async function ensureUser(store, firebaseUser) {
   const existing = await store.getUser(firebaseUser.uid);
@@ -36,7 +37,13 @@ router.patch(
     const user = await ensureUser(store, req.user);
     const { displayName, sportId, sportName, darkMode } = req.body || {};
 
-    if (displayName !== undefined) user.displayName = String(displayName).trim();
+    if (displayName !== undefined) {
+      const name = clipped(displayName);
+      const error = assertLength(name, LIMITS.displayName, "displayName");
+      if (error) throw new HttpError(400, error);
+      if (!name) throw new HttpError(400, "displayName is required");
+      user.displayName = name;
+    }
     if (darkMode !== undefined) user.darkMode = Boolean(darkMode);
 
     if (sportId !== undefined) {

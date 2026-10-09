@@ -388,15 +388,11 @@ class LoginFragment : Fragment() {
                     val profile = response.body()
                     if (!response.isSuccessful || profile == null) {
                         setLoading(false)
-                        showMessage(
-                            "Could not load your profile. " +
-                                    "Check that the API is running."
-                        )
+                        session().isLoggedIn = false
+                        showMessage(ProfileSync.UNAVAILABLE)
                         return
                     }
-                    val localSession = session()
-                    localSession.sportId = profile.sportId
-                    localSession.sportName = profile.sportName
+                    ProfileSync.apply(session(), profile)
                     setLoading(false)
                     goNext()
                 }
@@ -407,10 +403,8 @@ class LoginFragment : Fragment() {
                 ) {
                     if (_binding !== screen || call.isCanceled) return
                     setLoading(false)
-                    showMessage(
-                        "Could not connect to the API. " +
-                                "Check that it is running on port 3000."
-                    )
+                    session().isLoggedIn = false
+                    showMessage(ProfileSync.UNAVAILABLE)
                 }
             }
         )

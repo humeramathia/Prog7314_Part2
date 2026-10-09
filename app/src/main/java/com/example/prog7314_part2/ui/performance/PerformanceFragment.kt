@@ -13,7 +13,9 @@ import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.PerformanceSessionDto
 import com.example.prog7314_part2.data.remote.toLocal
 import com.example.prog7314_part2.databinding.FragmentPerformanceBinding
+import com.example.prog7314_part2.ui.auth.ProfileSync
 import com.example.prog7314_part2.ui.session
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -31,6 +33,7 @@ class PerformanceFragment : Fragment() {
     private var _binding: FragmentPerformanceBinding? = null
     private val binding get() = _binding!!
     private var historyCall: Call<List<PerformanceSessionDto>>? = null
+    private var deleteCall: Call<Void>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -70,7 +73,7 @@ class PerformanceFragment : Fragment() {
         screen.emptyHistory.text = getString(R.string.empty_history)
 
         if (sportId.isBlank()) {
-            screen.sessionList.adapter = SessionAdapter(emptyList())
+            screen.sessionList.adapter = SessionAdapter(emptyList()) {}
             screen.emptyHistory.isVisible = true
             return
         }
@@ -95,7 +98,9 @@ class PerformanceFragment : Fragment() {
                     .orEmpty()
                     .sortedByDescending { it.recordedAt }
                     .map { it.toLocal() }
-                screen.sessionList.adapter = SessionAdapter(sessions)
+                screen.sessionList.adapter = SessionAdapter(sessions) { session ->
+                    confirmDelete(session.id)
+                }
                 screen.emptyHistory.isVisible = sessions.isEmpty()
             }
 
@@ -111,15 +116,54 @@ class PerformanceFragment : Fragment() {
 
     private fun showError() {
         val screen = _binding ?: return
-        screen.sessionList.adapter = SessionAdapter(emptyList())
+        screen.sessionList.adapter = SessionAdapter(emptyList()) {}
         screen.emptyHistory.text = getString(R.string.error_load_performance)
+        screen.emptyHistory.isVisible = true
+        screen.retryButton.isVisible = true
+    }
+
+    private fun confirmDelete(sessionId: String) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.delete_session)
+            .setMessage(R.string.delete_session_confirm)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.delete) { _, _ -> deleteSession(sessionId) }
+            .show()
+    }
+
+    private fun deleteSession(sessionId: String) {
+        deleteCall?.cancel()
+        val call = ApiClient.service.deletePerformance(sessionId)
+        deleteCall = call
+        call.enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (_binding == null) return
+                if (response.isSuccessful) {
+                    loadHistory()
+                } else {
+                    showError()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, error: Throwable) {
+                if (_binding == null || call.isCanceled) return
+                screenEmptyWith(ProfileSync.UNAVAILABLE)
+            }
+        })
+    }
+
+    private fun screenEmptyWith(message: String) {
+        val screen = _binding ?: return
+        screen.emptyHistory.text = message
         screen.emptyHistory.isVisible = true
         screen.retryButton.isVisible = true
     }
 
     override fun onDestroyView() {
         historyCall?.cancel()
+        deleteCall?.cancel()
         historyCall = null
+        deleteCall = null
         super.onDestroyView()
         _binding = null
     }
