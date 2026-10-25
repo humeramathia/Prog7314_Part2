@@ -1,8 +1,11 @@
 package com.example.prog7314_part2
 
 import android.app.Application
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.prog7314_part2.data.SessionPrefs
+import com.example.prog7314_part2.data.biometric.BiometricStore
+import kotlinx.coroutines.runBlocking
 
 /**
  * Application entry point.
@@ -20,9 +23,16 @@ class SportSphereApp : Application() {
     lateinit var session: SessionPrefs
         private set
 
+    /** DataStore cache for the biometric unlock switch. */
+    lateinit var biometrics: BiometricStore
+        private set
+
     override fun onCreate() {
         super.onCreate()
         session = SessionPrefs(this)
+        biometrics = BiometricStore(this)
+        runBlocking { biometrics.refresh() }
+        Log.i(TAG, "app start biometricEnabled=${biometrics.enabled}")
 
         // Apply the saved theme immediately so recreations after a system
         // theme change do not flash the wrong palette.
@@ -33,5 +43,9 @@ class SportSphereApp : Application() {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
         )
+    }
+
+    private companion object {
+        const val TAG = "Biometric"
     }
 }

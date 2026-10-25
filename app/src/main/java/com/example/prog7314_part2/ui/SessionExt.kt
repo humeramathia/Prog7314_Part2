@@ -3,6 +3,7 @@ package com.example.prog7314_part2.ui
 import androidx.fragment.app.Fragment
 import com.example.prog7314_part2.SportSphereApp
 import com.example.prog7314_part2.data.SessionPrefs
+import com.example.prog7314_part2.data.biometric.BiometricStore
 
 /**
  * Shorthand for retrieving the process-wide [SessionPrefs] from any
@@ -13,3 +14,6 @@ import com.example.prog7314_part2.data.SessionPrefs
  */
 fun Fragment.session(): SessionPrefs =
     (requireActivity().application as SportSphereApp).session
+
+fun Fragment.biometrics(): BiometricStore =
+    (requireActivity().application as SportSphereApp).biometrics
