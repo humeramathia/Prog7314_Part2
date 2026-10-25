@@ -186,4 +186,25 @@
             android:id="@+id/action_settings_to_sport"
             app:destination="@id/sportSelectFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/biometricLockFragment"
+        android:name="com.example.prog7314_part2.ui.auth.BiometricLockFragment"
+        android:label="@string/biometric_lock_title">
+        <action
+            android:id="@+id/action_lock_to_home"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_lock_to_sport"
+            app:destination="@id/sportSelectFragment"
+            app:popUpTo="@id/welcomeFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_lock_to_login"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
 </navigation>
