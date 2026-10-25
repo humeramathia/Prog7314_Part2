@@ -2,6 +2,7 @@ package com.example.prog7314_part2.ui.auth
 
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.prog7314_part2.data.SessionPrefs
+import com.example.prog7314_part2.data.biometric.BiometricStore
 import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.google.firebase.auth.FirebaseAuth
 
@@ -24,6 +25,10 @@ object ProfileSync {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
         )
+    }
+
+    suspend fun applyBiometrics(store: BiometricStore, profile: UserProfileDto) {
+        store.setEnabled(profile.userId, profile.biometricEnabled)
     }
 
     fun currentUserId(): String = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()

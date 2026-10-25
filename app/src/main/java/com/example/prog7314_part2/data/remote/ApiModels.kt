@@ -24,6 +24,7 @@ data class UserProfileDto(
     val sportId: String,
     val sportName: String,
     val darkMode: Boolean,
+    val biometricEnabled: Boolean = false,
     val createdAt: Long,
     val updatedAt: Long
 )
@@ -38,7 +39,8 @@ data class UpdateProfileRequest(
     val displayName: String? = null,
     val sportId: String? = null,
     val sportName: String? = null,
-    val darkMode: Boolean? = null
+    val darkMode: Boolean? = null,
+    val biometricEnabled: Boolean? = null
 )
 
 /** A single metric column returned inside a [SportDto]. */

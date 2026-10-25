@@ -14,6 +14,7 @@ async function ensureUser(store, firebaseUser) {
     sportId: "",
     sportName: "",
     darkMode: false,
+    biometricEnabled: false,
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
@@ -35,7 +36,7 @@ router.patch(
   asyncHandler(async (req, res) => {
     const store = req.app.locals.store;
     const user = await ensureUser(store, req.user);
-    const { displayName, sportId, sportName, darkMode } = req.body || {};
+    const { displayName, sportId, sportName, darkMode, biometricEnabled } = req.body || {};
 
     if (displayName !== undefined) {
       const name = clipped(displayName);
@@ -45,6 +46,7 @@ router.patch(
       user.displayName = name;
     }
     if (darkMode !== undefined) user.darkMode = Boolean(darkMode);
+    if (biometricEnabled !== undefined) user.biometricEnabled = Boolean(biometricEnabled);
 
     if (sportId !== undefined) {
       const sport = await store.getSport(String(sportId));
