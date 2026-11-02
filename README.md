@@ -957,6 +957,30 @@ Set-Location api
 npm run seed
 ```
 
+`npm run seed` **upserts** learning documents, so re-running it after a media-URL change updates Cosmos even when sports already exist.
+
+### Azure Blob Storage
+
+Learn still images are served from Azure Blob Storage, which is the POE blob-storage outcome (Microsoft, [s.a.]). YouTube links stay on Safety cards.
+
+| Detail | Value |
+| --- | --- |
+| Storage account | `st10276384media` |
+| Container | `learn` (anonymous blob read) |
+| Public base URL | `https://st10276384media.blob.core.windows.net/learn/` |
+| Example | `https://st10276384media.blob.core.windows.net/learn/football-techniques.jpg` |
+
+Techniques and Training each have a sport-specific JPEG. Create the account and upload the files with:
+
+```powershell
+az login
+powershell -File api\scripts\provision-learn-blob.ps1
+Set-Location api
+npm run seed
+```
+
+Then open a Techniques card in the app and confirm the image URL in Azure Portal → Storage browser. Glide loads the HTTPS blob; the Safety button still opens YouTube.
+
 ### Optional Azure App Service deployment
 
 `api/deploy-azure.ps1` is an alternative deployment path for the Express API. It:
@@ -1072,3 +1096,7 @@ Additional safeguards:
 - Use HTTPS for every production API request.
 - Use the debug keystore only for coursework/demo installation.
 - Do not publish verification links because they contain one-time action codes.
+
+## References
+
+Microsoft, [s.a.]. *Introduction to Azure Blob Storage*. [online] Available at: https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction [Accessed 2 November 2026].
