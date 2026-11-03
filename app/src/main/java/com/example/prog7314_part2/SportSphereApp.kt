@@ -3,6 +3,8 @@ package com.example.prog7314_part2
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.prog7314_part2.data.SessionPrefs
+import com.example.prog7314_part2.logging.AppLog
+import com.example.prog7314_part2.logging.LifecycleLogger
 
 /**
  * Application entry point.
@@ -23,6 +25,9 @@ class SportSphereApp : Application() {
     override fun onCreate() {
         super.onCreate()
         session = SessionPrefs(this)
+        // Log every activity/fragment lifecycle step (Logcat filter: tag:SS.Lifecycle).
+        registerActivityLifecycleCallbacks(LifecycleLogger())
+        AppLog.i("App", "SportSphere process started (dark mode = ${session.darkMode})")
 
         // Apply the saved theme immediately so recreations after a system
         // theme change do not flash the wrong palette.
