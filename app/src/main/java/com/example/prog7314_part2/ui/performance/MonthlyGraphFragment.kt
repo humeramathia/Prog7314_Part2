@@ -121,7 +121,7 @@ class MonthlyGraphFragment : Fragment() {
 
         graphCall?.cancel()
         screen.barChart.setData(emptyList())
-        screen.graphCaption.text = "Loading graph…"
+        screen.graphCaption.text = getString(R.string.graph_loading)
         setNavigationEnabled(false)
 
         val call = ApiClient.service.getMonthlyPerformance(
@@ -147,7 +147,7 @@ class MonthlyGraphFragment : Fragment() {
 
                 if (!response.isSuccessful || graph == null) {
                     screen.graphCaption.text =
-                        "Could not load the monthly graph."
+                        getString(R.string.graph_load_failed)
                     return
                 }
 
@@ -161,14 +161,13 @@ class MonthlyGraphFragment : Fragment() {
                     if (points.isEmpty()) {
                         getString(R.string.empty_month_graph)
                     } else {
-                        "${graph.metricLabel} by date"
+                        getString(R.string.graph_caption, graph.metricLabel)
                     }
 
                 screen.barChart.contentDescription =
-                    "${graph.metricLabel} for " +
-                            screen.monthLabel.text + ". " +
+                    getString(R.string.graph_description, graph.metricLabel, screen.monthLabel.text) +
                             graph.points.joinToString(". ") { point ->
-                                "Day ${point.day}: ${point.value}"
+                                getString(R.string.graph_point_description, point.day, point.value.toString())
                             }
             }
 
@@ -180,11 +179,11 @@ class MonthlyGraphFragment : Fragment() {
 
                 setNavigationEnabled(true)
                 screen.graphCaption.text =
-                    "Could not connect to the API."
+                    getString(R.string.graph_no_connection)
 
                 Toast.makeText(
                     requireContext(),
-                    "Check that the API is running.",
+                    getString(R.string.graph_check_api),
                     Toast.LENGTH_LONG
                 ).show()
             }

@@ -130,7 +130,7 @@ class SimpleBarChartView @JvmOverloads constructor(
         }
 
         canvas.drawText(
-            "Day of month",
+            context.getString(R.string.graph_axis_day),
             width / 2f,
             height - dp(8f),
             labelPaint
