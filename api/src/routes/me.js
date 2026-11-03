@@ -2,6 +2,7 @@ const express = require("express");
 const { asyncHandler, HttpError } = require("../httpError");
 const { publicDoc } = require("../store/shape");
 const { LIMITS, clipped, assertLength } = require("../limits");
+const { applyDeviceSettings, publicUser, testMessage } = require("./deviceSettings");
 
 async function ensureUser(store, firebaseUser) {
   const existing = await store.getUser(firebaseUser.uid);
@@ -26,7 +27,7 @@ router.get(
   "/",
   asyncHandler(async (req, res) => {
     const user = await ensureUser(req.app.locals.store, req.user);
-    res.json(publicDoc(user));
+    res.json(publicUser(publicDoc(user)));
   })
 );
 
@@ -58,8 +59,47 @@ router.patch(
       user.sportName = String(sportName);
     }
 
+    // Push token, language and notification switch (Lilitha's Part 3 work).
+    const deviceError = applyDeviceSettings(user, req.body || {});
+    if (deviceError) throw new HttpError(400, deviceError);
+
     user.updatedAt = Date.now();
-    res.json(publicDoc(await store.upsertUser(user)));
+    res.json(publicUser(publicDoc(await store.upsertUser(user))));
+  })
+);
+
+/**
+ * Sends a push to the caller's own phone so they can confirm that FCM is
+ * wired end to end. Used by Settings → "Send test notification".
+ */
+router.post(
+  "/test-notification",
+  asyncHandler(async (req, res) => {
+    const store = req.app.locals.store;
+    const user = await ensureUser(store, req.user);
+    if (!user.fcmToken) {
+      throw new HttpError(409, "This account has no registered device. Turn notifications on in Settings first.");
+    }
+    if (user.notificationsEnabled === false) {
+      throw new HttpError(409, "Notifications are switched off for this account.");
+    }
+    let result;
+    try {
+      result = await req.app.locals.notifier.toToken(user.fcmToken, testMessage(user));
+    } catch (error) {
+      // Stale token (app reinstalled, data cleared): forget it so the phone re-registers.
+      if (String(error.code || "").includes("registration-token-not-registered")) {
+        delete user.fcmToken;
+        user.updatedAt = Date.now();
+        await store.upsertUser(user);
+        throw new HttpError(410, "This device registration expired. Reopen the app and try again.");
+      }
+      throw error;
+    }
+    if (!result.sent) {
+      throw new HttpError(503, "Push notifications are not configured on the server.");
+    }
+    res.json({ ok: true, messageId: result.id });
   })
 );
 
