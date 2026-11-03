@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.example.prog7314_part2.data.SessionPrefs
 import com.example.prog7314_part2.logging.AppLog
 import com.example.prog7314_part2.logging.LifecycleLogger
+import com.example.prog7314_part2.notifications.NotificationChannels
 
 /**
  * Application entry point.
@@ -28,6 +29,8 @@ class SportSphereApp : Application() {
         // Log every activity/fragment lifecycle step (Logcat filter: tag:SS.Lifecycle).
         registerActivityLifecycleCallbacks(LifecycleLogger())
         AppLog.i("App", "SportSphere process started (dark mode = ${session.darkMode})")
+        // Push notifications need their channel to exist before the first message arrives.
+        NotificationChannels.create(this)
 
         // Apply the saved theme immediately so recreations after a system
         // theme change do not flash the wrong palette.
