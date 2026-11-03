@@ -10,6 +10,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.example.prog7314_part2.databinding.ActivityMainBinding
+import com.example.prog7314_part2.notifications.NotificationPermissionPrompt
 import com.example.prog7314_part2.ui.auth.EmailVerification
 
 /**
@@ -46,6 +47,8 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHost.navController
         binding.bottomNav.setupWithNavController(navController)
+        // Ask for notification permission on first Home visit and keep the push registration current.
+        NotificationPermissionPrompt.attach(this, navController)
         val session = (application as SportSphereApp).session
 
         // First launch after a return to the app: skip the welcome screen
