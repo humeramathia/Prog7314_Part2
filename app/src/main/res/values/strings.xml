@@ -104,4 +104,19 @@
     <string name="graph_metric">Metric</string>
     <string name="welcome_kicker">Campus sports club</string>
     <string name="login_kicker">Back on the pitch</string>
+
+    <!-- Part 3: push notifications (Lilitha) -->
+    <string name="notifications">Notifications</string>
+    <string name="notifications_switch">Fixture alerts</string>
+    <string name="notifications_status_on">On. You will get an alert when a %1$s fixture is added or changed.</string>
+    <string name="notifications_status_on_no_sport">On. Choose a sport to start getting fixture alerts.</string>
+    <string name="notifications_status_off">Off. You will not get fixture alerts on this phone.</string>
+    <string name="notifications_status_blocked">Blocked by Android. Tap here to allow SportSphere notifications.</string>
+    <string name="notifications_send_test">Send test notification</string>
+    <string name="notifications_test_sent">Test sent. Check your notification shade.</string>
+    <string name="notifications_test_registering">This phone is still registering. Try again in a few seconds.</string>
+    <string name="notifications_test_server_off">The server cannot send notifications right now.</string>
+    <string name="notifications_test_failed">Could not send the test notification.</string>
+    <string name="notification_channel_fixtures">Fixtures and announcements</string>
+    <string name="notification_channel_fixtures_description">Alerts when a practice, event or announcement is added or changed for your sport.</string>
 </resources>
