@@ -119,4 +119,30 @@
     <string name="notifications_test_failed">Could not send the test notification.</string>
     <string name="notification_channel_fixtures">Fixtures and announcements</string>
     <string name="notification_channel_fixtures_description">Alerts when a practice, event or announcement is added or changed for your sport.</string>
+
+    <!-- Part 3: multi-language support (Lilitha). Language names stay in their own language. -->
+    <string name="language">Language</string>
+    <string name="language_subtitle">Choose the language for SportSphere on this phone.</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_afrikaans" translatable="false">Afrikaans</string>
+    <string name="language_xhosa" translatable="false">isiXhosa</string>
+    <string name="language_note">Club content such as fixture titles and guides stays in the language it was written in.</string>
+    <string name="home_greeting">Hi, %1$s</string>
+    <string name="athlete_fallback">athlete</string>
+    <string name="graph_loading">Loading graph…</string>
+    <string name="graph_load_failed">Could not load the monthly graph.</string>
+    <string name="graph_caption">%1$s by date</string>
+    <string name="graph_description">"%1$s for %2$s. "</string>
+    <string name="graph_point_description">Day %1$d: %2$s</string>
+    <string name="graph_no_connection">Could not connect to the API.</string>
+    <string name="graph_check_api">Check that the API is running.</string>
+    <string name="graph_axis_day">Day of month</string>
+    <string name="error_register_name">Enter your display name.</string>
+    <string name="error_register_email">Enter a valid email address.</string>
+    <string name="error_register_password_length">Use at least 6 characters.</string>
+    <string name="error_register_confirm">Confirm your password.</string>
+    <string name="error_register_terms">Accept the terms and conditions.</string>
+    <string name="error_register_failed">Registration failed. Please try again.</string>
+    <string name="error_register_no_account">Account response unavailable. Try logging in.</string>
+    <string name="error_register_name_not_saved">Account created, but your display name could not be saved.</string>
 </resources>
