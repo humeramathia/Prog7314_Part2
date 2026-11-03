@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+ asks the user before an app may show notifications. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".SportSphereApp"
@@ -45,6 +47,26 @@
                     android:pathPrefix="/__/auth/action" />
             </intent-filter>
         </activity>
+
+        <!-- Receives Firebase Cloud Messaging tokens and foreground pushes. -->
+        <service
+            android:name=".notifications.SportSphereMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Used by Android when it shows a push while the app is in the background. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="fixtures" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/teal" />
     </application>
 
 </manifest>
