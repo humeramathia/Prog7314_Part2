@@ -51,8 +51,8 @@ class HomeFragment : Fragment() {
 
         // Personalised greeting; falls back to "athlete" when no display
         // name is available (e.g. Google account with no profile name).
-        val name = session.displayName.ifBlank { "athlete" }
-        binding.greeting.text = "Hi, $name"
+        val name = session.displayName.ifBlank { getString(R.string.athlete_fallback) }
+        binding.greeting.text = getString(R.string.home_greeting, name)
         binding.sportChip.text = session.sportName.ifBlank { getString(R.string.choose_sport) }
 
         // Placeholder copy until the API responses land.
