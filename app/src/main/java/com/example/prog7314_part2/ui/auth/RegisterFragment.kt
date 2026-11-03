@@ -66,26 +66,26 @@ class RegisterFragment : Fragment() {
         var valid = true
 
         if (name.isBlank()) {
-            screen.nameLayout.error = "Enter your display name."
+            screen.nameLayout.error = getString(R.string.error_register_name)
             valid = false
         }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            screen.emailLayout.error = "Enter a valid email address."
+            screen.emailLayout.error = getString(R.string.error_register_email)
             valid = false
         }
         if (password.length < 6) {
-            screen.passwordLayout.error = "Use at least 6 characters."
+            screen.passwordLayout.error = getString(R.string.error_register_password_length)
             valid = false
         }
         if (confirm.isBlank()) {
-            screen.confirmLayout.error = "Confirm your password."
+            screen.confirmLayout.error = getString(R.string.error_register_confirm)
             valid = false
         } else if (password != confirm) {
-            screen.confirmLayout.error = "Passwords do not match."
+            screen.confirmLayout.error = getString(R.string.passwords_mismatch)
             valid = false
         }
         if (!screen.termsCheck.isChecked) {
-            screen.termsCheck.error = "Accept the terms and conditions."
+            screen.termsCheck.error = getString(R.string.error_register_terms)
             valid = false
         }
         if (!valid) return
@@ -106,14 +106,14 @@ class RegisterFragment : Fragment() {
                     // (most failures are "email already in use").
                     screen.emailLayout.error =
                         result.exception?.localizedMessage
-                            ?: "Registration failed. Please try again."
+                            ?: getString(R.string.error_register_failed)
                     return@createComplete
                 }
 
                 val user = result.result?.user
                 if (user == null) {
                     setLoading(false)
-                    showMessage("Account response unavailable. Try logging in.")
+                    showMessage(getString(R.string.error_register_no_account))
                     return@createComplete
                 }
 
@@ -129,7 +129,7 @@ class RegisterFragment : Fragment() {
                             // The account is still valid — carry on but
                             // warn about the missing display name.
                             showMessage(
-                                "Account created, but your display name could not be saved."
+                                getString(R.string.error_register_name_not_saved)
                             )
                         }
 
