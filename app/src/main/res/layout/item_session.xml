@@ -31,5 +31,20 @@
             android:textColor="@color/slate"
             android:textSize="16sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/syncState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/muted"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteSession"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/performance_delete" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -25,6 +25,7 @@ function createApp(store) {
       service: "sportsphere-api",
       version,
       store: store.kind,
+      capabilities: { performanceClientId: true },
       skipAuth: require("./config").config.skipAuth,
       firebaseAdmin: firebaseReady()
     });

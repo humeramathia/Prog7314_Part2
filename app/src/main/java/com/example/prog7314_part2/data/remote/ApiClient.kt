@@ -8,21 +8,15 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Lazily-initialised singleton that owns the app's Retrofit + OkHttp
- * stack.
- *
- * The base URL comes from a `buildConfigField` declared in
- * `app/build.gradle.kts`, so debug builds talk to
- * `http://10.0.2.2:3000/` (the emulator's alias for the developer PC)
- * and release builds talk to the hosted API on Render.
+ * stack. Both variants use the hosted API by default; debug builds
+ * can override the URL with the sportsphere.apiBaseUrl Gradle property.
  */
 object ApiClient {
 
     /**
      * HTTP stack shared by every Retrofit call.
      *
-     * The 15 s timeouts are chosen to cover Render's cold-start latency
-     * without blocking the UI for a full minute when the network is
-     * genuinely down.
+     * The longer read timeout lets a sleeping hosted API wake up.
      */
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -30,7 +24,7 @@ object ApiClient {
             // [FirebaseAuthInterceptor].
             .addInterceptor(FirebaseAuthInterceptor())
             .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
             .build()
     }

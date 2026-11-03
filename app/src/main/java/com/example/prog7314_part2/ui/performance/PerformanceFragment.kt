@@ -4,123 +4,120 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.prog7314_part2.R
-import com.example.prog7314_part2.data.remote.ApiClient
-import com.example.prog7314_part2.data.remote.PerformanceSessionDto
-import com.example.prog7314_part2.data.remote.toLocal
+import com.example.prog7314_part2.SportSphereApp
+import com.example.prog7314_part2.data.PerformanceSession
+import com.example.prog7314_part2.data.SyncWorker
+import com.example.prog7314_part2.data.local.SyncPolicy
+import com.example.prog7314_part2.data.networkStatus
 import com.example.prog7314_part2.databinding.FragmentPerformanceBinding
 import com.example.prog7314_part2.ui.session
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 
-/**
- * The Performance tab: a history list plus two action buttons for the
- * "add a session" and "monthly graph" screens.
- *
- * The list is reloaded on every `onResume` so a newly-added session
- * from [AddPerformanceFragment] shows up immediately once the user
- * pops back to this screen.
- */
+/** History always observes Room; network failures never clear saved sessions. */
 class PerformanceFragment : Fragment() {
-
     private var _binding: FragmentPerformanceBinding? = null
-    private val binding get() = _binding!!
-    private var historyCall: Call<List<PerformanceSessionDto>>? = null
+    private val app get() = requireActivity().application as SportSphereApp
+    private var uid = ""
+    private var sportId = ""
+    private val shownFailures = mutableSetOf<String>()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentPerformanceBinding.inflate(inflater, container, false)
-        return binding.root
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, state: Bundle?): View {
+        return FragmentPerformanceBinding.inflate(inflater, container, false).also { _binding = it }.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        binding.sessionList.layoutManager = LinearLayoutManager(requireContext())
-        binding.retryButton.setOnClickListener { loadHistory() }
-        binding.btnAdd.setOnClickListener {
-            findNavController().navigate(R.id.action_performance_to_add)
-        }
-        binding.btnGraph.setOnClickListener {
-            findNavController().navigate(R.id.action_performance_to_graph)
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Refresh on every resume so a saved session from the Add
-        // screen appears without a manual pull.
-        loadHistory()
-    }
-
-    /**
-     * Loads the history for the current sport. On failure we swap the
-     * empty text for an error message and reveal a Retry button.
-     */
-    private fun loadHistory() {
         val screen = _binding ?: return
-        val sportId = session().sportId
-        screen.retryButton.isVisible = false
-        screen.emptyHistory.text = getString(R.string.empty_history)
-
-        if (sportId.isBlank()) {
-            screen.sessionList.adapter = SessionAdapter(emptyList())
-            screen.emptyHistory.isVisible = true
-            return
+        uid = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+        sportId = session().sportId
+        screen.sessionList.layoutManager = LinearLayoutManager(requireContext())
+        screen.btnAdd.setOnClickListener { findNavController().navigate(R.id.action_performance_to_add) }
+        screen.btnGraph.setOnClickListener { findNavController().navigate(R.id.action_performance_to_graph) }
+        screen.retryButton.setOnClickListener {
+            SyncWorker.enqueue(requireContext(), uid)
+            refresh()
         }
+        if (uid.isBlank() || sportId.isBlank()) return
 
-        historyCall?.cancel()
-        screen.emptyHistory.isVisible = false
-
-        val call = ApiClient.service.getPerformance(sportId)
-        historyCall = call
-        call.enqueue(object : Callback<List<PerformanceSessionDto>> {
-            override fun onResponse(
-                call: Call<List<PerformanceSessionDto>>,
-                response: Response<List<PerformanceSessionDto>>
-            ) {
-                if (_binding !== screen) return
-                if (!response.isSuccessful) {
-                    showError()
-                    return
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    app.performance.observe(uid, sportId).collect { rows ->
+                        screen.sessionList.adapter = SessionAdapter(rows, ::confirmDelete)
+                        screen.emptyHistory.isVisible = rows.isEmpty()
+                        screen.syncWarning.isVisible = rows.any { it.syncState == SyncPolicy.FAILED }
+                        val rejected = rows.filter { it.syncState == SyncPolicy.FAILED }.map { it.id }
+                        if (rejected.any { it !in shownFailures }) {
+                            shownFailures.addAll(rejected)
+                            Snackbar.make(screen.root, R.string.performance_sync_warning, Snackbar.LENGTH_LONG).show()
+                        }
+                    }
                 }
-                // Newest first, mapped to the domain model.
-                val sessions = response.body()
-                    .orEmpty()
-                    .sortedByDescending { it.recordedAt }
-                    .map { it.toLocal() }
-                screen.sessionList.adapter = SessionAdapter(sessions)
-                screen.emptyHistory.isVisible = sessions.isEmpty()
+                launch {
+                    networkStatus(requireContext()).collect { online ->
+                        screen.offlineBanner.isVisible = !online
+                        if (online) {
+                            SyncWorker.enqueue(requireContext(), uid)
+                            refresh()
+                        }
+                    }
+                }
             }
-
-            override fun onFailure(
-                call: Call<List<PerformanceSessionDto>>,
-                error: Throwable
-            ) {
-                if (_binding !== screen || call.isCanceled) return
-                showError()
-            }
-        })
+        }
     }
 
-    private fun showError() {
+    private fun refresh() {
         val screen = _binding ?: return
-        screen.sessionList.adapter = SessionAdapter(emptyList())
-        screen.emptyHistory.text = getString(R.string.error_load_performance)
-        screen.emptyHistory.isVisible = true
-        screen.retryButton.isVisible = true
+        viewLifecycleOwner.lifecycleScope.launch {
+            screen.retryButton.isVisible = false
+            screen.refreshStatus.isVisible = true
+            screen.refreshStatus.setText(R.string.performance_refreshing)
+            try {
+                app.performance.refresh(uid, sportId)
+                screen.refreshStatus.isVisible = false
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                screen.refreshStatus.setText(R.string.performance_cached)
+                screen.retryButton.isVisible = true
+            }
+        }
+    }
+
+    private fun confirmDelete(row: PerformanceSession) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.performance_delete_title)
+            .setMessage(R.string.performance_delete_confirm)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.performance_delete) { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        if (!app.performance.delete(uid, row.id)) {
+                            Toast.makeText(context, R.string.performance_pending_delete, Toast.LENGTH_LONG).show()
+                        }
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        Toast.makeText(context, R.string.performance_delete_failed, Toast.LENGTH_LONG).show()
+                    }
+                }
+            }.show()
     }
 
     override fun onDestroyView() {
-        historyCall?.cancel()
-        historyCall = null
-        super.onDestroyView()
         _binding = null
+        super.onDestroyView()
     }
 }

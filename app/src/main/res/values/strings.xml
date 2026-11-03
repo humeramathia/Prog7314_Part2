@@ -73,4 +73,23 @@
     <string name="nav_learn">Learn</string>
     <string name="cd_sport_chip">Selected sport</string>
     <string name="cd_latest_session">Latest performance session</string>
+    <string name="performance_offline">Offline — sessions are saved on this phone and upload when connected.</string>
+    <string name="performance_pending">Pending upload</string>
+    <string name="performance_sync_failed">Upload rejected</string>
+    <string name="performance_sync_warning">A session could not be uploaded. Review it, then delete and record it again.</string>
+    <string name="performance_cached">Could not refresh. Saved sessions are still available.</string>
+    <string name="performance_refreshing">Refreshing sessions…</string>
+    <string name="performance_select_sport">Select a sport before recording a session.</string>
+    <string name="performance_invalid_number">Enter a valid number.</string>
+    <string name="performance_positive_number">Enter zero or a positive number.</string>
+    <string name="performance_sign_in">Sign in before saving a session.</string>
+    <string name="performance_save_failed">Could not save on this phone. Please try again.</string>
+    <string name="performance_delete">Delete</string>
+    <string name="performance_delete_title">Delete session?</string>
+    <string name="performance_delete_confirm">This removes the session permanently.</string>
+    <string name="performance_pending_delete">Wait for this session to finish uploading before deleting it.</string>
+    <string name="performance_delete_failed">Could not delete. Connect to the internet and try again.</string>
+    <string name="performance_sync_now">Sync performance now</string>
+    <string name="performance_never_synced">Performance has not synced yet</string>
+    <string name="performance_last_sync">Last performance sync: %1$s</string>
 </resources>

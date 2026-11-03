@@ -22,6 +22,11 @@ import java.util.concurrent.TimeUnit
 class FirebaseAuthInterceptor : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
+        // Offline sync pins the token to the owner of the queued row. Never
+        // replace it with another account's token during an account switch.
+        if (chain.request().header("Authorization") != null) {
+            return chain.proceed(chain.request())
+        }
         val user = FirebaseAuth.getInstance().currentUser
 
         // With SKIP_AUTH=true the local API permits anonymous requests,

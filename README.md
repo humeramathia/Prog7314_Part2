@@ -344,20 +344,20 @@ An expected development response resembles:
 
 ### Run the Android app on an emulator
 
-1. Start the local API with `npm start`.
+1. Use the hosted API, or start a local API with `npm start` and set the debug override below.
 2. Place `google-services.json` in `app/`.
 3. Open the repository in Android Studio.
 4. Open **Build → Select Build Variant** and choose `debug`.
 5. Start an Android emulator.
 6. Select the emulator in the device list and click **Run**.
 
-The debug build uses:
+Both build variants use `https://sportsphere-st10276384.onrender.com/` by default. To connect a debug build to the API running on your computer instead, build with:
 
-```text
-http://10.0.2.2:3000/
+```powershell
+.\gradlew.bat assembleDebug -Psportsphere.apiBaseUrl=http://10.0.2.2:3000/
 ```
 
-Do not replace `10.0.2.2` with `localhost`. Inside an emulator, `localhost` means the emulator itself, while `10.0.2.2` routes to the development computer.
+`10.0.2.2` is the Android emulator's alias for the development computer. It is not a physical phone address.
 
 Useful Gradle commands:
 
@@ -385,209 +385,27 @@ The physical-device build uses the hosted Render API, so the phone and developme
 5. Connect the phone with a data-capable USB cable.
 6. Accept the RSA debugging prompt on the phone.
 
-#### Android Studio
+#### Install a development build
 
-1. Open **Build → Select Build Variant**.
-2. Select the `release` variant for `app`.
-3. Choose the physical phone in the device selector.
-4. Click **Run**.
-
-#### Command line
-
-From the repository root:
+Select `debug` in Android Studio and run on the connected phone, or use:
 
 ```powershell
-# Confirm that the hosted service is available
-Invoke-RestMethod https://sportsphere-st10276384.onrender.com/health
-
-# Build the signed coursework release APK
-.\gradlew.bat assembleRelease
-
-# Confirm that ADB can see the phone
+.\gradlew.bat testDebugUnitTest assembleDebug
 adb devices
-
-# Install or update SportSphere
-adb install -r app\build\outputs\apk\release\app-release.apk
+adb install -r app\build\outputs\apk\debug\app-debug.apk
 ```
 
-On macOS or Linux, use:
-
-```bash
-curl https://sportsphere-st10276384.onrender.com/health
-./gradlew assembleRelease
-adb devices
-adb install -r app/build/outputs/apk/release/app-release.apk
-```
-
-The APK is created at:
-
-```text
-app/build/outputs/apk/release/app-release.apk
-```
-
-> Use the `release` build on a physical device. The current `debug` build points to `10.0.2.2`, which is an emulator-only host alias.
+Debug now uses the hosted API by default. For final evidence, build and test the signed production release using [the release guide](docs/play-store/README.md). Release builds require private signing values and the group's final Firebase application ID; they no longer use the debug signing key.
 
 ## Physical-device implementation
 
-Running on a phone required more than producing an APK. The app must use a network address the phone can reach, request internet access, use the correct transport security, authenticate hosted requests, and produce an installable signed package.
-
-### 1. Build-specific API addresses
-
-`app/build.gradle.kts` creates `BuildConfig.API_BASE_URL` with a different value for each build type:
-
-```kotlin
-buildTypes {
-    debug {
-        buildConfigField(
-            "String",
-            "API_BASE_URL",
-            "\"http://10.0.2.2:3000/\""
-        )
-    }
-    release {
-        isMinifyEnabled = false
-        signingConfig = signingConfigs.getByName("debug")
-        buildConfigField(
-            "String",
-            "API_BASE_URL",
-            "\"https://sportsphere-st10276384.onrender.com/\""
-        )
-    }
-}
-```
-
-This distinction is essential:
-
-- `10.0.2.2` is provided by the Android emulator and points back to the computer running the emulator.
-- A physical device cannot use `10.0.2.2` to reach that computer.
-- The release build therefore uses the public Render HTTPS URL.
-
-No URL has to be entered by the user. Gradle places the correct value in the generated `BuildConfig` class when it builds the selected variant.
-
-### 2. Retrofit consumes the generated URL
-
-`ApiClient.kt` passes the generated value to Retrofit:
-
-```kotlin
-val service: SportSphereApi by lazy {
-    Retrofit.Builder()
-        .baseUrl(BuildConfig.API_BASE_URL)
-        .client(httpClient)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(SportSphereApi::class.java)
-}
-```
-
-All interface paths in `SportSphereApi.kt`, such as `api/me` and `api/performance`, are relative to this base URL. Selecting `release` therefore redirects the complete API client to Render.
-
-The OkHttp client uses 15-second connect, read, and write timeouts. These allow a reasonable amount of time for a free Render service to wake up without leaving the interface waiting indefinitely.
-
-### 3. Android internet permission
-
-`AndroidManifest.xml` grants the application network access:
-
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-```
-
-`INTERNET` is a normal Android permission, so the user is not shown a runtime permission dialog.
-
-### 4. Network security
-
-The application links its network policy in `AndroidManifest.xml`:
-
-```xml
-<application
-    android:networkSecurityConfig="@xml/network_security_config"
-    android:usesCleartextTraffic="true"
-    ... >
-```
-
-The intended policy in `network_security_config.xml` is to reject cleartext traffic by default and permit the local HTTP endpoint only during debugging:
-
-```xml
-<network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
-    <debug-overrides>
-        <base-config cleartextTrafficPermitted="true" />
-    </debug-overrides>
-</network-security-config>
-```
-
-Production device traffic uses `https://sportsphere-st10276384.onrender.com/`, so credentials and Firebase tokens are encrypted in transit.
-
-### 5. Firebase token authentication
-
-The production API has `SKIP_AUTH=false`. Every protected request from the phone must therefore include a valid Firebase ID token.
-
-`FirebaseAuthInterceptor.kt` obtains the current token on OkHttp's background thread:
-
-```kotlin
-val token = Tasks.await(
-    user.getIdToken(false),
-    15,
-    TimeUnit.SECONDS
-).token
-
-val authenticatedRequest = chain.request()
-    .newBuilder()
-    .header("Authorization", "Bearer $token")
-    .build()
-```
-
-The resulting request has this form:
-
-```http
-Authorization: Bearer <firebase-id-token>
-```
-
-The Express `requireAuth` middleware verifies the token with Firebase Admin. It then makes the verified user identity available to routes so records such as performance sessions can be scoped to the correct user.
-
-### 6. The API listens on a hosted interface
-
-The Node server uses the platform's port and binds to all interfaces:
-
-```javascript
-const host = process.env.HOST || "0.0.0.0";
-app.listen(config.port, host, () => {
-  // Server ready
-});
-```
-
-Binding to `0.0.0.0` is required on hosted platforms. Binding only to `localhost` would make the process unavailable to Render's public routing layer.
-
-### 7. Installable release signing
-
-The coursework release currently uses Android's debug keystore:
-
-```kotlin
-signingConfig = signingConfigs.getByName("debug")
-```
-
-This makes `app-release.apk` installable on a demonstration phone without storing a private production keystore in the repository.
-
-This signing choice is appropriate for a class demonstration only. A Play Store release must use a securely managed release key and should not use the debug keystore.
-
-### 8. Physical-device request path
-
-After installation, a protected request follows this sequence:
-
-```text
-Screen/Fragment
-  → SportSphereApi Retrofit method
-  → FirebaseAuthInterceptor
-  → BuildConfig.API_BASE_URL
-  → HTTPS request to Render
-  → Firebase Admin token verification
-  → Route handler
-  → Azure Cosmos DB
-  → JSON response
-  → Retrofit/Gson model
-  → Android screen
-```
-
-This design removes the phone's dependency on the development computer. Once the release APK is installed and the Render service is available, the app only requires an internet connection.
+- `BuildConfig.API_BASE_URL` uses the hosted Render HTTPS URL in both variants. A debug-only Gradle property can select a local API.
+- Retrofit shares one OkHttp client. Connect/write timeouts are 15 seconds and read timeout is 60 seconds to allow a sleeping server to wake.
+- `INTERNET` and `ACCESS_NETWORK_STATE` permissions support API calls and offline status.
+- The main network security policy rejects cleartext traffic. A debug resource overlay permits local HTTP during development.
+- Firebase ID tokens authenticate protected API routes. The offline worker explicitly pins the request token to the queue owner, preventing uploads under another signed-in account.
+- Performance screens save/read through Room. WorkManager uploads pending sessions to the API; the API verifies the owner and persists in Cosmos. Other screens continue to use Retrofit directly.
+- Release signing reads an ignored `keystore.properties`, uses minification and has no debug-key fallback. See [release preparation](docs/play-store/README.md).
 
 ## Firebase authentication and email verification
 
@@ -716,7 +534,8 @@ private fun handleEmailLink(intent: Intent?) {
 | Environment | Base URL |
 | --- | --- |
 | Local computer | `http://localhost:3000/` |
-| Android emulator | `http://10.0.2.2:3000/` |
+| Android default (both variants) | `https://sportsphere-st10276384.onrender.com/` |
+| Android emulator (optional debug override) | `http://10.0.2.2:3000/` |
 | Production | `https://sportsphere-st10276384.onrender.com/` |
 
 ### Authentication
@@ -925,11 +744,11 @@ The Android workflow runs unit tests and creates a debug APK. Unit tests cover a
 
 ### The phone cannot load data
 
-- Confirm that the installed app is the `release` build.
+- Confirm that the installed build uses the hosted API (the default in both variants).
 - Open the Render health check and wait for `"ok": true`.
 - Confirm that the phone has internet access.
 - Confirm that Firebase sign-in completed successfully.
-- Reinstall the latest release APK if the base URL changed.
+- Rebuild and reinstall the APK if the base URL changed.
 
 ### The emulator cannot reach the local API
 
@@ -983,3 +802,10 @@ Additional safeguards:
 - Use HTTPS for every production API request.
 - Use the debug keystore only for coursework/demo installation.
 - Do not publish verification links because they contain one-time action codes.
+
+
+## Part 3: Mo — offline performance and release preparation
+
+Offline performance saves, account-scoped background uploads and safe upload retries are implemented on the Mo Part 3 branch. See [implementation, integration and device checks](docs/PART3-MO.md). Deploy the included API changes before testing sync.
+
+See [Play Store readiness preparation](docs/play-store/README.md) for private signing, Firebase package coordination and the outstanding release evidence. Signed production files, screenshots and device proof are still pending; this is not a final POE release.

@@ -8,6 +8,14 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.SportSphereApp
+import com.example.prog7314_part2.data.SyncWorker
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.UpdateProfileRequest
 import com.example.prog7314_part2.data.remote.UserProfileDto
@@ -47,6 +55,20 @@ class SettingsFragment : Fragment() {
         binding.userEmail.text = session.email
         binding.btnChangeSport.text = session.sportName.ifBlank { getString(R.string.choose_sport) }
         binding.darkModeSwitch.isChecked = session.darkMode
+
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            val app = requireActivity().application as SportSphereApp
+            binding.btnSyncNow.setOnClickListener { SyncWorker.enqueue(requireContext(), uid) }
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    app.performance.lastSync(uid).collect { time ->
+                        _binding?.lastSync?.text = if (time == null) getString(R.string.performance_never_synced)
+                        else getString(R.string.performance_last_sync, DateFormat.getDateTimeInstance().format(Date(time)))
+                    }
+                }
+            }
+        }
 
         binding.btnChangeSport.setOnClickListener {
             findNavController().navigate(R.id.action_settings_to_sport)

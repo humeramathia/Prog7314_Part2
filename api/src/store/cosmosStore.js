@@ -122,6 +122,10 @@ async function createCosmosStore() {
       const { resource } = await handles.performance.items.upsert(session);
       return resource;
     },
+    async createPerformance(session) {
+      const { resource } = await handles.performance.items.create(session);
+      return resource;
+    },
     async deletePerformance(sessionId) {
       const existing = await this.getPerformance(sessionId);
       if (!existing) return false;

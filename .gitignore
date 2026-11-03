@@ -1,5 +1,6 @@
 *.iml
 .gradle
+.kotlin/
 /local.properties
 /.idea/caches
 /.idea/libraries
@@ -22,3 +23,8 @@ node_modules/
 .idea/appInsightsSettings.xml
 api/firebase-service-account.json
 **/google-services.json
+
+# Private release signing material
+keystore.properties
+*.jks
+*.keystore

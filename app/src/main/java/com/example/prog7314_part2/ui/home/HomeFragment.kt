@@ -7,10 +7,16 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.SportSphereApp
+import com.example.prog7314_part2.data.SportMetrics
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.CalendarEventDto
-import com.example.prog7314_part2.data.remote.PerformanceSessionDto
-import com.example.prog7314_part2.data.remote.summaryLine
 import com.example.prog7314_part2.databinding.FragmentHomeBinding
 import com.example.prog7314_part2.ui.session
 import java.text.SimpleDateFormat
@@ -24,8 +30,8 @@ import retrofit2.Response
  * The dashboard the user lands on after login.
  *
  * Displays two tiles — "Next practice" and "Latest session" — and links
- * to each detailed tab. Both tiles pull their data from the API on
- * every entry; failures leave the placeholder text in place instead of
+ * to each detailed tab. The latest session observes the local queue;
+ * the next event comes from the API. Network failures leave event text in place instead of
  * showing an error, because the four bottom-nav tabs already surface
  * connectivity problems in-context.
  */
@@ -35,7 +41,6 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var nextCall: Call<CalendarEventDto>? = null
-    private var latestCall: Call<List<PerformanceSessionDto>>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,18 +79,36 @@ class HomeFragment : Fragment() {
         }
 
         loadDashboard(session.sportId)
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val app = requireActivity().application as SportSphereApp
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    try {
+                        if (session.sportId.isNotBlank()) app.performance.refresh(uid, session.sportId)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        // Keep the local latest-session tile available offline.
+                    }
+                }
+                app.performance.observe(uid, session.sportId).collect { rows ->
+                    val latest = rows.firstOrNull()
+                    _binding?.latestScoreValue?.text = if (latest == null) getString(R.string.empty_history)
+                    else SportMetrics.summary(latest.sportId, latest.metrics)
+                }
+            }
+        }
     }
 
     /**
-     * Fires the two dashboard requests in parallel. Both silently
-     * short-circuit on failure — the tiles keep their placeholder copy.
+     * Load the next event. Performance is observed separately from Room.
      */
     private fun loadDashboard(sportId: String) {
         val screen = binding
         if (sportId.isBlank()) return
 
         nextCall?.cancel()
-        latestCall?.cancel()
 
         // Next practice tile.
         val upcoming = ApiClient.service.getNextEvent(sportId)
@@ -105,31 +128,11 @@ class HomeFragment : Fragment() {
             }
         })
 
-        // Latest performance tile. `maxByOrNull` handles the "no sessions
-        // yet" case gracefully by returning null.
-        val history = ApiClient.service.getPerformance(sportId)
-        latestCall = history
-        history.enqueue(object : Callback<List<PerformanceSessionDto>> {
-            override fun onResponse(
-                call: Call<List<PerformanceSessionDto>>,
-                response: Response<List<PerformanceSessionDto>>
-            ) {
-                if (_binding !== screen) return
-                val latest = response.body().orEmpty().maxByOrNull { it.recordedAt } ?: return
-                screen.latestScoreValue.text = latest.summaryLine()
-            }
-
-            override fun onFailure(call: Call<List<PerformanceSessionDto>>, t: Throwable) {
-                if (_binding !== screen || call.isCanceled) return
-            }
-        })
     }
 
     override fun onDestroyView() {
         nextCall?.cancel()
-        latestCall?.cancel()
         nextCall = null
-        latestCall = null
         super.onDestroyView()
         _binding = null
     }

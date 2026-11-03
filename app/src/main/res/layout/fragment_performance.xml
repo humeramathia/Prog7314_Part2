@@ -6,6 +6,32 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <TextView
+        android:id="@+id/offlineBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:accessibilityLiveRegion="polite"
+        android:text="@string/performance_offline"
+        android:textColor="@color/slate"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/syncWarning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/performance_sync_warning"
+        android:textColor="@color/slate"
+        android:accessibilityLiveRegion="polite"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/refreshStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/muted"
+        android:visibility="gone" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAdd"
         android:layout_width="match_parent"

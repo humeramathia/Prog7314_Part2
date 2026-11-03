@@ -10,11 +10,11 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.SportSphereApp
 import com.example.prog7314_part2.data.SportMetrics
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.CreatePerformanceRequest
 import com.example.prog7314_part2.data.remote.MetricDto
-import com.example.prog7314_part2.data.remote.PerformanceSessionDto
 import com.example.prog7314_part2.data.remote.SportDto
 import com.example.prog7314_part2.databinding.FragmentAddPerformanceBinding
 import com.example.prog7314_part2.ui.session
@@ -23,6 +23,10 @@ import com.google.android.material.textfield.TextInputLayout
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AddPerformanceFragment : Fragment() {
 
@@ -33,7 +37,6 @@ class AddPerformanceFragment : Fragment() {
         linkedMapOf<String, Pair<TextInputLayout, TextInputEditText>>()
 
     private var sportCall: Call<SportDto>? = null
-    private var saveCall: Call<PerformanceSessionDto>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,7 +66,7 @@ class AddPerformanceFragment : Fragment() {
         val sportId = session().sportId
 
         if (sportId.isBlank()) {
-            showMessage("Select a sport before recording a session.")
+            showMessage(getString(R.string.performance_select_sport))
             return
         }
 
@@ -168,10 +171,10 @@ class AddPerformanceFragment : Fragment() {
                     getString(R.string.required_field)
 
                 value == null || !value.isFinite() ->
-                    "Enter a valid number."
+                    getString(R.string.performance_invalid_number)
 
                 value < 0.0 ->
-                    "Enter zero or a positive number."
+                    getString(R.string.performance_positive_number)
 
                 else -> null
             }
@@ -206,40 +209,23 @@ class AddPerformanceFragment : Fragment() {
             metrics = values
         )
 
-        val call = ApiClient.service.createPerformance(request)
-        saveCall = call
-
-        call.enqueue(object : Callback<PerformanceSessionDto> {
-
-            override fun onResponse(
-                call: Call<PerformanceSessionDto>,
-                response: Response<PerformanceSessionDto>
-            ) {
-                if (_binding !== screen) return
-
-                if (!response.isSuccessful || response.body() == null) {
-                    setLoading(false)
-                    showMessage("Could not save the session.")
-                    return
-                }
-
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            setLoading(false)
+            showMessage(getString(R.string.performance_sign_in))
+            return
+        }
+        val app = requireActivity().application as SportSphereApp
+        // Finish the durable save even if the view closes during the disk write.
+        app.performanceScope.launch {
+            val saved = runCatching { app.performance.save(uid, request) }.isSuccess
+            withContext(Dispatchers.Main) {
+                if (_binding !== screen) return@withContext
                 setLoading(false)
-                findNavController().popBackStack()
+                if (saved) findNavController().popBackStack()
+                else showMessage(getString(R.string.performance_save_failed))
             }
-
-            override fun onFailure(
-                call: Call<PerformanceSessionDto>,
-                error: Throwable
-            ) {
-                if (_binding !== screen || call.isCanceled) return
-
-                setLoading(false)
-                showMessage(
-                    "Could not connect to the API. " +
-                            "The session was not saved."
-                )
-            }
-        })
+        }
     }
 
     private fun setLoading(loading: Boolean) {
@@ -260,9 +246,7 @@ class AddPerformanceFragment : Fragment() {
 
     override fun onDestroyView() {
         sportCall?.cancel()
-        saveCall?.cancel()
         sportCall = null
-        saveCall = null
         inputs.clear()
         _binding = null
         super.onDestroyView()

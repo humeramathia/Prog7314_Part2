@@ -62,6 +62,15 @@ function createMemoryStore() {
       performance.set(session.id, clone(session));
       return clone(session);
     },
+    async createPerformance(session) {
+      if (performance.has(session.id)) {
+        const error = new Error("Session already exists");
+        error.code = 409;
+        throw error;
+      }
+      performance.set(session.id, clone(session));
+      return clone(session);
+    },
     async deletePerformance(sessionId) {
       return performance.delete(sessionId);
     },

@@ -1,5 +1,5 @@
 const express = require("express");
-const { randomUUID } = require("crypto");
+const { randomUUID, createHash } = require("crypto");
 const { asyncHandler, HttpError } = require("../httpError");
 const { publicDoc, publicList, parseMillis, inYearMonth, monthByDate } = require("../store/shape");
 const { parseMetrics, metricsFor, primaryMetricKey, metricValue } = require("../data/metrics");
@@ -72,6 +72,11 @@ router.post(
   "/",
   asyncHandler(async (req, res) => {
     const body = req.body || {};
+    const clientId = body.clientId;
+    if (clientId != null && (typeof clientId !== "string" ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clientId))) {
+      throw new HttpError(400, "clientId must be a UUID");
+    }
     const sportId = String(body.sportId || "").trim();
     if (!sportId) throw new HttpError(400, "sportId is required");
     const sport = await req.app.locals.store.getSport(sportId);
@@ -82,7 +87,9 @@ router.post(
 
     const recordedAt = parseMillis(body.recordedAt) ?? Date.now();
     const session = {
-      id: randomUUID(),
+      // Include the authenticated owner: the same client UUID from two
+      // accounts must never address the same session.
+      id: clientId ? createHash("sha256").update(JSON.stringify([req.user.uid, clientId])).digest("hex") : randomUUID(),
       userId: req.user.uid,
       sportId,
       recordedAt,
@@ -91,7 +98,23 @@ router.post(
       primaryMetric: parsed.primaryMetric,
       primaryValue: parsed.primaryValue
     };
-    res.status(201).json(publicDoc(await req.app.locals.store.upsertPerformance(session)));
+    if (clientId) session.clientId = clientId;
+    try {
+      // Atomic create (rather than upsert) also handles simultaneous retries.
+      const saved = await req.app.locals.store.createPerformance(session);
+      res.status(201).json(publicDoc(saved));
+    } catch (error) {
+      if (error.code !== 409) throw error;
+      const saved = await req.app.locals.store.getPerformance(session.id);
+      if (!saved || saved.userId !== req.user.uid) throw new HttpError(409, "Session conflict");
+      const sameMetrics = Object.keys(saved.metrics).length === Object.keys(session.metrics).length &&
+        Object.entries(session.metrics).every(([key, value]) => saved.metrics[key] === value);
+      if (saved.sportId !== session.sportId || saved.recordedAt !== session.recordedAt ||
+          saved.notes !== session.notes || !sameMetrics) {
+        throw new HttpError(409, "clientId was already used for a different session");
+      }
+      res.status(200).json(publicDoc(saved));
+    }
   })
 );
 

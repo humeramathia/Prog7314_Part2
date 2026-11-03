@@ -1,5 +1,7 @@
 package com.example.prog7314_part2.ui.auth
 
+import com.example.prog7314_part2.BuildConfig
+
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -50,7 +52,7 @@ object EmailVerification {
         val settings = ActionCodeSettings.newBuilder()
             .setUrl(CONTINUE_URL)
             .setHandleCodeInApp(false)
-            .setAndroidPackageName("com.example.prog7314_part2", false, null)
+            .setAndroidPackageName(BuildConfig.APPLICATION_ID, false, null)
             .build()
 
         // Only one Firebase attempt — a second retry inside the same
