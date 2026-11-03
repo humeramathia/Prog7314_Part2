@@ -90,6 +90,8 @@ class SettingsFragment : Fragment() {
         binding.btnLogout.setOnClickListener { signOut() }
 
         notifications = NotificationSettingsController(this, binding, notificationPermission).also { it.bind() }
+        // English / Afrikaans / isiXhosa picker.
+        LanguageSettingsController(binding).bind()
     }
 
     override fun onResume() {
