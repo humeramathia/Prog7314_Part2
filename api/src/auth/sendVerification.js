@@ -1,6 +1,6 @@
 const { HttpError } = require("../httpError");
 
-const CONTINUE_URL = "https://sportsphere-st10276384.onrender.com/verify-email";
+const CONTINUE_URL = "https://sportsphere-st10276384.onrender.com/verified";
 
 function webApiKey() {
   return process.env.FIREBASE_WEB_API_KEY || "AIzaSyAGvb3cS_XxE0LCsSpVXLtVkL7c5KoC5MU";
@@ -20,8 +20,8 @@ async function sendVerificationEmail(idToken) {
         requestType: "VERIFY_EMAIL",
         idToken,
         continueUrl: CONTINUE_URL,
-        canHandleCodeInApp: false,
-        androidPackageName: process.env.ANDROID_APP_PACKAGE || "com.example.prog7314_part2"
+        // Match the Android client's browser-only verification flow.
+        canHandleCodeInApp: false
       })
     }
   );

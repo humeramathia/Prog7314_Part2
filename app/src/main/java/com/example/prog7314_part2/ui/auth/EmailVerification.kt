@@ -1,7 +1,5 @@
 package com.example.prog7314_part2.ui.auth
 
-import com.example.prog7314_part2.BuildConfig
-
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -34,8 +32,8 @@ object EmailVerification {
     /** Landing page for the verification link (also handles the oobCode server-side). */
     const val VERIFY_URL = "https://sportsphere-st10276384.onrender.com/verify-email"
 
-    /** Firebase requires an `ActionCodeSettings.url` — reuse the same page. */
-    const val CONTINUE_URL = VERIFY_URL
+    /** Browser landing page shown after Firebase has applied the verification code. */
+    const val CONTINUE_URL = "https://sportsphere-st10276384.onrender.com/verified"
 
     /**
      * Sends the "Please verify your email" mail via Firebase Auth.
@@ -52,7 +50,8 @@ object EmailVerification {
         val settings = ActionCodeSettings.newBuilder()
             .setUrl(CONTINUE_URL)
             .setHandleCodeInApp(false)
-            .setAndroidPackageName(BuildConfig.APPLICATION_ID, false, null)
+            // Keep the return URL in the browser. Adding an Android package wraps
+            // it in a Firebase Hosting app link, which can fail after verification.
             .build()
 
         // Only one Firebase attempt — a second retry inside the same
@@ -218,5 +217,5 @@ object EmailVerification {
             EmailVerificationMessages.isRateLimited(error?.localizedMessage.orEmpty())
 
     private fun sentMessage(): String =
-        "Verification email sent. In Gmail, long-press the button, copy the link, and open it in Chrome — not the in-app browser."
+        "Verification email sent. Check your inbox and spam folder, open the link, then return to SportSphere."
 }

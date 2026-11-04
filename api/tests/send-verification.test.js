@@ -6,7 +6,7 @@ const { createMemoryStore } = require("../src/store/memoryStore");
 const { verifiedPage } = require("../src/pages/verifiedPage");
 const { sendVerificationEmail } = require("../src/auth/sendVerification");
 
-test("verification fallback uses the configured production Android package", async () => {
+test("verification fallback returns to the browser success page without an Android app link", async () => {
   const previousPackage = process.env.ANDROID_APP_PACKAGE;
   const previousFetch = global.fetch;
   process.env.ANDROID_APP_PACKAGE = "za.co.sportsphere.app";
@@ -14,7 +14,12 @@ test("verification fallback uses the configured production Android package", asy
   try {
     await sendVerificationEmail("test-id-token");
     const sent = JSON.parse(global.fetch.mock.calls[0][1].body);
-    expect(sent.androidPackageName).toBe("za.co.sportsphere.app");
+    expect(sent).toEqual({
+      requestType: "VERIFY_EMAIL",
+      idToken: "test-id-token",
+      continueUrl: "https://sportsphere-st10276384.onrender.com/verified",
+      canHandleCodeInApp: false
+    });
   } finally {
     global.fetch = previousFetch;
     if (previousPackage == null) delete process.env.ANDROID_APP_PACKAGE;
