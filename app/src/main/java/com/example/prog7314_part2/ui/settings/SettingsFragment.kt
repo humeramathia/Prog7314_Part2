@@ -1,6 +1,7 @@
 package com.example.prog7314_part2.ui.settings
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,17 +14,26 @@ import androidx.credentials.CredentialManagerCallback
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.data.biometric.BiometricDecision
+import com.example.prog7314_part2.data.biometric.BiometricSession
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.UpdateProfileRequest
 import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.example.prog7314_part2.databinding.FragmentSettingsBinding
 import com.example.prog7314_part2.notifications.PushRegistrar
+import com.example.prog7314_part2.ui.auth.BiometricEnrollment
+import com.example.prog7314_part2.ui.auth.BiometricPromptHost
+import com.example.prog7314_part2.ui.auth.BiometricPromptOutcome
 import com.example.prog7314_part2.ui.auth.ProfileSync
+import com.example.prog7314_part2.ui.auth.blockReason
+import com.example.prog7314_part2.ui.biometrics
 import com.example.prog7314_part2.ui.session
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -60,6 +70,7 @@ class SettingsFragment : Fragment() {
         binding.displayNameInput.setText(session.displayName)
         binding.btnChangeSport.text = session.sportName.ifBlank { getString(R.string.choose_sport) }
         binding.darkModeSwitch.isChecked = session.darkMode
+        bindBiometricSwitch()
 
         binding.btnSaveName.setOnClickListener { saveDisplayName() }
         binding.btnChangeSport.setOnClickListener {
@@ -98,6 +109,82 @@ class SettingsFragment : Fragment() {
         super.onResume()
         // Re-check in case the user allowed or blocked notifications in Android settings.
         notifications?.refresh()
+    }
+
+    private fun bindBiometricSwitch() {
+        val host = BiometricPromptHost(requireActivity())
+        val status = host.canAuthenticateStatus()
+        val enabled = biometrics().enabledFor(ProfileSync.currentUserId())
+        renderBiometricStatus(enabled, status)
+
+        binding.biometricSwitch.setOnCheckedChangeListener(null)
+        binding.biometricSwitch.isChecked = enabled
+        if (!BiometricDecision.isReady(status) && !enabled) {
+            binding.biometricSwitch.isEnabled = true
+        }
+
+        binding.biometricSwitch.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                enableBiometrics(host)
+            } else {
+                BiometricEnrollment.persistEnabled(this, false) {
+                    if (_binding == null) return@persistEnabled
+                    showMessage(getString(R.string.biometric_disabled))
+                    renderBiometricStatus(false, host.canAuthenticateStatus())
+                }
+            }
+        }
+    }
+
+    private fun enableBiometrics(host: BiometricPromptHost) {
+        host.authenticate(
+            title = getString(R.string.biometric_prompt_enable_title),
+            subtitle = getString(R.string.biometric_prompt_enable_subtitle)
+        ) { outcome ->
+            if (_binding == null) return@authenticate
+            when (outcome) {
+                BiometricPromptOutcome.Success -> {
+                    BiometricSession.markUnlocked()
+                    BiometricEnrollment.persistEnabled(this, true) {
+                        if (_binding == null) return@persistEnabled
+                        showMessage(getString(R.string.biometric_enabled))
+                        renderBiometricStatus(true, host.canAuthenticateStatus())
+                    }
+                }
+                else -> {
+                    Log.w(TAG, "settings enable failed $outcome")
+                    binding.biometricSwitch.setOnCheckedChangeListener(null)
+                    binding.biometricSwitch.isChecked = false
+                    bindBiometricSwitch()
+                    val reason = BiometricPromptHost.messageForReason(
+                        requireActivity(),
+                        outcome.blockReason()
+                    )
+                    if (outcome is BiometricPromptOutcome.Unavailable ||
+                        (outcome is BiometricPromptOutcome.Error &&
+                            !BiometricDecision.isUserCancel(outcome.errorCode))
+                    ) {
+                        showMessage(getString(R.string.biometric_status_unavailable, reason))
+                    } else {
+                        showMessage(getString(R.string.biometric_cancelled))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun renderBiometricStatus(enabled: Boolean, status: Int) {
+        binding.biometricStatus.text = when {
+            enabled -> getString(R.string.biometric_status_on)
+            !BiometricDecision.isReady(status) -> getString(
+                R.string.biometric_status_unavailable,
+                BiometricPromptHost.messageForReason(
+                    requireActivity(),
+                    BiometricDecision.reasonForStatus(status)
+                )
+            )
+            else -> getString(R.string.biometric_status_off)
+        }
     }
 
     private fun saveDisplayName() {
@@ -145,6 +232,8 @@ class SettingsFragment : Fragment() {
         PushRegistrar.onSignOut(requireContext())
         FirebaseAuth.getInstance().signOut()
         session().signOut()
+        BiometricSession.lock()
+        viewLifecycleOwner.lifecycleScope.launch { biometrics().clear() }
         clearGoogleState()
         findNavController().navigate(R.id.action_settings_to_welcome)
     }
@@ -181,5 +270,9 @@ class SettingsFragment : Fragment() {
         nameCall = null
         super.onDestroyView()
         _binding = null
+    }
+
+    private companion object {
+        const val TAG = "Biometric"
     }
 }

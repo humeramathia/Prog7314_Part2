@@ -52,6 +52,18 @@ describe("SportSphere API", () => {
     expect(res.body.sportName).toBe("Tennis");
   });
 
+  test("PATCH /api/me saves biometric unlock preference", async () => {
+    const created = await request(app).get("/api/me");
+    expect(created.body.biometricEnabled).toBe(false);
+
+    const res = await request(app).patch("/api/me").send({ biometricEnabled: true });
+    expect(res.status).toBe(200);
+    expect(res.body.biometricEnabled).toBe(true);
+
+    const again = await request(app).get("/api/me");
+    expect(again.body.biometricEnabled).toBe(true);
+  });
+
   test("GET /api/events requires sportId", async () => {
     const res = await request(app).get("/api/events");
     expect(res.status).toBe(400);

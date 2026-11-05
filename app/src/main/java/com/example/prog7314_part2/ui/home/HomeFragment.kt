@@ -1,16 +1,17 @@
 package com.example.prog7314_part2.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.data.PerformanceRepository
+import com.example.prog7314_part2.data.SportMetrics
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.CalendarEventDto
-import com.example.prog7314_part2.data.remote.PerformanceSessionDto
-import com.example.prog7314_part2.data.remote.summaryLine
 import com.example.prog7314_part2.databinding.FragmentHomeBinding
 import com.example.prog7314_part2.ui.session
 import java.text.SimpleDateFormat
@@ -35,7 +36,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var nextCall: Call<CalendarEventDto>? = null
-    private var latestCall: Call<List<PerformanceSessionDto>>? = null
+    private var latestCall: Call<*>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -72,8 +73,11 @@ class HomeFragment : Fragment() {
         binding.btnLearn.setOnClickListener {
             findNavController().navigate(R.id.action_home_to_learn)
         }
+    }
 
-        loadDashboard(session.sportId)
+    override fun onResume() {
+        super.onResume()
+        loadDashboard(session().sportId)
     }
 
     /**
@@ -105,24 +109,20 @@ class HomeFragment : Fragment() {
             }
         })
 
-        // Latest performance tile. `maxByOrNull` handles the "no sessions
-        // yet" case gracefully by returning null.
-        val history = ApiClient.service.getPerformance(sportId)
-        latestCall = history
-        history.enqueue(object : Callback<List<PerformanceSessionDto>> {
-            override fun onResponse(
-                call: Call<List<PerformanceSessionDto>>,
-                response: Response<List<PerformanceSessionDto>>
-            ) {
-                if (_binding !== screen) return
-                val latest = response.body().orEmpty().maxByOrNull { it.recordedAt } ?: return
-                screen.latestScoreValue.text = latest.summaryLine()
+        latestCall = PerformanceRepository.latest(sportId) { latest ->
+            if (_binding !== screen) return@latest
+            if (latest == null) {
+                screen.latestScoreValue.text = getString(R.string.empty_history)
+                return@latest
             }
-
-            override fun onFailure(call: Call<List<PerformanceSessionDto>>, t: Throwable) {
-                if (_binding !== screen || call.isCanceled) return
+            val metricsLine = SportMetrics.summary(latest.sportId, latest.metrics)
+            screen.latestScoreValue.text = if (latest.notes.isBlank()) {
+                metricsLine
+            } else {
+                "$metricsLine  ·  ${latest.notes}"
             }
-        })
+            Log.i("Performance", "home latest session=${latest.id} pending=${latest.pending}")
+        }
     }
 
     override fun onDestroyView() {

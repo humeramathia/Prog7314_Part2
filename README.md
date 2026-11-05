@@ -678,6 +678,20 @@ Screen/Fragment
 
 This design removes the phone's dependency on the development computer. Once the release APK is installed and the Render service is available, the app only requires an internet connection.
 
+## Biometric unlock
+
+Biometrics sit on top of Firebase SSO. They do not replace Google or email/password sign-in, and SportSphere never stores a password on the phone (PROG7314 POE tips, s. 3; Android Developers, [s.a.]).
+
+1. The user signs in with Google or a verified email.
+2. After that first sign-in, SportSphere asks whether they want fingerprint or face unlock next time.
+3. The answer is stored in Jetpack DataStore and also on `PATCH /api/me` as `biometricEnabled`.
+4. Settings has an on/off switch. Turning it on must succeed on a `BiometricPrompt` first. The status line under the switch changes immediately so the setting is visibly used.
+5. On the next cold start (app killed from Recents), `MainActivity` opens `BiometricLockFragment` **before** Home loads any club data.
+6. `BiometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)` is checked first. If the phone has no sensor, nothing enrolled, or is locked out, the user sees a plain-language reason and is not locked out of their account.
+7. Cancel on the lock screen leaves **Unlock** (try again / device PIN) and **Sign in again**.
+
+The prompt is hosted on `MainActivity`, which is an `AppCompatActivity`, as required by `BiometricPrompt`.
+
 ## Firebase authentication and email verification
 
 ### Registration flow
@@ -844,7 +858,7 @@ When local `SKIP_AUTH=true`, the middleware uses the configured development iden
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/me` | Get or create the signed-in user's profile |
-| `PATCH` | `/api/me` | Update display name, selected sport, or dark mode |
+| `PATCH` | `/api/me` | Update display name, selected sport, dark mode, or biometric unlock |
 
 ### Sport endpoints
 
@@ -956,6 +970,30 @@ At startup, the API checks whether sports exist and seeds the catalog when neede
 Set-Location api
 npm run seed
 ```
+
+`npm run seed` **upserts** learning documents, so re-running it after a media-URL change updates Cosmos even when sports already exist.
+
+### Azure Blob Storage
+
+Learn still images are served from Azure Blob Storage, which is the POE blob-storage outcome (Microsoft, [s.a.]). YouTube links stay on Safety cards.
+
+| Detail | Value |
+| --- | --- |
+| Storage account | `st10276384media` |
+| Container | `learn` (anonymous blob read) |
+| Public base URL | `https://st10276384media.blob.core.windows.net/learn/` |
+| Example | `https://st10276384media.blob.core.windows.net/learn/football-techniques.jpg` |
+
+Techniques and Training each have a sport-specific JPEG. Create the account and upload the files with:
+
+```powershell
+az login
+powershell -File api\scripts\provision-learn-blob.ps1
+Set-Location api
+npm run seed
+```
+
+Then open a Techniques card in the app and confirm the image URL in Azure Portal → Storage browser. Glide loads the HTTPS blob; the Safety button still opens YouTube.
 
 ### Optional Azure App Service deployment
 
@@ -1072,3 +1110,13 @@ Additional safeguards:
 - Use HTTPS for every production API request.
 - Use the debug keystore only for coursework/demo installation.
 - Do not publish verification links because they contain one-time action codes.
+
+## References
+
+Android Developers, [s.a.]. *Show a biometric authentication dialog*. [online] Available at: https://developer.android.com/identity/sign-in/biometric-auth [Accessed 25 October 2026].
+
+Android Developers, [s.a.a]. *Biometric library*. [online] Available at: https://developer.android.com/jetpack/androidx/releases/biometric [Accessed 25 October 2026].
+
+Android Developers, [s.a.b]. *Jetpack DataStore*. [online] Available at: https://developer.android.com/topic/libraries/architecture/datastore [Accessed 25 October 2026].
+
+Microsoft, [s.a.]. *Introduction to Azure Blob Storage*. [online] Available at: https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction [Accessed 2 November 2026].

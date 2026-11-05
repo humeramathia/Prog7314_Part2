@@ -135,6 +135,12 @@
     <string name="graph_no_connection">Kon nie aan die API koppel nie.</string>
     <string name="graph_check_api">Maak seker dat die API loop.</string>
     <string name="graph_axis_day">Dag van die maand</string>
+    <string name="graph_load_error">Kon nie die maandelikse grafiek laai nie.</string>
+    <string name="graph_connect_error">Kon nie aan die API koppel nie.</string>
+    <string name="graph_metric_by_date">%1$s volgens datum</string>
+    <string name="graph_day_content">%1$s vir %2$s. %3$s</string>
+    <string name="graph_day_point">Dag %1$d: %2$s</string>
+    <string name="graph_day_of_month">Dag van die maand</string>
     <string name="error_register_name">Voer jou vertoonnaam in.</string>
     <string name="error_register_email">Voer \'n geldige e-posadres in.</string>
     <string name="error_register_password_length">Gebruik minstens 6 karakters.</string>

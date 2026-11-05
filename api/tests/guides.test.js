@@ -1,4 +1,5 @@
 const { seedDocuments } = require("../src/data/catalog");
+const { isBlobUrl } = require("../src/data/blobMedia");
 
 test("learn guides are unique per sport and not a shared template", () => {
   const { learning } = seedDocuments();
@@ -13,6 +14,21 @@ test("learn guides are unique per sport and not a shared template", () => {
   expect(footballRules.body).toMatch(/offside/i);
   expect(cricketRules.body).toMatch(/LBW/i);
   expect(footballRules.body).not.toBe(cricketRules.body);
+});
+
+test("technique and training images are Azure Blob URLs, not Wikipedia hotlinks", () => {
+  const { learning } = seedDocuments();
+  const payload = JSON.stringify(learning);
+  expect(payload).not.toMatch(/upload\.wikimedia\.org/i);
+  expect(payload).not.toMatch(/wikipedia\.org/i);
+  expect(payload).not.toMatch(/picsum\.photos/i);
+
+  const pictured = learning.filter((guide) =>
+    ["TECHNIQUES", "TRAINING"].includes(guide.category)
+  );
+  expect(pictured).toHaveLength(12);
+  expect(pictured.every((guide) => isBlobUrl(guide.mediaUrl))).toBe(true);
+  expect(new Set(pictured.map((guide) => guide.mediaUrl)).size).toBe(pictured.length);
 });
 
 test("safety guides use sport-specific video links instead of Big Buck Bunny", () => {

@@ -136,6 +136,12 @@
     <string name="graph_no_connection">Ayikwazanga ukuqhagamshela ne-API.</string>
     <string name="graph_check_api">Qinisekisa ukuba i-API iyasebenza.</string>
     <string name="graph_axis_day">Usuku lwenyanga</string>
+    <string name="graph_load_error">Ayikwazanga ukulayisha igrafu yenyanga.</string>
+    <string name="graph_connect_error">Ayikwazanga ukuqhagamshela ne-API.</string>
+    <string name="graph_metric_by_date">%1$s ngokomhla</string>
+    <string name="graph_day_content">%1$s ka-%2$s. %3$s</string>
+    <string name="graph_day_point">Usuku %1$d: %2$s</string>
+    <string name="graph_day_of_month">Usuku lwenyanga</string>
     <string name="error_register_name">Faka igama lakho eliboniswayo.</string>
     <string name="error_register_email">Faka i-imeyile esebenzayo.</string>
     <string name="error_register_password_length">Sebenzisa ubuncinane iimpawu ezi-6.</string>

@@ -2,6 +2,7 @@ package com.example.prog7314_part2.ui.performance
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.prog7314_part2.data.PerformanceSession
 import com.example.prog7314_part2.data.SportMetrics
@@ -31,6 +32,7 @@ class SessionAdapter(
             append(SportMetrics.summary(session.sportId, session.metrics))
             if (session.notes.isNotBlank()) append("  ·  ").append(session.notes)
         }
+        holder.binding.sessionPending.isVisible = session.pending
         holder.binding.btnDeleteSession.setOnClickListener { onDelete(session) }
     }
 

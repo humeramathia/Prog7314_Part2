@@ -1,11 +1,14 @@
 package com.example.prog7314_part2
 
 import android.app.Application
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.prog7314_part2.data.SessionPrefs
+import com.example.prog7314_part2.data.biometric.BiometricStore
 import com.example.prog7314_part2.logging.AppLog
 import com.example.prog7314_part2.logging.LifecycleLogger
 import com.example.prog7314_part2.notifications.NotificationChannels
+import kotlinx.coroutines.runBlocking
 
 /**
  * Application entry point.
@@ -23,9 +26,16 @@ class SportSphereApp : Application() {
     lateinit var session: SessionPrefs
         private set
 
+    /** DataStore cache for the biometric unlock switch. */
+    lateinit var biometrics: BiometricStore
+        private set
+
     override fun onCreate() {
         super.onCreate()
         session = SessionPrefs(this)
+        biometrics = BiometricStore(this)
+        runBlocking { biometrics.refresh() }
+        Log.i(TAG, "app start biometricEnabled=${biometrics.enabled}")
         // Log every activity/fragment lifecycle step (Logcat filter: tag:SS.Lifecycle).
         registerActivityLifecycleCallbacks(LifecycleLogger())
         AppLog.i("App", "SportSphere process started (dark mode = ${session.darkMode})")
@@ -41,5 +51,9 @@ class SportSphereApp : Application() {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
         )
+    }
+
+    private companion object {
+        const val TAG = "Biometric"
     }
 }

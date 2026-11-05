@@ -1,6 +1,7 @@
 package com.example.prog7314_part2.ui.performance
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,31 +10,27 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.prog7314_part2.R
-import com.example.prog7314_part2.data.remote.ApiClient
-import com.example.prog7314_part2.data.remote.PerformanceSessionDto
-import com.example.prog7314_part2.data.remote.toLocal
+import com.example.prog7314_part2.data.PerformanceRepository
+import com.example.prog7314_part2.data.PerformanceSession
 import com.example.prog7314_part2.databinding.FragmentPerformanceBinding
-import com.example.prog7314_part2.ui.auth.ProfileSync
 import com.example.prog7314_part2.ui.session
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 /**
  * The Performance tab: a history list plus two action buttons for the
  * "add a session" and "monthly graph" screens.
  *
  * The list is reloaded on every `onResume` so a newly-added session
- * from [AddPerformanceFragment] shows up immediately once the user
- * pops back to this screen.
+ * from [AddPerformanceFragment] shows up immediately, including a
+ * pending row saved in airplane mode.
  */
 class PerformanceFragment : Fragment() {
 
     private var _binding: FragmentPerformanceBinding? = null
     private val binding get() = _binding!!
-    private var historyCall: Call<List<PerformanceSessionDto>>? = null
-    private var deleteCall: Call<Void>? = null
+    private var historyCall: Call<*>? = null
+    private var deleteCall: Call<*>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,61 +54,54 @@ class PerformanceFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refresh on every resume so a saved session from the Add
-        // screen appears without a manual pull.
         loadHistory()
     }
 
-    /**
-     * Loads the history for the current sport. On failure we swap the
-     * empty text for an error message and reveal a Retry button.
-     */
     private fun loadHistory() {
         val screen = _binding ?: return
         val sportId = session().sportId
         screen.retryButton.isVisible = false
-        screen.emptyHistory.text = getString(R.string.empty_history)
+        screen.emptyHistory.text = getString(R.string.performance_loading)
 
         if (sportId.isBlank()) {
-            screen.sessionList.adapter = SessionAdapter(emptyList()) {}
+            bindSessions(emptyList())
+            screen.emptyHistory.text = getString(R.string.empty_history)
             screen.emptyHistory.isVisible = true
             return
         }
 
         historyCall?.cancel()
         screen.emptyHistory.isVisible = false
-
-        val call = ApiClient.service.getPerformance(sportId)
-        historyCall = call
-        call.enqueue(object : Callback<List<PerformanceSessionDto>> {
-            override fun onResponse(
-                call: Call<List<PerformanceSessionDto>>,
-                response: Response<List<PerformanceSessionDto>>
-            ) {
-                if (_binding !== screen) return
-                if (!response.isSuccessful) {
+        historyCall = PerformanceRepository.history(sportId) { sessions, remoteFailed ->
+            if (_binding !== screen) return@history
+            bindSessions(sessions)
+            when {
+                remoteFailed && sessions.isEmpty() -> {
+                    Log.i("Performance", "load fail sport=$sportId")
                     showError()
-                    return
                 }
-                // Newest first, mapped to the domain model.
-                val sessions = response.body()
-                    .orEmpty()
-                    .sortedByDescending { it.recordedAt }
-                    .map { it.toLocal() }
-                screen.sessionList.adapter = SessionAdapter(sessions) { session ->
-                    confirmDelete(session.id)
+                remoteFailed -> {
+                    Log.i("Performance", "load fail sport=$sportId showing ${sessions.size} pending")
+                    screen.retryButton.isVisible = true
+                    screen.emptyHistory.isVisible = false
                 }
-                screen.emptyHistory.isVisible = sessions.isEmpty()
+                sessions.isEmpty() -> {
+                    screen.emptyHistory.text = getString(R.string.empty_history)
+                    screen.emptyHistory.isVisible = true
+                }
+                else -> {
+                    Log.i("Performance", "loaded ${sessions.size} sessions sport=$sportId")
+                    screen.emptyHistory.isVisible = false
+                }
             }
+        }
+    }
 
-            override fun onFailure(
-                call: Call<List<PerformanceSessionDto>>,
-                error: Throwable
-            ) {
-                if (_binding !== screen || call.isCanceled) return
-                showError()
-            }
-        })
+    private fun bindSessions(sessions: List<PerformanceSession>) {
+        val screen = _binding ?: return
+        screen.sessionList.adapter = SessionAdapter(sessions) { row ->
+            confirmDelete(row)
+        }
     }
 
     private fun showError() {
@@ -122,41 +112,30 @@ class PerformanceFragment : Fragment() {
         screen.retryButton.isVisible = true
     }
 
-    private fun confirmDelete(sessionId: String) {
+    private fun confirmDelete(session: PerformanceSession) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.delete_session)
             .setMessage(R.string.delete_session_confirm)
             .setNegativeButton(android.R.string.cancel, null)
-            .setPositiveButton(R.string.delete) { _, _ -> deleteSession(sessionId) }
+            .setPositiveButton(R.string.delete) { _, _ -> deleteSession(session) }
             .show()
     }
 
-    private fun deleteSession(sessionId: String) {
+    private fun deleteSession(session: PerformanceSession) {
         deleteCall?.cancel()
-        val call = ApiClient.service.deletePerformance(sessionId)
-        deleteCall = call
-        call.enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                if (_binding == null) return
-                if (response.isSuccessful) {
-                    loadHistory()
-                } else {
-                    showError()
-                }
+        deleteCall = PerformanceRepository.delete(
+            session,
+            onSuccess = {
+                if (_binding == null) return@delete
+                Log.i("Performance", "deleted session ${session.id} pending=${session.pending}")
+                loadHistory()
+            },
+            onError = { _ ->
+                if (_binding == null) return@delete
+                Log.i("Performance", "delete fail session=${session.id}")
+                showError()
             }
-
-            override fun onFailure(call: Call<Void>, error: Throwable) {
-                if (_binding == null || call.isCanceled) return
-                screenEmptyWith(ProfileSync.UNAVAILABLE)
-            }
-        })
-    }
-
-    private fun screenEmptyWith(message: String) {
-        val screen = _binding ?: return
-        screen.emptyHistory.text = message
-        screen.emptyHistory.isVisible = true
-        screen.retryButton.isVisible = true
+        )
     }
 
     override fun onDestroyView() {
