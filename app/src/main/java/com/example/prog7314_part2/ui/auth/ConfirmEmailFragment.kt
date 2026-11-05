@@ -7,12 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.example.prog7314_part2.databinding.FragmentConfirmEmailBinding
+import com.example.prog7314_part2.ui.biometrics
 import com.example.prog7314_part2.ui.session
+import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
 import retrofit2.Call
 import retrofit2.Callback
@@ -155,6 +158,11 @@ class ConfirmEmailFragment : Fragment() {
                 val profile = response.body()
                 if (response.isSuccessful && profile != null) {
                     ProfileSync.apply(session(), profile)
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        ProfileSync.applyBiometrics(biometrics(), profile)
+                        goNext()
+                    }
+                    return
                 }
                 goNext()
             }
@@ -168,12 +176,15 @@ class ConfirmEmailFragment : Fragment() {
     }
 
     private fun goNext() {
-        val destination = if (session().sportId.isBlank()) {
-            R.id.action_confirm_to_sport
-        } else {
-            R.id.action_confirm_to_home
+        BiometricEnrollment.offerAfterSignIn(this) {
+            if (_binding == null) return@offerAfterSignIn
+            val destination = if (session().sportId.isBlank()) {
+                R.id.action_confirm_to_sport
+            } else {
+                R.id.action_confirm_to_home
+            }
+            findNavController().navigate(destination)
         }
-        findNavController().navigate(destination)
     }
 
     /**
