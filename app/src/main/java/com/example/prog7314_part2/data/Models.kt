@@ -53,7 +53,9 @@ data class PerformanceSession(
     val sportId: String,
     val recordedAt: Long,
     val metrics: Map<String, Double>,
-    val notes: String
+    val notes: String,
+    /** True until MO's WorkManager sync posts this row to the API. */
+    val pending: Boolean = false
 )
 
 /** A single beginner-friendly Learn card (Rules / Techniques / Training / Safety). */
