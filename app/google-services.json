@@ -1,0 +1,100 @@
+{
+  "project_info": {
+    "project_number": "82208305666",
+    "project_id": "sportsphere-st10276384",
+    "storage_bucket": "sportsphere-st10276384.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82208305666:android:0a271b0cbe65155664ed1b",
+        "android_client_info": {
+          "package_name": "com.example.prog7314_part2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "82208305666-atei85evvb2rjabn91bi8dcv1thhqk8s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.prog7314_part2",
+            "certificate_hash": "01f59d61bf9efc2f093715e962e38ab648536a75"
+          }
+        },
+        {
+          "client_id": "82208305666-unvual5gbafk7ga589bm8qt76k009g1e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.prog7314_part2",
+            "certificate_hash": "35bfa2b24f29eaae3a21d494ccf38a9eeed94e77"
+          }
+        },
+        {
+          "client_id": "82208305666-gegfag0agkdjld8nopq6vh9586v0fnvt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmvimsLe0KFP3URF4ltMdV2H2FIDcVOLE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "82208305666-gegfag0agkdjld8nopq6vh9586v0fnvt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82208305666:android:7d97332610a86e7f64ed1b",
+        "android_client_info": {
+          "package_name": "za.co.sportsphere.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "82208305666-hq141j9d236tsiq7nf2g9joavfvbnphk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "za.co.sportsphere.app",
+            "certificate_hash": "01f59d61bf9efc2f093715e962e38ab648536a75"
+          }
+        },
+        {
+          "client_id": "82208305666-n84imaibkmscek6mj3obd6ff2krfiduu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "za.co.sportsphere.app",
+            "certificate_hash": "61abb957ee12b05b08665ad2dc11fca8e74ad8c1"
+          }
+        },
+        {
+          "client_id": "82208305666-gegfag0agkdjld8nopq6vh9586v0fnvt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmvimsLe0KFP3URF4ltMdV2H2FIDcVOLE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "82208305666-gegfag0agkdjld8nopq6vh9586v0fnvt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
