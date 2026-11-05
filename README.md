@@ -1145,7 +1145,7 @@ The installed package is `za.co.sportsphere.app`. Kotlin source still uses the `
 
 Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. Listing copy, privacy policy, content rating, data safety, the 512 PNG icon, the 1024×500 feature graphic, and six phone screenshots are in [Play Store pack](docs/play-store/README.md). This is a signed coursework build, not a live Google Play listing.
 
-There is no `v1.0.0-final-poe` tag or GitHub Release until `merge` is on `main`. Do not treat this README as claiming those exist.
+The Final POE tag is `v1.0.0-final-poe`. GitHub Release: <https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/releases/tag/v1.0.0-final-poe>
 
 ## Release notes since Part 2
 

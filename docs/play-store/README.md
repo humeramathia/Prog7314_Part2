@@ -53,4 +53,4 @@ Set Render `ANDROID_APP_PACKAGE` to `za.co.sportsphere.app`.
 
 1. Paste listing copy, privacy URL, content rating, data safety, and the six phone screenshots into Play Console.
 2. Upload the AAB. Keep the `.jks` and `keystore.properties` off Git and off the GitHub Release.
-3. Do not tag `v1.0.0-final-poe` until this branch is on `main`.
+3. Tag `v1.0.0-final-poe` and GitHub Release: https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/releases/tag/v1.0.0-final-poe
