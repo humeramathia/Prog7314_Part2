@@ -132,6 +132,40 @@
     <string name="graph_metric">Metric</string>
     <string name="welcome_kicker">Campus sports club</string>
     <string name="login_kicker">Back on the pitch</string>
+
+    <!-- Part 3: push notifications (Lilitha) -->
+    <string name="notifications">Notifications</string>
+    <string name="notifications_switch">Fixture alerts</string>
+    <string name="notifications_status_on">On. You will get an alert when a %1$s fixture is added or changed.</string>
+    <string name="notifications_status_on_no_sport">On. Choose a sport to start getting fixture alerts.</string>
+    <string name="notifications_status_off">Off. You will not get fixture alerts on this phone.</string>
+    <string name="notifications_status_blocked">Blocked by Android. Tap here to allow SportSphere notifications.</string>
+    <string name="notifications_send_test">Send test notification</string>
+    <string name="notifications_test_sent">Test sent. Check your notification shade.</string>
+    <string name="notifications_test_registering">This phone is still registering. Try again in a few seconds.</string>
+    <string name="notifications_test_server_off">The server cannot send notifications right now.</string>
+    <string name="notifications_test_failed">Could not send the test notification.</string>
+    <string name="notification_channel_fixtures">Fixtures and announcements</string>
+    <string name="notification_channel_fixtures_description">Alerts when a practice, event or announcement is added or changed for your sport.</string>
+
+    <!-- Part 3: multi-language support (Lilitha). Language names stay in their own language. -->
+    <string name="language">Language</string>
+    <string name="language_subtitle">Choose the language for SportSphere on this phone.</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_afrikaans" translatable="false">Afrikaans</string>
+    <string name="language_xhosa" translatable="false">isiXhosa</string>
+    <string name="language_note">Club content such as fixture titles and guides stays in the language it was written in.</string>
+    <string name="home_greeting">Hi, %1$s</string>
+    <string name="athlete_fallback">athlete</string>
+    <string name="error_register_name">Enter your display name.</string>
+    <string name="error_register_email">Enter a valid email address.</string>
+    <string name="error_register_password_length">Use at least 6 characters.</string>
+    <string name="error_register_confirm">Confirm your password.</string>
+    <string name="error_register_terms">Accept the terms and conditions.</string>
+    <string name="error_register_failed">Registration failed. Please try again.</string>
+    <string name="error_register_no_account">Account response unavailable. Try logging in.</string>
+    <string name="error_register_name_not_saved">Account created, but your display name could not be saved.</string>
+
     <string name="biometric_unlock">Unlock with fingerprint</string>
     <string name="biometric_unlock_subtitle">When this is on, SportSphere asks for your fingerprint or face before opening your clubhouse. Your password is never stored on the phone.</string>
     <string name="biometric_status_on">Next launch will ask for your fingerprint or face.</string>

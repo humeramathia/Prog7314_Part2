@@ -12,6 +12,7 @@ import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CredentialManagerCallback
 import androidx.credentials.exceptions.ClearCredentialException
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -22,6 +23,7 @@ import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.UpdateProfileRequest
 import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.example.prog7314_part2.databinding.FragmentSettingsBinding
+import com.example.prog7314_part2.notifications.PushRegistrar
 import com.example.prog7314_part2.ui.auth.BiometricEnrollment
 import com.example.prog7314_part2.ui.auth.BiometricPromptHost
 import com.example.prog7314_part2.ui.auth.BiometricPromptOutcome
@@ -43,6 +45,15 @@ class SettingsFragment : Fragment() {
 
     private var darkModeCall: Call<UserProfileDto>? = null
     private var nameCall: Call<UserProfileDto>? = null
+
+    /** Notifications card (switch, status line, test button). */
+    private var notifications: NotificationSettingsController? = null
+
+    /** Registered up front because launchers cannot be created after onStart. */
+    private val notificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            notifications?.onPermissionResult(granted)
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -88,6 +99,16 @@ class SettingsFragment : Fragment() {
         }
 
         binding.btnLogout.setOnClickListener { signOut() }
+
+        notifications = NotificationSettingsController(this, binding, notificationPermission).also { it.bind() }
+        // English / Afrikaans / isiXhosa picker.
+        LanguageSettingsController(binding).bind()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-check in case the user allowed or blocked notifications in Android settings.
+        notifications?.refresh()
     }
 
     private fun bindBiometricSwitch() {
@@ -207,6 +228,8 @@ class SettingsFragment : Fragment() {
     }
 
     private fun signOut() {
+        // Stop pushes for this account before the session is cleared.
+        PushRegistrar.onSignOut(requireContext())
         FirebaseAuth.getInstance().signOut()
         session().signOut()
         BiometricSession.lock()
@@ -239,6 +262,8 @@ class SettingsFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        notifications?.onDestroyView()
+        notifications = null
         darkModeCall?.cancel()
         nameCall?.cancel()
         darkModeCall = null

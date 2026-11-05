@@ -13,6 +13,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.example.prog7314_part2.data.biometric.BiometricDecision
 import com.example.prog7314_part2.data.biometric.BiometricSession
 import com.example.prog7314_part2.databinding.ActivityMainBinding
+import com.example.prog7314_part2.notifications.NotificationPermissionPrompt
 import com.example.prog7314_part2.ui.auth.BiometricPromptHost
 import com.example.prog7314_part2.ui.auth.EmailVerification
 import com.example.prog7314_part2.ui.auth.ProfileSync
@@ -51,6 +52,8 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHost.navController
         binding.bottomNav.setupWithNavController(navController)
+        // Ask for notification permission on first Home visit and keep the push registration current.
+        NotificationPermissionPrompt.attach(this, navController)
         val app = application as SportSphereApp
         val session = app.session
 

@@ -154,4 +154,23 @@ interface SportSphereApi {
     fun deleteEvent(
         @Path("eventId") eventId: String
     ): Call<Void>
+
+    // ──────────────────── Notifications & language ────────────────────
+
+    /**
+     * Saves the phone's FCM token, the notification switch and/or the
+     * chosen language on the user's profile. Same endpoint as
+     * [updateMyProfile], with a body that only carries device settings.
+     */
+    @PATCH("api/me")
+    fun updateDeviceSettings(
+        @Body request: DeviceSettingsRequest
+    ): Call<UserProfileDto>
+
+    /**
+     * Asks the API to push a test message to this account's phone.
+     * 409 = phone not registered yet, 503 = server has no FCM credentials.
+     */
+    @POST("api/me/test-notification")
+    fun sendTestNotification(): Call<TestNotificationResponse>
 }
