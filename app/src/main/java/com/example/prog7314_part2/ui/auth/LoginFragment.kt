@@ -19,12 +19,15 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.example.prog7314_part2.databinding.FragmentLoginBinding
+import com.example.prog7314_part2.ui.biometrics
 import com.example.prog7314_part2.ui.session
+import kotlinx.coroutines.launch
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -394,7 +397,10 @@ class LoginFragment : Fragment() {
                     }
                     ProfileSync.apply(session(), profile)
                     setLoading(false)
-                    goNext()
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        ProfileSync.applyBiometrics(biometrics(), profile)
+                        goNext()
+                    }
                 }
 
                 override fun onFailure(
@@ -412,12 +418,15 @@ class LoginFragment : Fragment() {
 
     /** Sport-select for first-time users; Home for returning ones. */
     private fun goNext() {
-        val destination = if (session().sportId.isBlank()) {
-            R.id.action_login_to_sport
-        } else {
-            R.id.action_login_to_home
+        BiometricEnrollment.offerAfterSignIn(this) {
+            if (_binding == null) return@offerAfterSignIn
+            val destination = if (session().sportId.isBlank()) {
+                R.id.action_login_to_sport
+            } else {
+                R.id.action_login_to_home
+            }
+            findNavController().navigate(destination)
         }
-        findNavController().navigate(destination)
     }
 
     // ─────────────────────── UI plumbing ─────────────────────────────
