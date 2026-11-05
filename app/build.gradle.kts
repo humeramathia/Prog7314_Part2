@@ -13,7 +13,7 @@ val releaseProperties = Properties().apply {
 val releaseSigningReady = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
     .all { !releaseProperties.getProperty(it).isNullOrBlank() }
 val productionApplicationId = providers.gradleProperty("sportsphere.applicationId")
-    .orElse("com.example.prog7314_part2").get()
+    .orElse("za.co.sportsphere.app").get()
 
 android {
     namespace = "com.example.prog7314_part2"
@@ -24,7 +24,6 @@ android {
     }
 
     defaultConfig {
-        // Change only after the group registers the final package in Firebase.
         applicationId = productionApplicationId
         minSdk = 24
         targetSdk = 36
@@ -57,6 +56,7 @@ android {
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             if (releaseSigningReady) signingConfig = signingConfigs.getByName("production")
             // POE demo / signed builds talk to the hosted Render API.
             buildConfigField("String", "API_BASE_URL", "\"https://sportsphere-st10276384.onrender.com/\"")
@@ -94,6 +94,7 @@ dependencies {
     ksp("androidx.room:room-compiler:2.8.4")
     implementation("androidx.work:work-runtime-ktx:2.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
