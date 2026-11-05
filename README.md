@@ -1145,7 +1145,7 @@ Additional safeguards:
 
 The installed package is `za.co.sportsphere.app`. Kotlin source still uses the `com.example.prog7314_part2` namespace; Play Store looks at `applicationId`, not the Kotlin package.
 
-Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. Listing copy, privacy policy, content rating, data safety, the 512 PNG icon, and the 1024×500 feature graphic are in [Play Store pack](docs/play-store/README.md). Phone screenshots still have to be captured on the signed APK. This is a signed coursework build, not a live Google Play listing.
+Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. Listing copy, privacy policy, content rating, data safety, the 512 PNG icon, the 1024×500 feature graphic, and five phone screenshots are in [Play Store pack](docs/play-store/README.md). This is a signed coursework build, not a live Google Play listing.
 
 There is no `v1.0.0-final-poe` tag or GitHub Release until `merge` is on `main`. Do not treat this README as claiming those exist.
 

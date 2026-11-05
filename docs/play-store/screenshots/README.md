@@ -1,15 +1,13 @@
 # Store screenshots
 
-Play Console needs at least two phone screenshots. The POE tips ask for **four or more** captures of real screens with real data.
+Portrait captures of SportSphere with real account data. Play Console needs at least two; the POE tips ask for four or more.
 
-Take them on the signed release APK (`za.co.sportsphere.app`) after signing in, choosing a sport, and adding at least one performance session.
+| File | Screen |
+| --- | --- |
+| `01-welcome.png` | Get started / Log in |
+| `02-home.png` | Home — greeting, next practice, latest session |
+| `03-calendar.png` | Fixtures month view with a practice |
+| `04-learn.png` | Playbook (Learn) cards for Basketball |
+| `05-confirm-email.png` | Email confirmation |
 
-Suggested set (portrait, PNG or JPEG):
-
-1. Home — greeting, latest session, calendar preview
-2. Calendar — month with a practice or event
-3. Performance — history plus the add-session form or monthly graph
-4. Learn — a techniques or training card with the Azure Blob still
-5. Settings — notification type switches and language (optional fifth)
-
-Drop the files in this folder as `01-home.png`, `02-calendar.png`, `03-performance.png`, `04-learn.png`.
+Upload these five into Play Console phone screenshots. They are 24-bit PNG, taller than 320 px.
