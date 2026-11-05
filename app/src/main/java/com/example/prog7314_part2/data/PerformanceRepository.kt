@@ -1,202 +1,155 @@
 package com.example.prog7314_part2.data
 
-import com.example.prog7314_part2.data.remote.ApiClient
+import android.util.Log
+import androidx.room.withTransaction
+import com.example.prog7314_part2.data.local.AppDatabase
+import com.example.prog7314_part2.data.local.SessionEntity
+import com.example.prog7314_part2.data.local.SyncMetadata
+import com.example.prog7314_part2.data.local.SyncPolicy
 import com.example.prog7314_part2.data.remote.CreatePerformanceRequest
-import com.example.prog7314_part2.data.remote.MonthlyPerformanceDto
-import com.example.prog7314_part2.data.remote.PerformanceSessionDto
 import com.example.prog7314_part2.data.remote.SportSphereApi
-import com.example.prog7314_part2.data.remote.toLocal
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.auth.FirebaseAuth
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.util.UUID
-import java.util.concurrent.CopyOnWriteArrayList
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import java.util.concurrent.TimeUnit
 
-/**
- * Persistence seam the Performance screens call.
- *
- * Today this talks to the hosted API and keeps unsynced rows in memory
- * so a save in airplane mode still shows in History as pending.
- *
- * MO's Room / WorkManager layer should replace [pending] and keep these
- * method names (`save`, `history`, `delete`, `monthly`, `latest`).
- */
-object PerformanceRepository {
+/** Room is the source of truth. No screen has to wait for an upload to save. */
+class PerformanceRepository(
+    private val database: AppDatabase,
+    private val api: SportSphereApi,
+    private val schedule: (String) -> Unit
+) {
+    private val dao = database.sessions()
+    // One uploader/refresh/delete at a time, including the periodic backup worker.
+    private val syncMutex = Mutex()
 
-    private val api: SportSphereApi get() = ApiClient.service
-    private val pending = CopyOnWriteArrayList<PerformanceSession>()
-
-    fun save(
-        sportId: String,
-        recordedAt: Long,
-        notes: String,
-        metrics: Map<String, Double>,
-        onSuccess: (PerformanceSession) -> Unit,
-        onError: (Boolean) -> Unit
-    ): Call<PerformanceSessionDto> {
-        val request = CreatePerformanceRequest(
-            sportId = sportId,
-            recordedAt = recordedAt,
-            notes = notes,
-            metrics = metrics
-        )
-        val call = api.createPerformance(request)
-        call.enqueue(object : Callback<PerformanceSessionDto> {
-            override fun onResponse(
-                call: Call<PerformanceSessionDto>,
-                response: Response<PerformanceSessionDto>
-            ) {
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    onError(false)
-                    return
-                }
-                onSuccess(body.toLocal())
-            }
-
-            override fun onFailure(call: Call<PerformanceSessionDto>, error: Throwable) {
-                if (call.isCanceled) return
-                val local = PerformanceSession(
-                    id = "pending-${UUID.randomUUID()}",
-                    sportId = sportId,
-                    recordedAt = recordedAt,
-                    metrics = metrics,
-                    notes = notes,
-                    pending = true
-                )
-                pending.add(0, local)
-                onSuccess(local)
-            }
-        })
-        return call
+    fun observe(uid: String, sportId: String) = dao.observe(uid, sportId).map { rows ->
+        rows.map { it.toLocal() }
     }
 
-    fun history(
-        sportId: String,
-        onResult: (sessions: List<PerformanceSession>, remoteFailed: Boolean) -> Unit
-    ): Call<List<PerformanceSessionDto>>? {
-        if (sportId.isBlank()) {
-            onResult(emptyList(), false)
-            return null
+    fun lastSync(uid: String) = database.syncMetadata().observe(uid)
+
+    suspend fun save(uid: String, request: CreatePerformanceRequest): String = withContext(Dispatchers.IO) {
+        check(FirebaseAuth.getInstance().currentUser?.uid == uid)
+        require(request.sportId.isNotBlank() && request.metrics.isNotEmpty())
+        require(request.metrics.values.all { it.isFinite() && it >= 0 })
+        val id = UUID.randomUUID().toString()
+        dao.put(SessionEntity(
+            userId = uid, localId = id, sportId = request.sportId,
+            recordedAt = request.recordedAt, notes = request.notes,
+            metricsJson = Gson().toJson(request.metrics), updatedAt = System.currentTimeMillis()
+        ))
+        // Enqueue only after the durable write. Startup also re-enqueues after a
+        // process death between this insert and the WorkManager call.
+        try {
+            schedule(uid)
+        } catch (error: Exception) {
+            // The durable save succeeded. Startup/periodic work can recover
+            // scheduling; reporting a failed save would invite duplicate input.
+            Log.w(TAG, "Saved locally; scheduling will resume on next startup", error)
         }
-        flushPending(sportId)
-        val call = api.getPerformance(sportId)
-        call.enqueue(object : Callback<List<PerformanceSessionDto>> {
-            override fun onResponse(
-                call: Call<List<PerformanceSessionDto>>,
-                response: Response<List<PerformanceSessionDto>>
-            ) {
-                if (!response.isSuccessful) {
-                    onResult(pendingFor(sportId), true)
-                    return
-                }
-                val remote = response.body().orEmpty()
-                    .sortedByDescending { it.recordedAt }
-                    .map { it.toLocal() }
-                onResult(PerformanceHistory.merge(remote, pendingFor(sportId)), false)
-            }
-
-            override fun onFailure(
-                call: Call<List<PerformanceSessionDto>>,
-                error: Throwable
-            ) {
-                if (call.isCanceled) return
-                onResult(pendingFor(sportId), true)
-            }
-        })
-        return call
+        Log.i(TAG, "Session saved locally; upload enqueued")
+        id
     }
 
-    fun delete(
-        session: PerformanceSession,
-        onSuccess: () -> Unit,
-        onError: (Boolean) -> Unit
-    ): Call<Void>? {
-        if (session.pending) {
-            pending.removeAll { it.id == session.id }
-            onSuccess()
-            return null
-        }
-        val call = api.deletePerformance(session.id)
-        call.enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                if (response.isSuccessful) onSuccess() else onError(false)
-            }
-
-            override fun onFailure(call: Call<Void>, error: Throwable) {
-                if (call.isCanceled) return
-                onError(true)
-            }
-        })
-        return call
+    suspend fun refresh(uid: String, sportId: String) = withContext(Dispatchers.IO) {
+        syncMutex.withLock { pull(uid, sportId, authorization(uid)) }
     }
 
-    fun monthly(
-        sportId: String,
-        year: Int,
-        month: Int,
-        metric: String?,
-        onSuccess: (MonthlyPerformanceDto) -> Unit,
-        onError: (Boolean) -> Unit
-    ): Call<MonthlyPerformanceDto> {
-        val call = api.getMonthlyPerformance(sportId, year, month, metric)
-        call.enqueue(object : Callback<MonthlyPerformanceDto> {
-            override fun onResponse(
-                call: Call<MonthlyPerformanceDto>,
-                response: Response<MonthlyPerformanceDto>
-            ) {
-                val body = response.body()
-                if (!response.isSuccessful || body == null) {
-                    onError(false)
-                    return
-                }
-                onSuccess(body)
+    /** Returns false when temporary failures leave rows waiting for retry. */
+    suspend fun sync(uid: String): Boolean = withContext(Dispatchers.IO) {
+        syncMutex.withLock {
+            val auth = authorization(uid)
+            // Do not upload to an older deployment that would create a second
+            // document when WorkManager retries after a lost response.
+            val health = api.health().execute()
+            if (!health.isSuccessful || health.body()?.capabilities?.get("performanceClientId") != true) {
+                throw IOException("API deployment does not support safe offline uploads yet")
             }
-
-            override fun onFailure(call: Call<MonthlyPerformanceDto>, error: Throwable) {
-                if (call.isCanceled) return
-                onError(true)
-            }
-        })
-        return call
-    }
-
-    fun latest(
-        sportId: String,
-        onResult: (PerformanceSession?) -> Unit
-    ): Call<List<PerformanceSessionDto>>? {
-        return history(sportId) { sessions, _ ->
-            onResult(sessions.firstOrNull())
-        }
-    }
-
-    private fun pendingFor(sportId: String): List<PerformanceSession> =
-        pending.filter { it.sportId == sportId }
-
-    /**
-     * Best-effort POST of in-memory pending rows. MO should swap this
-     * for WorkManager once Room is in place.
-     */
-    private fun flushPending(sportId: String) {
-        pendingFor(sportId).forEach { row ->
-            val request = CreatePerformanceRequest(
-                sportId = row.sportId,
-                recordedAt = row.recordedAt,
-                notes = row.notes,
-                metrics = row.metrics
-            )
-            api.createPerformance(request).enqueue(object : Callback<PerformanceSessionDto> {
-                override fun onResponse(
-                    call: Call<PerformanceSessionDto>,
-                    response: Response<PerformanceSessionDto>
-                ) {
-                    if (response.isSuccessful) {
-                        pending.removeAll { it.id == row.id }
+            var retry = false
+            for (row in dao.pending(uid)) {
+                checkOwner(uid)
+                val response = api.createPerformance(row.toRequest(), auth).execute()
+                val remote = response.body()
+                when {
+                    response.isSuccessful && remote != null && remote.userId == uid -> {
+                        dao.setState(uid, row.localId, SyncPolicy.SYNCED, remote.id)
+                        Log.i(TAG, "Session upload completed")
+                    }
+                    SyncPolicy.isPermanentFailure(response.code()) -> {
+                        dao.setState(uid, row.localId, SyncPolicy.FAILED, null)
+                        Log.w(TAG, "Session rejected (${response.code()}); retained for review")
+                    }
+                    else -> {
+                        retry = true
+                        Log.i(TAG, "Upload deferred (${response.code()})")
+                        // Stop on auth failures, retaining every pending row.
+                        if (response.code() == 401 || response.code() == 403) break
                     }
                 }
-
-                override fun onFailure(call: Call<PerformanceSessionDto>, error: Throwable) = Unit
-            })
+            }
+            if (!retry) {
+                for (sportId in dao.sports(uid)) pull(uid, sportId, auth)
+                database.syncMetadata().put(SyncMetadata(uid, System.currentTimeMillis()))
+            }
+            !retry
         }
     }
+
+    /** Synced sessions require a successful server delete. Pending uploads stay intact. */
+    suspend fun delete(uid: String, localId: String): Boolean = withContext(Dispatchers.IO) {
+        syncMutex.withLock {
+            val row = dao.get(uid, localId) ?: return@withLock true
+            checkOwner(uid)
+            if (row.syncState == SyncPolicy.PENDING) return@withLock false
+            if (row.serverId != null) {
+                val response = api.deletePerformance(row.serverId, authorization(uid)).execute()
+                if (!response.isSuccessful && response.code() != 404) throw IOException("Delete failed")
+            }
+            dao.delete(uid, localId)
+            true
+        }
+    }
+
+    private suspend fun pull(uid: String, sportId: String, auth: String) {
+        checkOwner(uid)
+        val response = api.getPerformance(sportId, auth).execute()
+        val rows = response.body()
+        if (!response.isSuccessful || rows == null || rows.any { it.userId != uid || it.sportId != sportId }) {
+            throw IOException("History refresh failed")
+        }
+        database.withTransaction {
+            // Only replace acknowledged data; never discard pending or rejected rows.
+            // A lost upload response can leave a pending row that already exists on
+            // the server. Skip that remote copy until the idempotent retry completes.
+            val pendingIds = dao.pending(uid).map { it.localId }.toSet()
+            dao.clearSynced(uid, sportId)
+            rows.filter { it.clientId !in pendingIds }.forEach { dao.put(SessionEntity.fromRemote(it)) }
+        }
+    }
+
+    private fun checkOwner(uid: String) {
+        if (FirebaseAuth.getInstance().currentUser?.uid != uid) throw IOException("Account changed")
+    }
+
+    private fun authorization(uid: String): String {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null || user.uid != uid) throw IOException("Sign in required")
+        val token = try {
+            Tasks.await(user.getIdToken(false), 15, TimeUnit.SECONDS).token
+        } catch (error: Exception) {
+            throw IOException("Authentication temporarily unavailable", error)
+        }
+        if (token.isNullOrBlank()) throw IOException("Sign in required")
+        return "Bearer $token"
+    }
+
+    private companion object { const val TAG = "PerformanceSync" }
 }

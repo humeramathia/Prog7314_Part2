@@ -11,14 +11,17 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.prog7314_part2.R
 import com.example.prog7314_part2.data.MetricField
-import com.example.prog7314_part2.data.PerformanceRepository
 import com.example.prog7314_part2.data.SportMetrics
+import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.MonthlyPerformanceDto
 import com.example.prog7314_part2.databinding.FragmentMonthlyGraphBinding
 import com.example.prog7314_part2.ui.session
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MonthlyGraphFragment : Fragment() {
 
@@ -116,14 +119,26 @@ class MonthlyGraphFragment : Fragment() {
         screen.graphCaption.text = getString(R.string.graph_loading)
         setNavigationEnabled(false)
 
-        graphCall = PerformanceRepository.monthly(
-            sportId = sportId,
-            year = year,
-            month = month,
-            metric = selectedMetric.ifBlank { null },
-            onSuccess = { graph ->
-                if (_binding !== screen) return@monthly
+        val call = ApiClient.service.getMonthlyPerformance(
+            sportId,
+            year,
+            month,
+            selectedMetric.ifBlank { null }
+        )
+        graphCall = call
+        call.enqueue(object : Callback<MonthlyPerformanceDto> {
+            override fun onResponse(
+                call: Call<MonthlyPerformanceDto>,
+                response: Response<MonthlyPerformanceDto>
+            ) {
+                if (_binding !== screen) return
                 setNavigationEnabled(true)
+                val graph = response.body()
+                if (!response.isSuccessful || graph == null) {
+                    screen.graphCaption.text = getString(R.string.graph_load_error)
+                    Log.i("Performance", "load fail graph sport=$sportId")
+                    return
+                }
                 val points = graph.points.map { point ->
                     point.day.toString() to point.value
                 }
@@ -146,26 +161,21 @@ class MonthlyGraphFragment : Fragment() {
                     "Performance",
                     "graph sport=$sportId metric=${graph.metric} points=${points.size}"
                 )
-            },
-            onError = { offline ->
-                if (_binding !== screen) return@monthly
+            }
+
+            override fun onFailure(call: Call<MonthlyPerformanceDto>, error: Throwable) {
+                if (_binding !== screen || call.isCanceled) return
                 setNavigationEnabled(true)
                 screen.barChart.setData(emptyList())
-                screen.graphCaption.text = if (offline) {
-                    getString(R.string.graph_connect_error)
-                } else {
-                    getString(R.string.graph_load_error)
-                }
+                screen.graphCaption.text = getString(R.string.graph_connect_error)
                 Log.i("Performance", "load fail graph sport=$sportId")
-                if (offline) {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.graph_check_api),
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.graph_check_api),
+                    Toast.LENGTH_LONG
+                ).show()
             }
-        )
+        })
     }
 
     private fun setNavigationEnabled(enabled: Boolean) {

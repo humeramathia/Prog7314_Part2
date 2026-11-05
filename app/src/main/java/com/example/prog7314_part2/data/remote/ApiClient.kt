@@ -8,12 +8,8 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Lazily-initialised singleton that owns the app's Retrofit + OkHttp
- * stack.
- *
- * The base URL comes from a `buildConfigField` declared in
- * `app/build.gradle.kts`. Debug and release both talk to the hosted
- * Render API so a physical phone works; pass `-PapiBaseUrl=` to point
- * an emulator at a local Node process.
+ * stack. Both variants use the hosted API by default; debug builds
+ * can override the URL with `-Psportsphere.apiBaseUrl=`.
  */
 object ApiClient {
 

@@ -1,5 +1,7 @@
 package com.example.prog7314_part2.data.remote
 
+data class HealthDto(val capabilities: Map<String, Boolean>? = null)
+
 /**
  * Data-transfer objects (DTOs) that mirror the JSON returned by the
  * SportSphere REST API.
@@ -72,7 +74,8 @@ data class PerformanceSessionDto(
     val metrics: Map<String, Double>,
     /** Server's choice of the "headline" metric for graphs and tiles. */
     val primaryMetric: String,
-    val primaryValue: Double
+    val primaryValue: Double,
+    val clientId: String? = null
 )
 
 /** Body for `POST /api/performance`. */
@@ -80,7 +83,9 @@ data class CreatePerformanceRequest(
     val sportId: String,
     val recordedAt: Long,
     val notes: String,
-    val metrics: Map<String, Double>
+    val metrics: Map<String, Double>,
+    /** Stable local UUID. The API uses it to make upload retries idempotent. */
+    val clientId: String? = null
 )
 
 /** A single dot on the monthly graph (one session, one metric value). */

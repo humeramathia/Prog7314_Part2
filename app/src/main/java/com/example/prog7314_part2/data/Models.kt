@@ -54,7 +54,8 @@ data class PerformanceSession(
     val recordedAt: Long,
     val metrics: Map<String, Double>,
     val notes: String,
-    /** True until MO's WorkManager sync posts this row to the API. */
+    val syncState: String = "synced",
+    /** True until WorkManager posts this row, or after a rejected upload. */
     val pending: Boolean = false
 )
 

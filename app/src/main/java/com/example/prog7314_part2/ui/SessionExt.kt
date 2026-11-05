@@ -2,6 +2,7 @@ package com.example.prog7314_part2.ui
 
 import androidx.fragment.app.Fragment
 import com.example.prog7314_part2.SportSphereApp
+import com.example.prog7314_part2.data.PerformanceRepository
 import com.example.prog7314_part2.data.SessionPrefs
 import com.example.prog7314_part2.data.biometric.BiometricStore
 
@@ -17,3 +18,6 @@ fun Fragment.session(): SessionPrefs =
 
 fun Fragment.biometrics(): BiometricStore =
     (requireActivity().application as SportSphereApp).biometrics
+
+fun Fragment.performance(): PerformanceRepository =
+    (requireActivity().application as SportSphereApp).performance

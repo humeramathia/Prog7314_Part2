@@ -242,7 +242,7 @@ Render: SportSphere Express API
                                         learning
 ```
 
-By default the Android app talks to the hosted Render API, including debug builds on a physical phone. To run the emulator against a local Node process, rebuild with `-PapiBaseUrl=http://10.0.2.2:3000/` (`10.0.2.2` is Android's alias for the host computer).
+By default the Android app talks to the hosted Render API, including debug builds on a physical phone. To run the emulator against a local Node process, rebuild with `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/` (`10.0.2.2` is Android's alias for the host computer).
 
 The app follows a single-activity structure. `MainActivity` hosts Navigation Component fragments and the bottom navigation bar. Retrofit provides typed API calls, while an OkHttp interceptor obtains the current Firebase ID token and adds it to requests.
 
@@ -462,7 +462,7 @@ An expected development response resembles:
 Debug and release both use the hosted Render API by default so a physical phone can sign in without `10.0.2.2`. To point an emulator at a local Node process instead:
 
 ```powershell
-.\gradlew.bat assembleDebug -PapiBaseUrl=http://10.0.2.2:3000/
+.\gradlew.bat assembleDebug -Psportsphere.apiBaseUrl=http://10.0.2.2:3000/
 ```
 
 Do not replace `10.0.2.2` with `localhost` inside an emulator. `localhost` means the emulator itself, while `10.0.2.2` routes to the development computer.
@@ -533,7 +533,7 @@ The APK is created at:
 app/build/outputs/apk/release/app-release.apk
 ```
 
-> Debug and release both use the hosted Render URL, so a physical phone works with either variant. Use `-PapiBaseUrl=http://10.0.2.2:3000/` only when you want an emulator to talk to a local API.
+> Debug and release both use the hosted Render URL, so a physical phone works with either variant. Use `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/` only when you want an emulator to talk to a local API.
 
 ## Physical-device implementation
 
@@ -819,7 +819,7 @@ private fun handleEmailLink(intent: Intent?) {
 | Environment | Base URL |
 | --- | --- |
 | Local computer | `http://localhost:3000/` |
-| Android emulator (optional local API) | `http://10.0.2.2:3000/` via `-PapiBaseUrl` |
+| Android emulator (optional local API) | `http://10.0.2.2:3000/` via `-Psportsphere.apiBaseUrl` |
 | Android app default (debug and release) | `https://sportsphere-st10276384.onrender.com/` |
 
 ### Authentication
@@ -1110,6 +1110,12 @@ Additional safeguards:
 - Use HTTPS for every production API request.
 - Use the debug keystore only for coursework/demo installation.
 - Do not publish verification links because they contain one-time action codes.
+
+## Part 3: offline performance and Play Store prep
+
+Performance saves go to Room first. WorkManager uploads pending sessions when the phone is online; see [implementation notes](docs/PART3-MO.md). Deploy the API `clientId` changes before testing sync.
+
+Signed production builds, Firebase package coordination and store listing copy are documented in [Play Store readiness](docs/play-store/README.md). A local API override for debug builds uses `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/`.
 
 ## References
 

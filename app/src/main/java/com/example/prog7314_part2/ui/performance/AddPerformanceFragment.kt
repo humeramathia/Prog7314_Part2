@@ -11,9 +11,10 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
-import com.example.prog7314_part2.data.PerformanceRepository
+import com.example.prog7314_part2.SportSphereApp
 import com.example.prog7314_part2.data.SportMetrics
 import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.CreatePerformanceRequest
 import com.example.prog7314_part2.data.remote.MetricDto
 import com.example.prog7314_part2.data.remote.SportDto
 import com.example.prog7314_part2.databinding.FragmentAddPerformanceBinding
@@ -21,9 +22,13 @@ import com.example.prog7314_part2.ui.session
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -37,7 +42,6 @@ class AddPerformanceFragment : Fragment() {
         linkedMapOf<String, Pair<TextInputLayout, TextInputEditText>>()
 
     private var sportCall: Call<SportDto>? = null
-    private var saveCall: Call<*>? = null
     private var recordedAt = System.currentTimeMillis()
 
     override fun onCreateView(
@@ -193,30 +197,37 @@ class AddPerformanceFragment : Fragment() {
         }
         if (values.isEmpty()) return
 
-        setLoading(true)
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            showMessage(getString(R.string.performance_sign_in))
+            return
+        }
+
         val sportId = session().sportId
         val notes = screen.notesInput.text?.toString().orEmpty().trim()
-        saveCall = PerformanceRepository.save(
+        val request = CreatePerformanceRequest(
             sportId = sportId,
             recordedAt = recordedAt,
             notes = notes,
-            metrics = values,
-            onSuccess = { session ->
-                if (_binding !== screen) return@save
-                setLoading(false)
-                Log.i(
-                    "Performance",
-                    "saved session ${session.id} sport=$sportId pending=${session.pending}"
-                )
-                findNavController().popBackStack()
-            },
-            onError = {
-                if (_binding !== screen) return@save
-                setLoading(false)
-                Log.i("Performance", "save fail sport=$sportId")
-                showMessage(getString(R.string.error_save_session))
-            }
+            metrics = values
         )
+
+        setLoading(true)
+        val app = requireActivity().application as SportSphereApp
+        app.performanceScope.launch {
+            val saved = runCatching { app.performance.save(uid, request) }
+            withContext(Dispatchers.Main) {
+                if (_binding !== screen) return@withContext
+                setLoading(false)
+                if (saved.isSuccess) {
+                    Log.i("Performance", "saved session ${saved.getOrNull()} sport=$sportId pending=true")
+                    findNavController().popBackStack()
+                } else {
+                    Log.i("Performance", "save fail sport=$sportId")
+                    showMessage(getString(R.string.performance_save_failed))
+                }
+            }
+        }
     }
 
     private fun setLoading(loading: Boolean) {
@@ -235,9 +246,7 @@ class AddPerformanceFragment : Fragment() {
 
     override fun onDestroyView() {
         sportCall?.cancel()
-        saveCall?.cancel()
         sportCall = null
-        saveCall = null
         inputs.clear()
         _binding = null
         super.onDestroyView()

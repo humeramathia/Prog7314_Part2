@@ -4,6 +4,7 @@ import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -22,6 +23,8 @@ import retrofit2.http.Query
  * here declares an `Authorization` header.
  */
 interface SportSphereApi {
+    @GET("health")
+    fun health(): Call<HealthDto>
 
     // ─────────────────────────── Auth ────────────────────────────
 
@@ -66,13 +69,15 @@ interface SportSphereApi {
     /** Every session recorded by the current user for [sportId], newest first. */
     @GET("api/performance")
     fun getPerformance(
-        @Query("sportId") sportId: String
+        @Query("sportId") sportId: String,
+        @Header("Authorization") authorization: String? = null
     ): Call<List<PerformanceSessionDto>>
 
     /** Persists a new session and returns the server's authoritative copy. */
     @POST("api/performance")
     fun createPerformance(
-        @Body request: CreatePerformanceRequest
+        @Body request: CreatePerformanceRequest,
+        @Header("Authorization") authorization: String? = null
     ): Call<PerformanceSessionDto>
 
     /**
@@ -90,7 +95,8 @@ interface SportSphereApi {
     /** Removes one session owned by the current user. Returns HTTP 204. */
     @DELETE("api/performance/{sessionId}")
     fun deletePerformance(
-        @Path("sessionId") sessionId: String
+        @Path("sessionId") sessionId: String,
+        @Header("Authorization") authorization: String? = null
     ): Call<Void>
 
     // ─────────────────────────── Learn ───────────────────────────
