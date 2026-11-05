@@ -4,7 +4,7 @@ This folder contains preparation, not evidence that a production release is comp
 
 ## 1. Coordinate the final application ID
 
-Agree the group's final unique package name, for example `za.co.sportsphere.app` (an example, not a registered identifier). Tell the group before changing it. Humera must register an Android app with that exact package in the existing Firebase project, configure Google authentication and download the matching `google-services.json` into `app/`.
+The Play identifier is `za.co.sportsphere.app`. It is set in `gradle.properties` as `sportsphere.applicationId`. Firebase already has that Android app; `app/google-services.json` is committed and contains both this package and the older `com.example.prog7314_part2` client.
 
 Set the deployed API's `ANDROID_APP_PACKAGE` environment variable to the same package so its verification-email fallback uses the correct Android application. The Android email flow reads `BuildConfig.APPLICATION_ID` automatically.
 

@@ -117,7 +117,7 @@ The Android application uses Firebase Authentication and communicates with a cus
 
 | Project detail | Value |
 | --- | --- |
-| Android package | `com.example.prog7314_part2` |
+| Android package | `za.co.sportsphere.app` |
 | Mobile platform | Native Android (Kotlin) |
 | Minimum Android version | API 24 / Android 7.0 |
 | Target SDK | 36 |
@@ -337,7 +337,6 @@ Install the following before running the project:
 - JDK 11 or newer; GitHub Actions uses JDK 21
 - Node.js 20.x and npm
 - Git
-- A Firebase Android configuration file named `google-services.json`
 - Android Platform Tools/ADB when installing from the command line
 
 For deployment rather than local development:
@@ -351,20 +350,14 @@ For deployment rather than local development:
 
 ### Android Firebase configuration
 
-Download `google-services.json` from Firebase Console and place it here:
+`app/google-services.json` is committed so a clone can build. It registers both the Play identifier `za.co.sportsphere.app` and the older debug package `com.example.prog7314_part2`.
 
 ```text
-app/google-services.json
+Play applicationId: za.co.sportsphere.app
+Project ID:         sportsphere-st10276384
 ```
 
-The Firebase Android app must use:
-
-```text
-Package name: com.example.prog7314_part2
-Project ID:   sportsphere-st10276384
-```
-
-The file is gitignored because it belongs to a specific Firebase project.
+Kotlin source still uses the `com.example.prog7314_part2` namespace. Play Store rejects `com.example.*`; the Gradle `applicationId` is the identifier that must stay unique.
 
 ### API environment
 
@@ -453,7 +446,7 @@ An expected development response resembles:
 ### Run the Android app on an emulator
 
 1. Start the local API with `npm start`.
-2. Place `google-services.json` in `app/`.
+2. Confirm `app/google-services.json` is present (it is committed).
 3. Open the repository in Android Studio.
 4. Open **Build → Select Build Variant** and choose `debug`.
 5. Start an Android emulator.
@@ -488,7 +481,7 @@ The physical-device build uses the hosted Render API, so the phone and developme
 
 1. Open <https://sportsphere-st10276384.onrender.com/health> to wake the Render service.
 2. Confirm that the response contains `"ok": true`.
-3. Place the correct `google-services.json` in `app/`.
+3. Confirm `app/google-services.json` is present.
 4. On the phone, enable **Developer options** and **USB debugging**.
 5. Connect the phone with a data-capable USB cable.
 6. Accept the RSA debugging prompt on the phone.
@@ -1097,7 +1090,6 @@ Never commit:
 ```text
 api/.env
 api/firebase-service-account.json
-app/google-services.json
 Cosmos DB keys
 Private Android release keystores
 ```
@@ -1117,6 +1109,12 @@ Performance saves go to Room first. WorkManager uploads pending sessions when th
 
 Signed production builds, Firebase package coordination and store listing copy are documented in [Play Store readiness](docs/play-store/README.md). A local API override for debug builds uses `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/`.
 
+## Play Store identifier and signed release
+
+The installed package is `za.co.sportsphere.app`. Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. See [Play Store readiness](docs/play-store/README.md).
+
+After the `merge` branch is on `main`, tag `v1.0.0-final-poe` and attach the signed APK and AAB to the GitHub Release.
+
 ## References
 
 Android Developers, [s.a.]. *Show a biometric authentication dialog*. [online] Available at: https://developer.android.com/identity/sign-in/biometric-auth [Accessed 25 October 2026].
@@ -1124,5 +1122,13 @@ Android Developers, [s.a.]. *Show a biometric authentication dialog*. [online] A
 Android Developers, [s.a.a]. *Biometric library*. [online] Available at: https://developer.android.com/jetpack/androidx/releases/biometric [Accessed 25 October 2026].
 
 Android Developers, [s.a.b]. *Jetpack DataStore*. [online] Available at: https://developer.android.com/topic/libraries/architecture/datastore [Accessed 25 October 2026].
+
+Android Developers, [s.a.c]. *Splash screens*. [online] Available at: https://developer.android.com/develop/ui/views/launch/splash-screen [Accessed 5 November 2026].
+
+Android Developers, [s.a.d]. *Save data in a local database using Room*. [online] Available at: https://developer.android.com/training/data-storage/room [Accessed 5 November 2026].
+
+Android Developers, [s.a.e]. *Schedule tasks with WorkManager*. [online] Available at: https://developer.android.com/topic/libraries/architecture/workmanager [Accessed 5 November 2026].
+
+Google, [s.a.]. *Firebase Cloud Messaging*. [online] Available at: https://firebase.google.com/docs/cloud-messaging [Accessed 5 November 2026].
 
 Microsoft, [s.a.]. *Introduction to Azure Blob Storage*. [online] Available at: https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction [Accessed 2 November 2026].
