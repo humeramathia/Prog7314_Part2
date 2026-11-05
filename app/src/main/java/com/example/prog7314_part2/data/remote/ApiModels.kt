@@ -162,3 +162,10 @@ data class SendVerificationResponse(
     val email: String? = null,
     val error: String? = null
 )
+
+/** Response of `POST /api/auth/verification-link`. */
+data class VerificationLinkResponse(
+    val ok: Boolean = false,
+    val link: String? = null,
+    val error: String? = null
+)

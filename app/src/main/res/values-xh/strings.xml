@@ -16,9 +16,10 @@
     <string name="have_account">Sele unayo iakhawunti? Ngena</string>
     <string name="accept_terms">Ndiyayamkela imiqathango</string>
     <string name="confirm_email_title">Qinisekisa i-imeyile yakho</string>
-    <string name="confirm_email_body">Sithumele ikhonkco ku-%1$s.\n\nUngalivuli ngaphakathi kwibhrawuza ye-Gmail (ibonisa “page mode is invalid”).\n\nCinezela ixesha elide iqhosha ku-imeyile → Kopa ikhonkco → lincamathisele ku-Chrome.\nEmva koko buyela apha ucofe Ndiqinisekisile.\n\nOkanye sebenzisa Qhubeka nge-Google kwiscreen sokungena.</string>
-    <string name="confirm_email_not_yet">Ayikaqinisekiswa. Kopa ikhonkco le-imeyile ku-Chrome, linda u-“Email verified”, emva koko ucofe apha kwakhona.</string>
+    <string name="confirm_email_body">Sithumele ikhonkco ku-%1$s.\n\nI-Hotmail, i-Outlook neebhokisi zekhampasi zihlala zifaka i-imeyile ye-Firebase ku-Junk. Qala ujonge ku-Junk.\n\nUkuba ayifiki, cofa Qinisekisa ku-Chrome — oku kuqinisekisa i-akhawunti ngaphandle kwe-imeyile.\n\nUkuba uyayivula i-imeyile, ungasebenzisi ibhrawuza ye-Gmail. Ncamathisela ikhonkco ku-Chrome, uze ucofe Ndiqinisekisile.\n\nOkanye sebenzisa Qhubeka nge-Google.</string>
+    <string name="confirm_email_not_yet">Ayikaqinisekiswa. Sebenzisa Qinisekisa ku-Chrome, okanye ncamathisela ikhonkco ku-Chrome, uze ucofe apha kwakhona.</string>
     <string name="resend_email">Thumela i-imeyile kwakhona</string>
+    <string name="verify_in_browser">Qinisekisa ku-Chrome</string>
     <string name="i_have_confirmed">Ndiqinisekisile</string>
     <string name="open_email_app">Vula i-app ye-imeyile</string>
     <string name="choose_sport">Khetha umdlalo wakho</string>

@@ -16,9 +16,7 @@ test("verification fallback returns to the browser success page without an Andro
     const sent = JSON.parse(global.fetch.mock.calls[0][1].body);
     expect(sent).toEqual({
       requestType: "VERIFY_EMAIL",
-      idToken: "test-id-token",
-      continueUrl: "https://sportsphere-st10276384.onrender.com/verified",
-      canHandleCodeInApp: false
+      idToken: "test-id-token"
     });
   } finally {
     global.fetch = previousFetch;
@@ -30,6 +28,13 @@ test("verification fallback returns to the browser success page without an Andro
 test("POST /api/auth/send-verification requires a Bearer token", async () => {
   const app = createApp(createMemoryStore());
   const res = await request(app).post("/api/auth/send-verification");
+  expect(res.status).toBe(401);
+  expect(res.body.error).toBe("Missing Bearer token");
+});
+
+test("POST /api/auth/verification-link requires a Bearer token", async () => {
+  const app = createApp(createMemoryStore());
+  const res = await request(app).post("/api/auth/verification-link");
   expect(res.status).toBe(401);
   expect(res.body.error).toBe("Missing Bearer token");
 });

@@ -79,4 +79,24 @@ function messaging() {
   return loadAdmin().messaging();
 }
 
-module.exports = { firebaseReady, verifyIdToken, messaging };
+/**
+ * Builds a verify-email URL for the signed-in user without sending mail.
+ * Hotmail / Outlook often drop Firebase's noreply messages; the app can
+ * open this link in Chrome instead.
+ */
+async function generateEmailVerificationLink(email) {
+  if (!firebaseReady()) {
+    throw new Error("Firebase Admin is not configured");
+  }
+  return loadAdmin().auth().generateEmailVerificationLink(email, {
+    url: "https://sportsphere-st10276384.firebaseapp.com",
+    handleCodeInApp: false
+  });
+}
+
+module.exports = {
+  firebaseReady,
+  verifyIdToken,
+  messaging,
+  generateEmailVerificationLink
+};

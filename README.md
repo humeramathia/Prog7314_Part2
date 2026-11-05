@@ -752,18 +752,10 @@ The app does not treat account creation as full access. Login and session checks
 
 ### Creating the verification link
 
-`EmailVerification.kt` sends the user to the hosted success page. The Android package is not wrapped into the Firebase link (that wrapping was breaking the return after verification):
+`EmailVerification.kt` sends Firebase's default verification mail (no custom continue URL). Hotmail and Outlook often drop or delay that mail; the confirm screen therefore also has **Verify in Chrome**, which asks the API for `admin.auth().generateEmailVerificationLink` and opens it so the account can be confirmed without the inbox.
 
 ```kotlin
-const val CONTINUE_URL =
-    "https://sportsphere-st10276384.onrender.com/verified"
-
-val settings = ActionCodeSettings.newBuilder()
-    .setUrl(CONTINUE_URL)
-    .setHandleCodeInApp(false)
-    .build()
-
-user.sendEmailVerification(settings)
+user.sendEmailVerification()
 ```
 
 Firebase sends the user an email similar to the following:
@@ -776,21 +768,27 @@ The screenshot hides the private one-time action code. Verification links should
 
 ### Rate-limit fallback
 
-Repeated verification requests can trigger a Firebase device-level rate limit. SportSphere first calls `FirebaseUser.sendEmailVerification()`. If Firebase reports a rate-limit error, the app calls:
+Repeated verification requests can trigger a Firebase device-level rate limit. Register tries the client SDK first; **Resend** tries the API first. Either path falls back to the other:
 
 ```http
 POST /api/auth/send-verification
 Authorization: Bearer <firebase-id-token>
 ```
 
-The API forwards the request to Google Identity Toolkit using the authenticated user's ID token. The confirmation screen also applies a 60-second resend cooldown to prevent accidental repeated requests.
+```http
+POST /api/auth/verification-link
+Authorization: Bearer <firebase-id-token>
+```
+
+The API forwards the send to Google Identity Toolkit. The verification-link route uses Firebase Admin so Hotmail users can confirm in Chrome. The confirmation screen also applies a 60-second resend cooldown.
 
 ### Confirming verification
 
-The confirmation screen provides three actions:
+The confirmation screen provides four actions:
 
-- **Open email app** launches the device's default mail application.
-- **Resend email** sends another link after the cooldown.
+- **Verify in Chrome** opens a Firebase verification URL from the API (works when the mail never arrives).
+- **Open email app** opens Outlook on the web for Hotmail/Outlook, Gmail on the web for Gmail, or the device mail app.
+- **Resend email** sends another link after the cooldown, preferring the API.
 - **I have confirmed** refreshes the token, reloads the Firebase user, and checks `isEmailVerified`.
 
 The refresh deliberately forces a new ID token before reloading:
@@ -1145,7 +1143,7 @@ Additional safeguards:
 
 The installed package is `za.co.sportsphere.app`. Kotlin source still uses the `com.example.prog7314_part2` namespace; Play Store looks at `applicationId`, not the Kotlin package.
 
-Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. Listing copy, privacy policy, content rating, data safety, the 512 PNG icon, the 1024×500 feature graphic, and five phone screenshots are in [Play Store pack](docs/play-store/README.md). This is a signed coursework build, not a live Google Play listing.
+Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. Listing copy, privacy policy, content rating, data safety, the 512 PNG icon, the 1024×500 feature graphic, and six phone screenshots are in [Play Store pack](docs/play-store/README.md). This is a signed coursework build, not a live Google Play listing.
 
 There is no `v1.0.0-final-poe` tag or GitHub Release until `merge` is on `main`. Do not treat this README as claiming those exist.
 

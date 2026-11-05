@@ -73,6 +73,7 @@ class ConfirmEmailFragment : Fragment() {
         binding.btnConfirmed.setOnClickListener { checkVerification(quiet = false) }
         binding.btnResend.setOnClickListener { resendEmail() }
         binding.btnOpenEmail.setOnClickListener { openEmailApp() }
+        binding.btnVerifyInBrowser.setOnClickListener { verifyInBrowser() }
     }
 
     override fun onResume() {
@@ -210,19 +211,36 @@ class ConfirmEmailFragment : Fragment() {
 
         lastResendAt = SystemClock.elapsedRealtime()
         setLoading(true)
-        EmailVerification.send(user) { _, message ->
+        EmailVerification.send(user, preferApi = true) { _, message ->
             if (_binding !== screen) return@send
             setLoading(false)
             showMessage(message)
         }
     }
 
-    /** Best-effort launch of the user's default email app. */
+    /** Opens a Firebase verify URL in the browser so Hotmail is not required. */
+    private fun verifyInBrowser() {
+        val screen = binding
+        val context = context ?: return
+        if (auth.currentUser == null) {
+            returnToLogin()
+            return
+        }
+        setLoading(true)
+        EmailVerification.openVerificationLink(context) { _, message ->
+            if (_binding !== screen) return@openVerificationLink
+            setLoading(false)
+            showMessage(message)
+        }
+    }
+
+    /** Best-effort launch of the user's inbox, including Outlook on the web. */
     private fun openEmailApp() {
         openedInbox = true
-        val opened = context?.let { EmailVerification.openInbox(it) } == true
+        val email = auth.currentUser?.email
+        val opened = context?.let { EmailVerification.openInbox(it, email) } == true
         if (!opened) {
-            showMessage("Open Gmail or your mail app, then tap the Verify link.")
+            showMessage("Open Gmail, Outlook or your mail app, then tap the Verify link.")
         }
     }
 
@@ -246,6 +264,7 @@ class ConfirmEmailFragment : Fragment() {
             btnConfirmed.isEnabled = !loading
             btnResend.isEnabled = !loading
             btnOpenEmail.isEnabled = !loading
+            btnVerifyInBrowser.isEnabled = !loading
         }
     }
 

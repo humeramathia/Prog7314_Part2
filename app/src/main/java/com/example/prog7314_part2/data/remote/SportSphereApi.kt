@@ -37,6 +37,13 @@ interface SportSphereApi {
     @POST("api/auth/send-verification")
     fun sendVerificationEmail(): Call<SendVerificationResponse>
 
+    /**
+     * Returns a Firebase verify-email URL for the signed-in user.
+     * Used when Hotmail / Outlook never deliver the Firebase message.
+     */
+    @POST("api/auth/verification-link")
+    fun verificationLink(): Call<VerificationLinkResponse>
+
     // ────────────────────────── Profile ──────────────────────────
 
     /** Returns the current user's profile, creating one on first call. */

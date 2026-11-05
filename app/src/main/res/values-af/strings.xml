@@ -16,9 +16,10 @@
     <string name="have_account">Het jy reeds \'n rekening? Teken in</string>
     <string name="accept_terms">Ek aanvaar die bepalings</string>
     <string name="confirm_email_title">Bevestig jou e-pos</string>
-    <string name="confirm_email_body">Ons het \'n skakel na %1$s gestuur.\n\nMoenie dit in Gmail se ingeboude blaaier oopmaak nie (dit wys “page mode is invalid”).\n\nDruk lank op die knoppie in die e-pos → Kopieer skakel → plak in Chrome.\nKom dan terug hierheen en tik Ek het bevestig.\n\nOf gebruik Gaan voort met Google op die aanmeldskerm.</string>
-    <string name="confirm_email_not_yet">Nog nie bevestig nie. Kopieer die e-posskakel in Chrome, wag vir “Email verified” en tik dan weer hier.</string>
+    <string name="confirm_email_body">Ons het \'n skakel na %1$s gestuur.\n\nHotmail, Outlook en sommige kampus-posbusse sit Firebase-pos in Gemors, of vertraag dit. Kyk eers in Gemors.\n\nAs niks aankom nie, tik Verifieer in Chrome — dit bevestig die rekening sonder die e-pos.\n\nAs jy die pos oopmaak, moenie Gmail se ingeboude blaaier gebruik nie. Plak die skakel in Chrome, tik dan Ek het bevestig.\n\nOf gebruik Gaan voort met Google op die aanmeldskerm.</string>
+    <string name="confirm_email_not_yet">Nog nie bevestig nie. Gebruik Verifieer in Chrome, of plak die e-posskakel in Chrome, en tik dan weer hier.</string>
     <string name="resend_email">Stuur e-pos weer</string>
+    <string name="verify_in_browser">Verifieer in Chrome</string>
     <string name="i_have_confirmed">Ek het bevestig</string>
     <string name="open_email_app">Maak e-posapp oop</string>
     <string name="choose_sport">Kies jou sport</string>
