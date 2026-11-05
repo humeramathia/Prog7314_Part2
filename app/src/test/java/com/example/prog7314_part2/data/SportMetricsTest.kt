@@ -33,6 +33,14 @@ class SportMetricsTest {
     }
 
     @Test
+    fun cricketAndTennisStaySportAware() {
+        assertEquals(listOf("runs", "wickets"), SportMetrics.fields("cricket").map { it.key })
+        assertEquals(listOf("aces", "winners"), SportMetrics.fields("tennis").map { it.key })
+        assertEquals("runs", SportMetrics.primaryKey("cricket"))
+        assertEquals("aces", SportMetrics.primaryKey("tennis"))
+    }
+
+    @Test
     fun summaryUsesLabels() {
         val line = SportMetrics.summary("swimming", mapOf("distance" to 1500.0, "time" to 1260.0))
         assertEquals("1500 distance (m)  ·  1260 time (s)", line)
