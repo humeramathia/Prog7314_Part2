@@ -18,7 +18,13 @@
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
-# Keep Retrofit/Gson models if minify is turned on later.
+# Keep Retrofit/Gson models, Firebase and Room entities for the minified release.
 -keep class com.example.prog7314_part2.data.remote.** { *; }
+-keep class com.example.prog7314_part2.data.local.** { *; }
+-keep class com.google.gson.** { *; }
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
 -keepattributes Signature
 -keepattributes *Annotation*
+-keepattributes EnclosingMethod
+-keepattributes InnerClasses
