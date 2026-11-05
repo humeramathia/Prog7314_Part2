@@ -2,6 +2,7 @@ package com.example.prog7314_part2.ui.performance
 
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,11 +11,10 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.data.PerformanceRepository
 import com.example.prog7314_part2.data.SportMetrics
 import com.example.prog7314_part2.data.remote.ApiClient
-import com.example.prog7314_part2.data.remote.CreatePerformanceRequest
 import com.example.prog7314_part2.data.remote.MetricDto
-import com.example.prog7314_part2.data.remote.PerformanceSessionDto
 import com.example.prog7314_part2.data.remote.SportDto
 import com.example.prog7314_part2.databinding.FragmentAddPerformanceBinding
 import com.example.prog7314_part2.ui.session
@@ -37,7 +37,7 @@ class AddPerformanceFragment : Fragment() {
         linkedMapOf<String, Pair<TextInputLayout, TextInputEditText>>()
 
     private var sportCall: Call<SportDto>? = null
-    private var saveCall: Call<PerformanceSessionDto>? = null
+    private var saveCall: Call<*>? = null
     private var recordedAt = System.currentTimeMillis()
 
     override fun onCreateView(
@@ -61,7 +61,6 @@ class AddPerformanceFragment : Fragment() {
         binding.btnSave.setOnClickListener { save() }
         binding.btnPickDate.setOnClickListener { pickDate() }
         renderDate()
-
         loadMetricFields()
     }
 
@@ -89,41 +88,28 @@ class AddPerformanceFragment : Fragment() {
         val sportId = session().sportId
 
         if (sportId.isBlank()) {
-            showMessage("Select a sport before recording a session.")
+            showMessage(getString(R.string.error_select_sport_session))
             return
         }
 
-        // Render the fields immediately from the local metric schema so the
-        // screen is never a dead end when the API is asleep or offline.
         renderLocalMetrics(sportId)
 
         val call = ApiClient.service.getSport(sportId)
         sportCall = call
-
         call.enqueue(object : Callback<SportDto> {
-
-            override fun onResponse(
-                call: Call<SportDto>,
-                response: Response<SportDto>
-            ) {
+            override fun onResponse(call: Call<SportDto>, response: Response<SportDto>) {
                 if (_binding !== screen) return
-
                 val metrics = response.body()?.metrics.orEmpty()
-
                 if (!response.isSuccessful || metrics.isEmpty()) {
-                    // Local fallback fields are already on screen.
+                    Log.i("Performance", "sport metrics fallback sport=$sportId")
                     return
                 }
-
                 renderApiMetrics(metrics)
             }
 
-            override fun onFailure(
-                call: Call<SportDto>,
-                error: Throwable
-            ) {
+            override fun onFailure(call: Call<SportDto>, error: Throwable) {
                 if (_binding !== screen || call.isCanceled) return
-                // Local fallback fields are already on screen; nothing to do.
+                Log.i("Performance", "load sport metrics fail sport=$sportId ${error.message}")
             }
         })
     }
@@ -133,7 +119,7 @@ class AddPerformanceFragment : Fragment() {
         screen.metricFields.removeAllViews()
         inputs.clear()
         SportMetrics.fields(sportId).forEach { field ->
-            addMetricInput(MetricDto(field.key, field.label))
+            addMetricInput(MetricDto(field.key, getString(field.labelRes)))
         }
         screen.btnSave.isEnabled = inputs.isNotEmpty()
     }
@@ -142,13 +128,13 @@ class AddPerformanceFragment : Fragment() {
         val screen = _binding ?: return
         val currentKeys = inputs.keys.toList()
         val apiKeys = metrics.map { it.key }
-        // Skip rebuild when the API returns exactly the same fields we
-        // already showed from the local schema; keeps any typed values.
         if (currentKeys == apiKeys) return
 
         screen.metricFields.removeAllViews()
         inputs.clear()
-        metrics.forEach { addMetricInput(it) }
+        metrics.forEach { metric ->
+            addMetricInput(MetricDto(metric.key, getString(SportMetrics.labelRes(metric.key))))
+        }
         screen.btnSave.isEnabled = inputs.isNotEmpty()
     }
 
@@ -161,16 +147,13 @@ class AddPerformanceFragment : Fragment() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 if (inputs.isNotEmpty()) {
-                    topMargin =
-                        (16 * resources.displayMetrics.density).toInt()
+                    topMargin = (16 * resources.displayMetrics.density).toInt()
                 }
             }
         }
 
         val input = TextInputEditText(layout.context).apply {
-            inputType =
-                InputType.TYPE_CLASS_NUMBER or
-                        InputType.TYPE_NUMBER_FLAG_DECIMAL
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             setSingleLine(true)
         }
 
@@ -190,24 +173,15 @@ class AddPerformanceFragment : Fragment() {
             val value = text.replace(',', '.').toDoubleOrNull()
 
             val error = when {
-                text.isBlank() ->
-                    getString(R.string.required_field)
-
-                value == null || !value.isFinite() ->
-                    "Enter a valid number."
-
-                value < 0.0 ->
-                    "Enter zero or a positive number."
-
+                text.isBlank() -> getString(R.string.required_field)
+                value == null || !value.isFinite() -> getString(R.string.error_invalid_number)
+                value < 0.0 -> getString(R.string.error_negative_number)
                 else -> null
             }
 
             layout.error = error
-
             if (error != null) {
-                if (firstInvalid == null) {
-                    firstInvalid = input
-                }
+                if (firstInvalid == null) firstInvalid = input
             } else if (value != null) {
                 values[key] = value
             }
@@ -217,55 +191,32 @@ class AddPerformanceFragment : Fragment() {
             it.requestFocus()
             return
         }
-
         if (values.isEmpty()) return
 
         setLoading(true)
-
-        val request = CreatePerformanceRequest(
-            sportId = session().sportId,
+        val sportId = session().sportId
+        val notes = screen.notesInput.text?.toString().orEmpty().trim()
+        saveCall = PerformanceRepository.save(
+            sportId = sportId,
             recordedAt = recordedAt,
-            notes = screen.notesInput.text
-                ?.toString()
-                .orEmpty()
-                .trim(),
-            metrics = values
-        )
-
-        val call = ApiClient.service.createPerformance(request)
-        saveCall = call
-
-        call.enqueue(object : Callback<PerformanceSessionDto> {
-
-            override fun onResponse(
-                call: Call<PerformanceSessionDto>,
-                response: Response<PerformanceSessionDto>
-            ) {
-                if (_binding !== screen) return
-
-                if (!response.isSuccessful || response.body() == null) {
-                    setLoading(false)
-                    showMessage("Could not save the session.")
-                    return
-                }
-
+            notes = notes,
+            metrics = values,
+            onSuccess = { session ->
+                if (_binding !== screen) return@save
                 setLoading(false)
-                findNavController().popBackStack()
-            }
-
-            override fun onFailure(
-                call: Call<PerformanceSessionDto>,
-                error: Throwable
-            ) {
-                if (_binding !== screen || call.isCanceled) return
-
-                setLoading(false)
-                showMessage(
-                    "Could not connect to the API. " +
-                            "The session was not saved."
+                Log.i(
+                    "Performance",
+                    "saved session ${session.id} sport=$sportId pending=${session.pending}"
                 )
+                findNavController().popBackStack()
+            },
+            onError = {
+                if (_binding !== screen) return@save
+                setLoading(false)
+                Log.i("Performance", "save fail sport=$sportId")
+                showMessage(getString(R.string.error_save_session))
             }
-        })
+        )
     }
 
     private fun setLoading(loading: Boolean) {
@@ -279,9 +230,7 @@ class AddPerformanceFragment : Fragment() {
     }
 
     private fun showMessage(message: String) {
-        context?.let {
-            Toast.makeText(it, message, Toast.LENGTH_LONG).show()
-        }
+        context?.let { Toast.makeText(it, message, Toast.LENGTH_LONG).show() }
     }
 
     override fun onDestroyView() {

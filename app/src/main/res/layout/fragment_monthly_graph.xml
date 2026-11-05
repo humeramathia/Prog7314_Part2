@@ -21,11 +21,13 @@
         android:text="@string/graph_metric"
         android:textColor="@color/muted" />
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/metricChips"
+    <Spinner
+        android:id="@+id/metricSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp" />
+        android:layout_marginTop="4dp"
+        android:minHeight="48dp"
+        android:contentDescription="@string/graph_metric" />
 
     <LinearLayout
         android:layout_width="match_parent"

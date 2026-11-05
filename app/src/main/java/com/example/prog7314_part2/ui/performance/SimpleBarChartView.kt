@@ -7,6 +7,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.data.GraphPoints
 import java.text.NumberFormat
 
 class SimpleBarChartView @JvmOverloads constructor(
@@ -43,9 +44,7 @@ class SimpleBarChartView @JvmOverloads constructor(
     private var slotWidth = dp(64f)
 
     fun setData(values: List<Pair<String, Double>>) {
-        points = values.filter {
-            it.second.isFinite() && it.second >= 0.0
-        }
+        points = GraphPoints.forChart(values)
 
         valueLabels = points.map { numberFormat.format(it.second) }
 
@@ -130,7 +129,7 @@ class SimpleBarChartView @JvmOverloads constructor(
         }
 
         canvas.drawText(
-            "Day of month",
+            context.getString(R.string.graph_day_of_month),
             width / 2f,
             height - dp(8f),
             labelPaint
