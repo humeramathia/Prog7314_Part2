@@ -58,4 +58,3 @@ Release signing scaffolding, HTTPS-only release networking, hosted API defaults 
 - Android Developers, AGP built-in Kotlin and KSP: https://developer.android.com/build/migrate-to-built-in-kotlin
 - KSP 2.3.4 release: https://github.com/google/ksp/releases/tag/2.3.4
 
-AI assistance: OpenAI Codex helped implement this branch, review retry/account-isolation behaviour and prepare tests/documentation. The group must include this honestly in its final AI declaration and verify the device behaviour before claiming completion.
