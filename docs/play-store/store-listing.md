@@ -28,7 +28,7 @@ You can delete the account from Settings.
 | --- | --- | --- |
 | High-res icon | `icon-512.png` | 512 × 512 PNG |
 | Feature graphic | `feature-graphic-1024x500.png` | 1024 × 500 PNG |
-| Phone screenshots | `screenshots/` | `01-welcome.png` … `05-confirm-email.png` |
+| Phone screenshots | `screenshots/` | `01-welcome.png` … `06-choose-sport.png` |
 
 ## Privacy policy URL
 

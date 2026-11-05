@@ -19,7 +19,7 @@ This folder is the listing evidence for `za.co.sportsphere.app`. It is a signed,
 | Privacy policy | `privacy-policy.md` |
 | Content rating answers | `content-rating.md` |
 | Data safety answers | `data-safety.md` |
-| Phone screenshots | `screenshots/` — welcome, Home, Calendar, Learn, confirm email |
+| Phone screenshots | `screenshots/` — welcome, Home, Calendar, Learn, confirm email, choose sport |
 
 ## Build the signed AAB and APK
 
@@ -51,6 +51,6 @@ Set Render `ANDROID_APP_PACKAGE` to `za.co.sportsphere.app`.
 
 ## Still done on the phone / Play Console
 
-1. Paste listing copy, privacy URL, content rating, data safety, and the five phone screenshots into Play Console.
+1. Paste listing copy, privacy URL, content rating, data safety, and the six phone screenshots into Play Console.
 2. Upload the AAB. Keep the `.jks` and `keystore.properties` off Git and off the GitHub Release.
 3. Do not tag `v1.0.0-final-poe` until this branch is on `main`.
