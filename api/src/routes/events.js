@@ -3,6 +3,7 @@ const { randomUUID } = require("crypto");
 const { asyncHandler, HttpError } = require("../httpError");
 const { publicDoc, publicList, parseMillis } = require("../store/shape");
 const { LIMITS, clipped, assertLength } = require("../limits");
+const { notifyFixture } = require("../notify");
 
 const TYPES = new Set(["PRACTICE", "SOCIAL_EVENT", "ANNOUNCEMENT"]);
 
@@ -116,7 +117,11 @@ router.post(
       notes: clipped(body.notes),
       createdBy: req.user.uid
     };
-    res.status(201).json(publicDoc(await req.app.locals.store.upsertEvent(event)));
+    const saved = await req.app.locals.store.upsertEvent(event);
+    // Push to everyone following this sport. Not awaited: a slow or failed
+    // push must never delay or fail the save.
+    notifyFixture(req.app.locals.notifier, saved, sport.name, "created");
+    res.status(201).json(publicDoc(saved));
   })
 );
 
@@ -147,7 +152,10 @@ router.put(
       }
       existing.type = type;
     }
-    res.json(publicDoc(await store.upsertEvent(existing)));
+    const saved = await store.upsertEvent(existing);
+    const sport = await store.getSport(saved.sportId);
+    notifyFixture(req.app.locals.notifier, saved, sport && sport.name, "updated");
+    res.json(publicDoc(saved));
   })
 );
 

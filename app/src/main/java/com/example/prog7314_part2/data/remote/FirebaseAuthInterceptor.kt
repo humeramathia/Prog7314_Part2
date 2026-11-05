@@ -22,6 +22,11 @@ import java.util.concurrent.TimeUnit
 class FirebaseAuthInterceptor : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
+        // Offline sync pins the token to the owner of the queued row. Never
+        // replace it with another account's token during an account switch.
+        if (chain.request().header("Authorization") != null) {
+            return proceedAndWatch(chain, chain.request())
+        }
         val user = FirebaseAuth.getInstance().currentUser
 
         // With SKIP_AUTH=true the local API permits anonymous requests,
@@ -60,6 +65,14 @@ class FirebaseAuthInterceptor : Interceptor {
             .header("Authorization", "Bearer $token")
             .build()
 
-        return chain.proceed(authenticatedRequest)
+        return proceedAndWatch(chain, authenticatedRequest)
+    }
+
+    private fun proceedAndWatch(chain: Interceptor.Chain, request: okhttp3.Request): Response {
+        val response = chain.proceed(request)
+        if (response.code == 401 && !request.url.encodedPath.endsWith("/health")) {
+            AuthExpiry.notifyUnauthorized()
+        }
+        return response
     }
 }

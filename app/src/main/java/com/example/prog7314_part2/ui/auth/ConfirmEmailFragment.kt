@@ -7,12 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.example.prog7314_part2.databinding.FragmentConfirmEmailBinding
+import com.example.prog7314_part2.ui.biometrics
 import com.example.prog7314_part2.ui.session
+import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
 import retrofit2.Call
 import retrofit2.Callback
@@ -70,6 +73,7 @@ class ConfirmEmailFragment : Fragment() {
         binding.btnConfirmed.setOnClickListener { checkVerification(quiet = false) }
         binding.btnResend.setOnClickListener { resendEmail() }
         binding.btnOpenEmail.setOnClickListener { openEmailApp() }
+        binding.btnVerifyInBrowser.setOnClickListener { verifyInBrowser() }
     }
 
     override fun onResume() {
@@ -155,6 +159,12 @@ class ConfirmEmailFragment : Fragment() {
                 val profile = response.body()
                 if (response.isSuccessful && profile != null) {
                     ProfileSync.apply(session(), profile)
+                    ProfileSync.applyNotifications(requireContext(), profile)
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        ProfileSync.applyBiometrics(biometrics(), profile)
+                        goNext()
+                    }
+                    return
                 }
                 goNext()
             }
@@ -168,12 +178,15 @@ class ConfirmEmailFragment : Fragment() {
     }
 
     private fun goNext() {
-        val destination = if (session().sportId.isBlank()) {
-            R.id.action_confirm_to_sport
-        } else {
-            R.id.action_confirm_to_home
+        BiometricEnrollment.offerAfterSignIn(this) {
+            if (_binding == null) return@offerAfterSignIn
+            val destination = if (session().sportId.isBlank()) {
+                R.id.action_confirm_to_sport
+            } else {
+                R.id.action_confirm_to_home
+            }
+            findNavController().navigate(destination)
         }
-        findNavController().navigate(destination)
     }
 
     /**
@@ -198,19 +211,36 @@ class ConfirmEmailFragment : Fragment() {
 
         lastResendAt = SystemClock.elapsedRealtime()
         setLoading(true)
-        EmailVerification.send(user) { _, message ->
+        EmailVerification.send(user, preferApi = true) { _, message ->
             if (_binding !== screen) return@send
             setLoading(false)
             showMessage(message)
         }
     }
 
-    /** Best-effort launch of the user's default email app. */
+    /** Opens a Firebase verify URL in the browser so Hotmail is not required. */
+    private fun verifyInBrowser() {
+        val screen = binding
+        val context = context ?: return
+        if (auth.currentUser == null) {
+            returnToLogin()
+            return
+        }
+        setLoading(true)
+        EmailVerification.openVerificationLink(context) { _, message ->
+            if (_binding !== screen) return@openVerificationLink
+            setLoading(false)
+            showMessage(message)
+        }
+    }
+
+    /** Best-effort launch of the user's inbox, including Outlook on the web. */
     private fun openEmailApp() {
         openedInbox = true
-        val opened = context?.let { EmailVerification.openInbox(it) } == true
+        val email = auth.currentUser?.email
+        val opened = context?.let { EmailVerification.openInbox(it, email) } == true
         if (!opened) {
-            showMessage("Open Gmail or your mail app, then tap the Verify link.")
+            showMessage("Open Gmail, Outlook or your mail app, then tap the Verify link.")
         }
     }
 
@@ -234,6 +264,7 @@ class ConfirmEmailFragment : Fragment() {
             btnConfirmed.isEnabled = !loading
             btnResend.isEnabled = !loading
             btnOpenEmail.isEnabled = !loading
+            btnVerifyInBrowser.isEnabled = !loading
         }
     }
 

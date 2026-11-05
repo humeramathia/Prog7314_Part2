@@ -2,15 +2,22 @@ package com.example.prog7314_part2
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.example.prog7314_part2.data.biometric.BiometricDecision
+import com.example.prog7314_part2.data.biometric.BiometricSession
 import com.example.prog7314_part2.databinding.ActivityMainBinding
+import com.example.prog7314_part2.notifications.NotificationPermissionPrompt
+import com.example.prog7314_part2.ui.auth.BiometricPromptHost
 import com.example.prog7314_part2.ui.auth.EmailVerification
+import com.example.prog7314_part2.ui.auth.ProfileSync
 
 /**
  * The single [AppCompatActivity] that hosts every fragment in the app.
@@ -30,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -46,16 +54,18 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.navHostFragment) as NavHostFragment
         val navController = navHost.navController
         binding.bottomNav.setupWithNavController(navController)
-        val session = (application as SportSphereApp).session
+        // Ask for notification permission on first Home visit and keep the push registration current.
+        NotificationPermissionPrompt.attach(this, navController)
+        val app = application as SportSphereApp
+        val session = app.session
 
         // First launch after a return to the app: skip the welcome screen
-        // if a valid Firebase session is already on device.
+        // if a valid Firebase session is already on device. When biometric
+        // unlock is on, stop on the lock screen so Home never loads data
+        // first (PROG7314 POE tips, s. 3).
         if (savedInstanceState == null && session.isLoggedIn) {
-            val start = if (session.sportId.isBlank()) {
-                R.id.sportSelectFragment
-            } else {
-                R.id.homeFragment
-            }
+            val start = startDestination(app)
+            Log.i(TAG, "cold start destination=$start unlocked=${BiometricSession.unlocked}")
 
             navController.navigate(
                 start,
@@ -80,7 +90,8 @@ class MainActivity : AppCompatActivity() {
             R.id.welcomeFragment,
             R.id.loginFragment,
             R.id.registerFragment,
-            R.id.confirmEmailFragment
+            R.id.confirmEmailFragment,
+            R.id.biometricLockFragment
         )
         binding.toolbar.setNavigationOnClickListener { navController.navigateUp() }
         navController.addOnDestinationChangedListener { _, destination, _ ->
@@ -89,8 +100,12 @@ class MainActivity : AppCompatActivity() {
             val showToolbar = destination.id !in tabs && destination.id !in hideChrome
             binding.toolbar.visibility = if (showToolbar) View.VISIBLE else View.GONE
             binding.toolbar.title = destination.label
+            if (destination.id == R.id.homeFragment) {
+                openFromNotification(intent, navController)
+            }
         }
         handleEmailLink(intent)
+        openFromNotification(intent, navController)
     }
 
     /**
@@ -101,6 +116,25 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleEmailLink(intent)
+        val navHost = supportFragmentManager
+            .findFragmentById(R.id.navHostFragment) as NavHostFragment
+        openFromNotification(intent, navHost.navController)
+    }
+
+    /**
+     * Fixture pushes set [EXTRA_OPEN] to [OPEN_CALENDAR]. After unlock,
+     * land on Calendar so tapping the notification opens the right screen.
+     */
+    private fun openFromNotification(
+        intent: Intent?,
+        navController: androidx.navigation.NavController
+    ) {
+        if (intent?.getStringExtra(EXTRA_OPEN) != OPEN_CALENDAR) return
+        val app = application as SportSphereApp
+        if (!app.session.isLoggedIn || needsBiometricGate(app)) return
+        intent.removeExtra(EXTRA_OPEN)
+        if (navController.currentDestination?.id == R.id.calendarFragment) return
+        navController.navigate(R.id.calendarFragment)
     }
 
     /** Applies a `verifyEmail` oobCode when the app is opened from an email link. */
@@ -126,11 +160,13 @@ class MainActivity : AppCompatActivity() {
             R.id.welcomeFragment,
             R.id.loginFragment,
             R.id.registerFragment,
-            R.id.confirmEmailFragment
+            R.id.confirmEmailFragment,
+            R.id.biometricLockFragment
         )
 
         val destination = navController.currentDestination?.id ?: return
-        val session = (application as SportSphereApp).session
+        val app = application as SportSphereApp
+        val session = app.session
 
         if (destination !in publicScreens && !session.isLoggedIn) {
             navController.navigate(
@@ -140,6 +176,47 @@ class MainActivity : AppCompatActivity() {
                     popUpTo(R.id.nav_graph) { inclusive = true }
                 }
             )
+            return
         }
+
+        if (destination !in publicScreens && needsBiometricGate(app)) {
+            Log.i(TAG, "resume re-gate destination=$destination")
+            navController.navigate(
+                R.id.biometricLockFragment,
+                null,
+                androidx.navigation.navOptions {
+                    popUpTo(R.id.nav_graph) { inclusive = true }
+                }
+            )
+            return
+        }
+
+        openFromNotification(intent, navController)
+    }
+
+    private fun startDestination(app: SportSphereApp): Int {
+        if (needsBiometricGate(app)) return R.id.biometricLockFragment
+        return if (app.session.sportId.isBlank()) {
+            R.id.sportSelectFragment
+        } else {
+            R.id.homeFragment
+        }
+    }
+
+    private fun needsBiometricGate(app: SportSphereApp): Boolean {
+        val status = BiometricPromptHost(this).canAuthenticateStatus()
+        val enabled = app.biometrics.enabledFor(ProfileSync.currentUserId())
+        return BiometricDecision.shouldGate(
+            loggedIn = app.session.isLoggedIn,
+            enabledForUser = enabled,
+            unlockedThisProcess = BiometricSession.unlocked,
+            canAuthenticateStatus = status
+        )
+    }
+
+    companion object {
+        const val EXTRA_OPEN = "open"
+        const val OPEN_CALENDAR = "calendar"
+        private const val TAG = "Biometric"
     }
 }

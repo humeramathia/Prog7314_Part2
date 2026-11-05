@@ -4,6 +4,7 @@ import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -22,6 +23,8 @@ import retrofit2.http.Query
  * here declares an `Authorization` header.
  */
 interface SportSphereApi {
+    @GET("health")
+    fun health(): Call<HealthDto>
 
     // ─────────────────────────── Auth ────────────────────────────
 
@@ -34,6 +37,13 @@ interface SportSphereApi {
     @POST("api/auth/send-verification")
     fun sendVerificationEmail(): Call<SendVerificationResponse>
 
+    /**
+     * Returns a Firebase verify-email URL for the signed-in user.
+     * Used when Hotmail / Outlook never deliver the Firebase message.
+     */
+    @POST("api/auth/verification-link")
+    fun verificationLink(): Call<VerificationLinkResponse>
+
     // ────────────────────────── Profile ──────────────────────────
 
     /** Returns the current user's profile, creating one on first call. */
@@ -45,6 +55,10 @@ interface SportSphereApi {
     fun updateMyProfile(
         @Body request: UpdateProfileRequest
     ): Call<UserProfileDto>
+
+    /** Removes the Cosmos profile. Firebase Auth deletion happens on the phone. */
+    @DELETE("api/me")
+    fun deleteMyAccount(): Call<Void>
 
     // ─────────────────────────── Sports ──────────────────────────
 
@@ -66,13 +80,15 @@ interface SportSphereApi {
     /** Every session recorded by the current user for [sportId], newest first. */
     @GET("api/performance")
     fun getPerformance(
-        @Query("sportId") sportId: String
+        @Query("sportId") sportId: String,
+        @Header("Authorization") authorization: String? = null
     ): Call<List<PerformanceSessionDto>>
 
     /** Persists a new session and returns the server's authoritative copy. */
     @POST("api/performance")
     fun createPerformance(
-        @Body request: CreatePerformanceRequest
+        @Body request: CreatePerformanceRequest,
+        @Header("Authorization") authorization: String? = null
     ): Call<PerformanceSessionDto>
 
     /**
@@ -90,7 +106,8 @@ interface SportSphereApi {
     /** Removes one session owned by the current user. Returns HTTP 204. */
     @DELETE("api/performance/{sessionId}")
     fun deletePerformance(
-        @Path("sessionId") sessionId: String
+        @Path("sessionId") sessionId: String,
+        @Header("Authorization") authorization: String? = null
     ): Call<Void>
 
     // ─────────────────────────── Learn ───────────────────────────
@@ -154,4 +171,23 @@ interface SportSphereApi {
     fun deleteEvent(
         @Path("eventId") eventId: String
     ): Call<Void>
+
+    // ──────────────────── Notifications & language ────────────────────
+
+    /**
+     * Saves the phone's FCM token, the notification switch and/or the
+     * chosen language on the user's profile. Same endpoint as
+     * [updateMyProfile], with a body that only carries device settings.
+     */
+    @PATCH("api/me")
+    fun updateDeviceSettings(
+        @Body request: DeviceSettingsRequest
+    ): Call<UserProfileDto>
+
+    /**
+     * Asks the API to push a test message to this account's phone.
+     * 409 = phone not registered yet, 503 = server has no FCM credentials.
+     */
+    @POST("api/me/test-notification")
+    fun sendTestNotification(): Call<TestNotificationResponse>
 }

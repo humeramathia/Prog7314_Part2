@@ -2,9 +2,12 @@ package com.example.prog7314_part2.ui.performance
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import com.example.prog7314_part2.R
 import com.example.prog7314_part2.data.PerformanceSession
 import com.example.prog7314_part2.data.SportMetrics
+import com.example.prog7314_part2.data.local.SyncPolicy
 import com.example.prog7314_part2.databinding.ItemSessionBinding
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -31,6 +34,14 @@ class SessionAdapter(
             append(SportMetrics.summary(session.sportId, session.metrics))
             if (session.notes.isNotBlank()) append("  ·  ").append(session.notes)
         }
+        holder.binding.sessionPending.isVisible = session.pending
+        holder.binding.sessionPending.setText(
+            if (session.syncState == SyncPolicy.FAILED) {
+                R.string.performance_sync_failed
+            } else {
+                R.string.session_pending
+            }
+        )
         holder.binding.btnDeleteSession.setOnClickListener { onDelete(session) }
     }
 

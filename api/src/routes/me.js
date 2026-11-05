@@ -2,6 +2,7 @@ const express = require("express");
 const { asyncHandler, HttpError } = require("../httpError");
 const { publicDoc } = require("../store/shape");
 const { LIMITS, clipped, assertLength } = require("../limits");
+const { applyDeviceSettings, publicUser, testMessage } = require("./deviceSettings");
 
 async function ensureUser(store, firebaseUser) {
   const existing = await store.getUser(firebaseUser.uid);
@@ -14,6 +15,7 @@ async function ensureUser(store, firebaseUser) {
     sportId: "",
     sportName: "",
     darkMode: false,
+    biometricEnabled: false,
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
@@ -26,7 +28,7 @@ router.get(
   "/",
   asyncHandler(async (req, res) => {
     const user = await ensureUser(req.app.locals.store, req.user);
-    res.json(publicDoc(user));
+    res.json(publicUser(publicDoc(user)));
   })
 );
 
@@ -35,7 +37,7 @@ router.patch(
   asyncHandler(async (req, res) => {
     const store = req.app.locals.store;
     const user = await ensureUser(store, req.user);
-    const { displayName, sportId, sportName, darkMode } = req.body || {};
+    const { displayName, sportId, sportName, darkMode, biometricEnabled } = req.body || {};
 
     if (displayName !== undefined) {
       const name = clipped(displayName);
@@ -45,6 +47,7 @@ router.patch(
       user.displayName = name;
     }
     if (darkMode !== undefined) user.darkMode = Boolean(darkMode);
+    if (biometricEnabled !== undefined) user.biometricEnabled = Boolean(biometricEnabled);
 
     if (sportId !== undefined) {
       const sport = await store.getSport(String(sportId));
@@ -58,8 +61,55 @@ router.patch(
       user.sportName = String(sportName);
     }
 
+    // Push token, language and notification switches.
+    const deviceError = applyDeviceSettings(user, req.body || {});
+    if (deviceError) throw new HttpError(400, deviceError);
+
     user.updatedAt = Date.now();
-    res.json(publicDoc(await store.upsertUser(user)));
+    res.json(publicUser(publicDoc(await store.upsertUser(user))));
+  })
+);
+
+router.delete(
+  "/",
+  asyncHandler(async (req, res) => {
+    await req.app.locals.store.deleteUser(req.user.uid);
+    res.status(204).send();
+  })
+);
+
+/**
+ * Sends a push to the caller's own phone so they can confirm that FCM is
+ * wired end to end. Used by Settings → "Send test notification".
+ */
+router.post(
+  "/test-notification",
+  asyncHandler(async (req, res) => {
+    const store = req.app.locals.store;
+    const user = await ensureUser(store, req.user);
+    if (!user.fcmToken) {
+      throw new HttpError(409, "This account has no registered device. Turn notifications on in Settings first.");
+    }
+    if (user.notificationsEnabled === false) {
+      throw new HttpError(409, "Notifications are switched off for this account.");
+    }
+    let result;
+    try {
+      result = await req.app.locals.notifier.toToken(user.fcmToken, testMessage(user));
+    } catch (error) {
+      // Stale token (app reinstalled, data cleared): forget it so the phone re-registers.
+      if (String(error.code || "").includes("registration-token-not-registered")) {
+        delete user.fcmToken;
+        user.updatedAt = Date.now();
+        await store.upsertUser(user);
+        throw new HttpError(410, "This device registration expired. Reopen the app and try again.");
+      }
+      throw error;
+    }
+    if (!result.sent) {
+      throw new HttpError(503, "Push notifications are not configured on the server.");
+    }
+    res.json({ ok: true, messageId: result.id });
   })
 );
 

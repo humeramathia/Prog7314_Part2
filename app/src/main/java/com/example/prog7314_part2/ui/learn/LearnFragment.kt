@@ -1,6 +1,7 @@
 package com.example.prog7314_part2.ui.learn
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -93,6 +94,7 @@ class LearnFragment : Fragment() {
                 screen.learnLoading.isVisible = false
 
                 if (!response.isSuccessful) {
+                    Log.w(TAG, "list http=${response.code()} sport=$sportId")
                     showError(screen)
                     return
                 }
@@ -101,11 +103,13 @@ class LearnFragment : Fragment() {
                 adapter.submit(guides)
                 screen.learnErrorGroup.isVisible = false
                 screen.emptyLearn.isVisible = LearnSupport.shouldShowEmpty(guides, isLoading = false, hasError = false)
+                Log.i(TAG, "loaded sport=$sportId category=${selectedCategory ?: "ALL"} count=${guides.size}")
             }
 
             override fun onFailure(call: Call<List<LearnGuideDto>>, error: Throwable) {
                 if (_binding !== screen || call.isCanceled) return
                 screen.learnLoading.isVisible = false
+                Log.w(TAG, "list failed sport=$sportId: ${error.message}")
                 showError(screen)
             }
         })
@@ -122,5 +126,9 @@ class LearnFragment : Fragment() {
         learnCall = null
         super.onDestroyView()
         _binding = null
+    }
+
+    private companion object {
+        const val TAG = "Learn"
     }
 }

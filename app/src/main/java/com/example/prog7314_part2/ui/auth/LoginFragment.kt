@@ -19,12 +19,15 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.example.prog7314_part2.databinding.FragmentLoginBinding
+import com.example.prog7314_part2.ui.biometrics
 import com.example.prog7314_part2.ui.session
+import kotlinx.coroutines.launch
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -109,11 +112,11 @@ class LoginFragment : Fragment() {
         screen.passwordLayout.error = null
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            screen.emailLayout.error = "Enter a valid email address."
+            screen.emailLayout.error = getString(R.string.invalid_email)
             return
         }
         if (password.isBlank()) {
-            screen.passwordLayout.error = "Enter your password."
+            screen.passwordLayout.error = getString(R.string.error_login_password_blank)
             return
         }
 
@@ -130,11 +133,11 @@ class LoginFragment : Fragment() {
                     setLoading(false)
                     val message = when (result.exception) {
                         is com.google.firebase.FirebaseNetworkException ->
-                            "No connection. Check your internet and try again."
+                            getString(R.string.error_login_connection)
                         is com.google.firebase.FirebaseTooManyRequestsException ->
-                            "Too many attempts. Please try again later."
+                            getString(R.string.error_login_too_many)
                         else ->
-                            "Could not sign in. Check your email and password."
+                            getString(R.string.error_login_password)
                     }
                     screen.passwordLayout.error = message
                     screen.passwordInput.requestFocus()
@@ -146,7 +149,7 @@ class LoginFragment : Fragment() {
                 val user = auth.currentUser
                 if (user == null) {
                     setLoading(false)
-                    showMessage("Session unavailable. Please try again.")
+                    showMessage(getString(R.string.error_session_unavailable))
                     return@loginComplete
                 }
 
@@ -157,13 +160,13 @@ class LoginFragment : Fragment() {
                     setLoading(false)
 
                     if (!reloadResult.isSuccessful) {
-                        showMessage("Could not check your account. Check your connection.")
+                        showMessage(getString(R.string.error_check_account))
                         return@reloadComplete
                     }
 
                     val refreshedUser = auth.currentUser
                     if (refreshedUser == null) {
-                        showMessage("Please try logging in again.")
+                        showMessage(getString(R.string.error_try_login_again))
                         return@reloadComplete
                     }
 
@@ -248,7 +251,7 @@ class LoginFragment : Fragment() {
                         credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
                     ) {
                         setLoading(false)
-                        showMessage("An unsupported sign-in response was received.")
+                        showMessage(getString(R.string.error_google_unsupported))
                         return
                     }
 
@@ -256,7 +259,7 @@ class LoginFragment : Fragment() {
                         GoogleIdTokenCredential.createFrom(credential.data)
                     } catch (error: GoogleIdTokenParsingException) {
                         setLoading(false)
-                        showMessage("Could not read the Google sign-in response.")
+                        showMessage(getString(R.string.error_google_parse))
                         return
                     }
 
@@ -273,14 +276,13 @@ class LoginFragment : Fragment() {
                             if (!task.isSuccessful) {
                                 val message = when (task.exception) {
                                     is com.google.firebase.FirebaseNetworkException ->
-                                        "No connection. Check your internet and try again."
+                                        getString(R.string.error_login_connection)
                                     is com.google.firebase.FirebaseTooManyRequestsException ->
-                                        "Too many attempts. Please try again later."
+                                        getString(R.string.error_login_too_many)
                                     is com.google.firebase.auth.FirebaseAuthUserCollisionException ->
-                                        "This email already uses another sign-in method. " +
-                                                "Log in with that method first."
+                                        getString(R.string.error_google_collision)
                                     else ->
-                                        "Google sign-in failed. Please try again."
+                                        getString(R.string.error_google_failed)
                                 }
                                 showMessage(message)
                                 return@googleComplete
@@ -288,7 +290,7 @@ class LoginFragment : Fragment() {
 
                             val user = task.result?.user
                             if (user == null) {
-                                showMessage("Session unavailable. Please try again.")
+                                showMessage(getString(R.string.error_session_unavailable))
                                 return@googleComplete
                             }
 
@@ -322,13 +324,11 @@ class LoginFragment : Fragment() {
 
                     val message = when (error) {
                         is GetCredentialCancellationException ->
-                            "Google sign-in cancelled."
+                            getString(R.string.error_google_cancelled)
                         is NoCredentialException ->
-                            "No Google account is available. Add one in the " +
-                                    "device's Settings, then try again."
+                            getString(R.string.error_google_no_account)
                         else ->
-                            "Could not open Google sign-in. Check your connection, " +
-                                    "Google Play services and Firebase configuration."
+                            getString(R.string.error_google_open)
                     }
                     showMessage(message)
                 }
@@ -349,7 +349,7 @@ class LoginFragment : Fragment() {
         screen.emailLayout.error = null
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            screen.emailLayout.error = "Enter your email address first."
+            screen.emailLayout.error = getString(R.string.error_reset_email_first)
             return
         }
 
@@ -360,9 +360,9 @@ class LoginFragment : Fragment() {
                 if (_binding !== screen) return@resetComplete
                 setLoading(false)
                 if (result.isSuccessful) {
-                    showMessage("If this email has an account, check its inbox for reset instructions.")
+                    showMessage(getString(R.string.error_reset_sent))
                 } else {
-                    showMessage("Could not request a password reset. Please try again later.")
+                    showMessage(getString(R.string.error_reset_failed))
                 }
             }
     }
@@ -393,8 +393,12 @@ class LoginFragment : Fragment() {
                         return
                     }
                     ProfileSync.apply(session(), profile)
+                    ProfileSync.applyNotifications(requireContext(), profile)
                     setLoading(false)
-                    goNext()
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        ProfileSync.applyBiometrics(biometrics(), profile)
+                        goNext()
+                    }
                 }
 
                 override fun onFailure(
@@ -412,12 +416,15 @@ class LoginFragment : Fragment() {
 
     /** Sport-select for first-time users; Home for returning ones. */
     private fun goNext() {
-        val destination = if (session().sportId.isBlank()) {
-            R.id.action_login_to_sport
-        } else {
-            R.id.action_login_to_home
+        BiometricEnrollment.offerAfterSignIn(this) {
+            if (_binding == null) return@offerAfterSignIn
+            val destination = if (session().sportId.isBlank()) {
+                R.id.action_login_to_sport
+            } else {
+                R.id.action_login_to_home
+            }
+            findNavController().navigate(destination)
         }
-        findNavController().navigate(destination)
     }
 
     // ─────────────────────── UI plumbing ─────────────────────────────

@@ -19,6 +19,9 @@ function createMemoryStore() {
       users.set(user.userId, clone(user));
       return clone(user);
     },
+    async deleteUser(userId) {
+      return users.delete(userId);
+    },
 
     async listSports() {
       return [...sports.values()].map(clone);
@@ -59,6 +62,15 @@ function createMemoryStore() {
       return performance.has(sessionId) ? clone(performance.get(sessionId)) : null;
     },
     async upsertPerformance(session) {
+      performance.set(session.id, clone(session));
+      return clone(session);
+    },
+    async createPerformance(session) {
+      if (performance.has(session.id)) {
+        const error = new Error("Session already exists");
+        error.code = 409;
+        throw error;
+      }
       performance.set(session.id, clone(session));
       return clone(session);
     },

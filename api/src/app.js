@@ -10,10 +10,17 @@ const learnRouter = require("./routes/learn");
 const authRouter = require("./routes/auth");
 const { verifyEmailPage } = require("./pages/verifyEmailPage");
 const { verifiedPage } = require("./pages/verifiedPage");
+const { createFcmNotifier } = require("./notify");
+const { messaging } = require("./firebase");
 
-function createApp(store) {
+/**
+ * @param store data store (Cosmos DB in production, memory in tests)
+ * @param options.notifier push sender; defaults to Firebase Cloud Messaging
+ */
+function createApp(store, options = {}) {
   const app = express();
   app.locals.store = store;
+  app.locals.notifier = options.notifier || createFcmNotifier(messaging);
   app.use(cors({ origin: true }));
   app.use(express.json({ limit: "1mb" }));
 
@@ -25,8 +32,10 @@ function createApp(store) {
       service: "sportsphere-api",
       version,
       store: store.kind,
+      capabilities: { performanceClientId: true },
       skipAuth: require("./config").config.skipAuth,
-      firebaseAdmin: firebaseReady()
+      firebaseAdmin: firebaseReady(),
+      notifier: app.locals.notifier.kind
     });
   });
 

@@ -1,2 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources />
+<resources>
+    <style name="Theme.SportSphere.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/teal_dark</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/teal</item>
+        <item name="postSplashScreenTheme">@style/Theme.Prog7314_Part2</item>
+    </style>
+</resources>

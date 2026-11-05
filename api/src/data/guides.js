@@ -1,3 +1,5 @@
+const { blobUrl } = require("./blobMedia");
+
 const GUIDES = {
   football: {
     RULES: {
@@ -10,14 +12,13 @@ const GUIDES = {
       title: "Weight of pass and a clean first touch",
       body:
         "Open your hips toward the target and strike the middle of the ball with the inside of the foot so the pass stays on the grass. Cushion the first touch with a slightly withdrawn foot so the ball dies a metre in front of you, not under your studs. Shield with your body between opponent and ball, then play the way you are facing. Practise wall passes against a rebounder before you try them in a match.",
-      mediaUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Emirates_Stadium_inside.jpg/640px-Emirates_Stadium_inside.jpg"
+      mediaUrl: blobUrl("football-techniques.jpg")
     },
     TRAINING: {
       title: "Small-sided games and a weekly load",
       body:
         "Play 4 v 4 on a 30-metre box twice a week. The tight space forces a first touch and a pass under pressure. Add one longer 11 v 11 session for match shape. Keep a simple load log: minutes played, how heavy the legs felt, and sleep. If RPE stays above 8 for two days, drop the extra shooting work and keep the recovery run.",
-      mediaUrl: null
+      mediaUrl: blobUrl("football-training.jpg")
     },
     SAFETY: {
       title: "Concussion substitutes and stud checks",
@@ -37,14 +38,13 @@ const GUIDES = {
       title: "Still head, high elbow, and a straight bat",
       body:
         "Get your eyes level at the bowler's release, then step toward the pitch of the ball. Keep the front elbow high so the bat face stays straight down the wicket. Play late under the eyes for a defensive block; roll the wrists on a square cut so the ball stays down. For spin, use your pad as a second line only after you have tried to hit with the bat.",
-      mediaUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Cricket_bat_and_ball.jpg/640px-Cricket_bat_and_ball.jpg"
+      mediaUrl: blobUrl("cricket-techniques.jpg")
     },
     TRAINING: {
       title: "Nets with a purpose, not just hitting",
       body:
         "Split a nets hour: 20 minutes of throw-downs on a specific length, 20 minutes of facing a bowling machine or partner at match pace, 20 minutes of fielding at short leg and in the covers. Count how many balls you leave outside off. Bowlers should mark a target on a good length and count hits out of 12, not just 'how it felt'.",
-      mediaUrl: null
+      mediaUrl: blobUrl("cricket-training.jpg")
     },
     SAFETY: {
       title: "Helmets, boxes, and a hard new ball",
@@ -64,14 +64,13 @@ const GUIDES = {
       title: "Continental serve and a unit-turn forehand",
       body:
         "Hold a continental grip for the serve so you can pronate through the ball instead of pushing it. Trophy pose, toss slightly in front, and hit up. On the forehand, turn shoulders before the ball bounces, take the racquet back with a loose wrist, and finish over the opposite shoulder. Split-step as your opponent makes contact so you can push off toward the ball.",
-      mediaUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Nadal_RG08.jpg/640px-Nadal_RG08.jpg"
+      mediaUrl: blobUrl("tennis-techniques.jpg")
     },
     TRAINING: {
       title: "Cross-court rallies before you go for winners",
       body:
         "Hit 50 cross-court forehands without missing, then 50 backhands. Only then add a down-the-line change-up. Serve practice: 10 to the T, 10 to the wide, 10 into the body, and count first-serve percentage. Finish with a tie-break so the session still has a scoreboard. Rest 45 seconds between service games the way you would in a match.",
-      mediaUrl: null
+      mediaUrl: blobUrl("tennis-training.jpg")
     },
     SAFETY: {
       title: "Ankles, heat, and a racquet that fits",
@@ -91,14 +90,13 @@ const GUIDES = {
       title: "Triple threat, a jump stop, and a high follow-through",
       body:
         "Catch in triple threat: ball in the hip, eyes up, ready to shoot, pass, or drive. Use a jump stop so both feet land together and you still have a pivot. Shoot with elbow under the ball, snap the wrist, and hold the follow-through until the net moves. On defence, stay in a stance with your chest to the ball and a hand in the passing lane, not reaching at the dribble.",
-      mediaUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Basketball.png/640px-Basketball.png"
+      mediaUrl: blobUrl("basketball-techniques.jpg")
     },
     TRAINING: {
       title: "Mikan, form shooting, then 3-on-2",
       body:
         "Start under the rim with Mikan drills on both sides, then five makes from five spots around the key before you move out. Conditioning is suicides and closeouts, not only laps. Finish with 3-on-2 / 2-on-1 so decision-making is tired. Track makes out of 10 from the elbow; that number tells you more than how a scrimmage felt.",
-      mediaUrl: null
+      mediaUrl: blobUrl("basketball-training.jpg")
     },
     SAFETY: {
       title: "Ankle braces, landings, and a clean floor",
@@ -118,14 +116,13 @@ const GUIDES = {
       title: "Catch, rotation, and a quiet kick",
       body:
         "In freestyle, set a high elbow catch so you pull water back, not down. Rotate from the hips so each stroke can reach. The kick should splash little; big splashes usually mean knees that are too bent. Breathe to both sides every three strokes in training so a crowded lane does not force a pattern you cannot race with. Count strokes per length and try to drop one without slowing the clock.",
-      mediaUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Swimming_pool_lanes.jpg/640px-Swimming_pool_lanes.jpg"
+      mediaUrl: blobUrl("swimming-techniques.jpg")
     },
     TRAINING: {
       title: "Aerobic sets, then race-pace 50s",
       body:
         "Build a week around one long aerobic set (for example 10 x 200 on a comfortable interval), one threshold set, and one speed set of 50s at race pace with full rest. Write splits on a slate. If the last 50 of a set is more than two seconds slower than the first, the interval is too tight. Dryland: pull-ups, hollow holds, and ankle mobility, not random gym selfies.",
-      mediaUrl: null
+      mediaUrl: blobUrl("swimming-training.jpg")
     },
     SAFETY: {
       title: "Depth, lane etiquette, and a shoulder that complains",
@@ -145,14 +142,13 @@ const GUIDES = {
       title: "Drive phase, tall sprinting, and a measured approach",
       body:
         "The first 30 metres of a sprint are a drive: shin angles forward, arms pumping, eyes down the track. Then stand tall and recycle the legs, not sit in the hips. For jumps, mark an approach that is consistent to the centimetre, not 'about 12 steps'. On the shot, keep the elbow high and finish with the thumb down so the implement does not dump out the side.",
-      mediaUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Usain_Bolt_after_winning_the_100m_in_Daegu.jpg/640px-Usain_Bolt_after_winning_the_100m_in_Daegu.jpg"
+      mediaUrl: blobUrl("athletics-techniques.jpg")
     },
     TRAINING: {
       title: "Acceleration, then speed endurance, then weights",
       body:
         "A sprinter's week needs short accelerations (10–30 m), a flying 30, and one speed-endurance session such as 3 x 120 m with long rest. Do not run race-pace 300s every day. Throws and jumps need technical throws or run-throughs when fresh, then gym. Track how you feel 24 hours later; if the next session is a shuffle, you overcooked the last one.",
-      mediaUrl: null
+      mediaUrl: blobUrl("athletics-training.jpg")
     },
     SAFETY: {
       title: "Spikes, throwing sectors, and a hamstring that twinges",

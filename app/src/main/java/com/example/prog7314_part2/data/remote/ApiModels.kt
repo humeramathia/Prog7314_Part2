@@ -1,5 +1,7 @@
 package com.example.prog7314_part2.data.remote
 
+data class HealthDto(val capabilities: Map<String, Boolean>? = null)
+
 /**
  * Data-transfer objects (DTOs) that mirror the JSON returned by the
  * SportSphere REST API.
@@ -24,6 +26,12 @@ data class UserProfileDto(
     val sportId: String,
     val sportName: String,
     val darkMode: Boolean,
+    val biometricEnabled: Boolean = false,
+    val language: String = "en",
+    val notificationsEnabled: Boolean = true,
+    val notifyPractice: Boolean = true,
+    val notifyEvents: Boolean = true,
+    val notifyAnnouncements: Boolean = true,
     val createdAt: Long,
     val updatedAt: Long
 )
@@ -38,7 +46,8 @@ data class UpdateProfileRequest(
     val displayName: String? = null,
     val sportId: String? = null,
     val sportName: String? = null,
-    val darkMode: Boolean? = null
+    val darkMode: Boolean? = null,
+    val biometricEnabled: Boolean? = null
 )
 
 /** A single metric column returned inside a [SportDto]. */
@@ -70,7 +79,8 @@ data class PerformanceSessionDto(
     val metrics: Map<String, Double>,
     /** Server's choice of the "headline" metric for graphs and tiles. */
     val primaryMetric: String,
-    val primaryValue: Double
+    val primaryValue: Double,
+    val clientId: String? = null
 )
 
 /** Body for `POST /api/performance`. */
@@ -78,7 +88,9 @@ data class CreatePerformanceRequest(
     val sportId: String,
     val recordedAt: Long,
     val notes: String,
-    val metrics: Map<String, Double>
+    val metrics: Map<String, Double>,
+    /** Stable local UUID. The API uses it to make upload retries idempotent. */
+    val clientId: String? = null
 )
 
 /** A single dot on the monthly graph (one session, one metric value). */
@@ -148,5 +160,12 @@ data class ApiErrorDto(
 data class SendVerificationResponse(
     val ok: Boolean = false,
     val email: String? = null,
+    val error: String? = null
+)
+
+/** Response of `POST /api/auth/verification-link`. */
+data class VerificationLinkResponse(
+    val ok: Boolean = false,
+    val link: String? = null,
     val error: String? = null
 )

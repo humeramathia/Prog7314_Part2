@@ -134,6 +134,22 @@ class LearnSupportTest {
     }
 
     @Test
+    fun isBlobUrl_trueForAzureBlobHttps() {
+        assertTrue(
+            LearnSupport.isBlobUrl(
+                "https://st10276384media.blob.core.windows.net/learn/football-techniques.jpg"
+            )
+        )
+        assertTrue(
+            LearnSupport.isImageUrl(
+                "https://st10276384media.blob.core.windows.net/learn/football-techniques.jpg"
+            )
+        )
+        assertFalse(LearnSupport.isBlobUrl("https://upload.wikimedia.org/wikipedia/commons/x.jpg"))
+        assertFalse(LearnSupport.isBlobUrl(null))
+    }
+
+    @Test
     fun isImageUrl_falseForVideoOrBlank() {
         assertFalse(LearnSupport.isImageUrl("https://cdn.example.com/clip.mp4"))
         assertFalse(LearnSupport.isImageUrl(null))
