@@ -2,6 +2,7 @@ package com.example.prog7314_part2.ui.performance
 
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,15 +19,19 @@ import com.example.prog7314_part2.data.remote.MetricDto
 import com.example.prog7314_part2.data.remote.SportDto
 import com.example.prog7314_part2.databinding.FragmentAddPerformanceBinding
 import com.example.prog7314_part2.ui.session
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class AddPerformanceFragment : Fragment() {
 
@@ -37,6 +42,7 @@ class AddPerformanceFragment : Fragment() {
         linkedMapOf<String, Pair<TextInputLayout, TextInputEditText>>()
 
     private var sportCall: Call<SportDto>? = null
+    private var recordedAt = System.currentTimeMillis()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,8 +63,28 @@ class AddPerformanceFragment : Fragment() {
     ) {
         binding.btnSave.isEnabled = false
         binding.btnSave.setOnClickListener { save() }
-
+        binding.btnPickDate.setOnClickListener { pickDate() }
+        renderDate()
         loadMetricFields()
+    }
+
+    private fun pickDate() {
+        val picker = MaterialDatePicker.Builder.datePicker()
+            .setTitleText(getString(R.string.session_date))
+            .setSelection(recordedAt)
+            .build()
+        picker.addOnPositiveButtonClickListener { millis ->
+            recordedAt = millis
+            renderDate()
+        }
+        picker.show(parentFragmentManager, "session_date")
+    }
+
+    private fun renderDate() {
+        binding.btnPickDate.text = SimpleDateFormat(
+            "EEE d MMM yyyy",
+            Locale.getDefault()
+        ).format(Date(recordedAt))
     }
 
     private fun loadMetricFields() {
@@ -66,41 +92,28 @@ class AddPerformanceFragment : Fragment() {
         val sportId = session().sportId
 
         if (sportId.isBlank()) {
-            showMessage(getString(R.string.performance_select_sport))
+            showMessage(getString(R.string.error_select_sport_session))
             return
         }
 
-        // Render the fields immediately from the local metric schema so the
-        // screen is never a dead end when the API is asleep or offline.
         renderLocalMetrics(sportId)
 
         val call = ApiClient.service.getSport(sportId)
         sportCall = call
-
         call.enqueue(object : Callback<SportDto> {
-
-            override fun onResponse(
-                call: Call<SportDto>,
-                response: Response<SportDto>
-            ) {
+            override fun onResponse(call: Call<SportDto>, response: Response<SportDto>) {
                 if (_binding !== screen) return
-
                 val metrics = response.body()?.metrics.orEmpty()
-
                 if (!response.isSuccessful || metrics.isEmpty()) {
-                    // Local fallback fields are already on screen.
+                    Log.i("Performance", "sport metrics fallback sport=$sportId")
                     return
                 }
-
                 renderApiMetrics(metrics)
             }
 
-            override fun onFailure(
-                call: Call<SportDto>,
-                error: Throwable
-            ) {
+            override fun onFailure(call: Call<SportDto>, error: Throwable) {
                 if (_binding !== screen || call.isCanceled) return
-                // Local fallback fields are already on screen; nothing to do.
+                Log.i("Performance", "load sport metrics fail sport=$sportId ${error.message}")
             }
         })
     }
@@ -110,7 +123,7 @@ class AddPerformanceFragment : Fragment() {
         screen.metricFields.removeAllViews()
         inputs.clear()
         SportMetrics.fields(sportId).forEach { field ->
-            addMetricInput(MetricDto(field.key, field.label))
+            addMetricInput(MetricDto(field.key, getString(field.labelRes)))
         }
         screen.btnSave.isEnabled = inputs.isNotEmpty()
     }
@@ -119,13 +132,13 @@ class AddPerformanceFragment : Fragment() {
         val screen = _binding ?: return
         val currentKeys = inputs.keys.toList()
         val apiKeys = metrics.map { it.key }
-        // Skip rebuild when the API returns exactly the same fields we
-        // already showed from the local schema; keeps any typed values.
         if (currentKeys == apiKeys) return
 
         screen.metricFields.removeAllViews()
         inputs.clear()
-        metrics.forEach { addMetricInput(it) }
+        metrics.forEach { metric ->
+            addMetricInput(MetricDto(metric.key, getString(SportMetrics.labelRes(metric.key))))
+        }
         screen.btnSave.isEnabled = inputs.isNotEmpty()
     }
 
@@ -138,16 +151,13 @@ class AddPerformanceFragment : Fragment() {
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 if (inputs.isNotEmpty()) {
-                    topMargin =
-                        (16 * resources.displayMetrics.density).toInt()
+                    topMargin = (16 * resources.displayMetrics.density).toInt()
                 }
             }
         }
 
         val input = TextInputEditText(layout.context).apply {
-            inputType =
-                InputType.TYPE_CLASS_NUMBER or
-                        InputType.TYPE_NUMBER_FLAG_DECIMAL
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             setSingleLine(true)
         }
 
@@ -167,24 +177,15 @@ class AddPerformanceFragment : Fragment() {
             val value = text.replace(',', '.').toDoubleOrNull()
 
             val error = when {
-                text.isBlank() ->
-                    getString(R.string.required_field)
-
-                value == null || !value.isFinite() ->
-                    getString(R.string.performance_invalid_number)
-
-                value < 0.0 ->
-                    getString(R.string.performance_positive_number)
-
+                text.isBlank() -> getString(R.string.required_field)
+                value == null || !value.isFinite() -> getString(R.string.error_invalid_number)
+                value < 0.0 -> getString(R.string.error_negative_number)
                 else -> null
             }
 
             layout.error = error
-
             if (error != null) {
-                if (firstInvalid == null) {
-                    firstInvalid = input
-                }
+                if (firstInvalid == null) firstInvalid = input
             } else if (value != null) {
                 values[key] = value
             }
@@ -194,36 +195,37 @@ class AddPerformanceFragment : Fragment() {
             it.requestFocus()
             return
         }
-
         if (values.isEmpty()) return
-
-        setLoading(true)
-
-        val request = CreatePerformanceRequest(
-            sportId = session().sportId,
-            recordedAt = System.currentTimeMillis(),
-            notes = screen.notesInput.text
-                ?.toString()
-                .orEmpty()
-                .trim(),
-            metrics = values
-        )
 
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid == null) {
-            setLoading(false)
             showMessage(getString(R.string.performance_sign_in))
             return
         }
+
+        val sportId = session().sportId
+        val notes = screen.notesInput.text?.toString().orEmpty().trim()
+        val request = CreatePerformanceRequest(
+            sportId = sportId,
+            recordedAt = recordedAt,
+            notes = notes,
+            metrics = values
+        )
+
+        setLoading(true)
         val app = requireActivity().application as SportSphereApp
-        // Finish the durable save even if the view closes during the disk write.
         app.performanceScope.launch {
-            val saved = runCatching { app.performance.save(uid, request) }.isSuccess
+            val saved = runCatching { app.performance.save(uid, request) }
             withContext(Dispatchers.Main) {
                 if (_binding !== screen) return@withContext
                 setLoading(false)
-                if (saved) findNavController().popBackStack()
-                else showMessage(getString(R.string.performance_save_failed))
+                if (saved.isSuccess) {
+                    Log.i("Performance", "saved session ${saved.getOrNull()} sport=$sportId pending=true")
+                    findNavController().popBackStack()
+                } else {
+                    Log.i("Performance", "save fail sport=$sportId")
+                    showMessage(getString(R.string.performance_save_failed))
+                }
             }
         }
     }
@@ -239,9 +241,7 @@ class AddPerformanceFragment : Fragment() {
     }
 
     private fun showMessage(message: String) {
-        context?.let {
-            Toast.makeText(it, message, Toast.LENGTH_LONG).show()
-        }
+        context?.let { Toast.makeText(it, message, Toast.LENGTH_LONG).show() }
     }
 
     override fun onDestroyView() {

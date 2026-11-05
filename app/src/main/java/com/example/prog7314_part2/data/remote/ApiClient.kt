@@ -9,23 +9,24 @@ import java.util.concurrent.TimeUnit
 /**
  * Lazily-initialised singleton that owns the app's Retrofit + OkHttp
  * stack. Both variants use the hosted API by default; debug builds
- * can override the URL with the sportsphere.apiBaseUrl Gradle property.
+ * can override the URL with `-Psportsphere.apiBaseUrl=`.
  */
 object ApiClient {
 
     /**
      * HTTP stack shared by every Retrofit call.
      *
-     * The longer read timeout lets a sleeping hosted API wake up.
+     * The 60 s timeouts cover a Render free-tier cold start, which often
+     * takes longer than 15 s after the service has been idle.
      */
     private val httpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             // Attaches the Firebase ID token to every request; see
             // [FirebaseAuthInterceptor].
             .addInterceptor(FirebaseAuthInterceptor())
-            .connectTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 

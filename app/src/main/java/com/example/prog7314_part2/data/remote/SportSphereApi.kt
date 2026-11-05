@@ -7,6 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -140,4 +141,42 @@ interface SportSphereApi {
     fun getEvent(
         @Path("eventId") eventId: String
     ): Call<CalendarEventDto>
+
+    /** Creates an event owned by the signed-in user. */
+    @POST("api/events")
+    fun createEvent(
+        @Body request: UpsertEventRequest
+    ): Call<CalendarEventDto>
+
+    /** Updates an event the signed-in user organised. */
+    @PUT("api/events/{eventId}")
+    fun updateEvent(
+        @Path("eventId") eventId: String,
+        @Body request: UpsertEventRequest
+    ): Call<CalendarEventDto>
+
+    /** Deletes an event the signed-in user organised. Returns HTTP 204. */
+    @DELETE("api/events/{eventId}")
+    fun deleteEvent(
+        @Path("eventId") eventId: String
+    ): Call<Void>
+
+    // ──────────────────── Notifications & language ────────────────────
+
+    /**
+     * Saves the phone's FCM token, the notification switch and/or the
+     * chosen language on the user's profile. Same endpoint as
+     * [updateMyProfile], with a body that only carries device settings.
+     */
+    @PATCH("api/me")
+    fun updateDeviceSettings(
+        @Body request: DeviceSettingsRequest
+    ): Call<UserProfileDto>
+
+    /**
+     * Asks the API to push a test message to this account's phone.
+     * 409 = phone not registered yet, 503 = server has no FCM credentials.
+     */
+    @POST("api/me/test-notification")
+    fun sendTestNotification(): Call<TestNotificationResponse>
 }

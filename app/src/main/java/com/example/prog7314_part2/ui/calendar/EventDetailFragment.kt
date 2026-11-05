@@ -9,11 +9,14 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
 import com.example.prog7314_part2.data.remote.ApiClient
 import com.example.prog7314_part2.data.remote.CalendarEventDto
 import com.example.prog7314_part2.data.remote.toLocal
 import com.example.prog7314_part2.databinding.FragmentEventDetailBinding
+import com.example.prog7314_part2.ui.auth.ProfileSync
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,6 +36,7 @@ class EventDetailFragment : Fragment() {
     private var _binding: FragmentEventDetailBinding? = null
     private val binding get() = _binding!!
     private var eventCall: Call<CalendarEventDto>? = null
+    private var deleteCall: Call<Void>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,6 +51,8 @@ class EventDetailFragment : Fragment() {
         // Hidden until the event loads — the button needs an event to
         // pre-populate the calendar-insert intent.
         binding.btnAddToCalendar.isVisible = false
+        binding.btnEditEvent.isVisible = false
+        binding.btnDeleteEvent.isVisible = false
         loadEvent()
     }
 
@@ -108,6 +114,17 @@ class EventDetailFragment : Fragment() {
         binding.detailNotes.text =
             if (event.notes.isBlank()) "" else getString(R.string.event_notes, event.notes)
 
+        val canManage = ProfileSync.canManageEvent(dto.createdBy.orEmpty())
+        binding.btnEditEvent.isVisible = canManage
+        binding.btnDeleteEvent.isVisible = canManage
+        binding.btnEditEvent.setOnClickListener {
+            findNavController().navigate(
+                R.id.action_event_to_edit,
+                Bundle().apply { putString("eventId", dto.id) }
+            )
+        }
+        binding.btnDeleteEvent.setOnClickListener { confirmDelete(dto.id) }
+
         binding.btnAddToCalendar.isVisible = true
         binding.btnAddToCalendar.setOnClickListener {
             val insert = Intent(Intent.ACTION_INSERT).apply {
@@ -135,9 +152,40 @@ class EventDetailFragment : Fragment() {
         }
     }
 
+    private fun confirmDelete(eventId: String) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.delete_event)
+            .setMessage(R.string.delete_event_confirm)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.delete) { _, _ -> deleteEvent(eventId) }
+            .show()
+    }
+
+    private fun deleteEvent(eventId: String) {
+        val call = ApiClient.service.deleteEvent(eventId)
+        deleteCall = call
+        call.enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (_binding == null) return
+                if (response.isSuccessful) {
+                    findNavController().popBackStack()
+                } else {
+                    Toast.makeText(requireContext(), getString(R.string.error_delete_event), Toast.LENGTH_LONG).show()
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, error: Throwable) {
+                if (_binding == null || call.isCanceled) return
+                Toast.makeText(requireContext(), ProfileSync.UNAVAILABLE, Toast.LENGTH_LONG).show()
+            }
+        })
+    }
+
     override fun onDestroyView() {
         eventCall?.cancel()
+        deleteCall?.cancel()
         eventCall = null
+        deleteCall = null
         super.onDestroyView()
         _binding = null
     }

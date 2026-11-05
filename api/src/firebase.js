@@ -70,4 +70,13 @@ async function verifyIdToken(token) {
   return loadAdmin().auth().verifyIdToken(token);
 }
 
-module.exports = { firebaseReady, verifyIdToken };
+/**
+ * Firebase Cloud Messaging client, or null when Firebase Admin is not
+ * configured (local dev without a service account, Jest).
+ */
+function messaging() {
+  if (!firebaseReady()) return null;
+  return loadAdmin().messaging();
+}
+
+module.exports = { firebaseReady, verifyIdToken, messaging };

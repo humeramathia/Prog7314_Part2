@@ -11,20 +11,53 @@
         android:orientation="vertical"
         android:padding="20dp">
 
+        <View
+            android:layout_width="72dp"
+            android:layout_height="6dp"
+            android:background="@drawable/bg_pitch_stripe" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_hero"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:padding="20dp">
 
-            <TextView
-                android:id="@+id/greeting"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textColor="@color/slate"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/clubhouse"
+                    android:textAllCaps="true"
+                    android:textColor="@color/amber"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/greeting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/on_hero"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/sportChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:contentDescription="@string/cd_sport_chip"
+                    android:textColor="@color/on_hero"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <ImageButton
                 android:id="@+id/btnSettings"
@@ -32,17 +65,9 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/settings"
-                android:src="@drawable/ic_settings" />
+                android:src="@drawable/ic_settings"
+                android:tint="@color/on_hero" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/sportChip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:contentDescription="@string/cd_sport_chip"
-            android:textColor="@color/teal"
-            android:textSize="14sp" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/nextPracticeCard"
@@ -51,30 +76,32 @@
             android:layout_marginTop="20dp"
             android:contentDescription="@string/next_practice"
             app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="16dp"
-            app:strokeColor="@color/stroke"
-            app:strokeWidth="1dp">
+            app:cardCornerRadius="18dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/next_practice"
-                    android:textColor="@color/muted"
-                    android:textSize="12sp" />
+                    android:textAllCaps="true"
+                    android:textColor="@color/teal"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/nextPracticeTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:textColor="@color/slate"
-                    android:textSize="18sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -93,28 +120,30 @@
             android:layout_marginTop="12dp"
             android:contentDescription="@string/cd_latest_session"
             app:cardBackgroundColor="@color/surface"
-            app:cardCornerRadius="16dp"
-            app:strokeColor="@color/stroke"
-            app:strokeWidth="1dp">
+            app:cardCornerRadius="18dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="18dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/latest_score"
-                    android:textColor="@color/muted"
-                    android:textSize="12sp" />
+                    android:textAllCaps="true"
+                    android:textColor="@color/teal"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/latestScoreValue"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:textColor="@color/slate"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -126,6 +155,6 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="20dp"
-            android:text="@string/learn" />
+            android:text="@string/playbook" />
     </LinearLayout>
 </ScrollView>

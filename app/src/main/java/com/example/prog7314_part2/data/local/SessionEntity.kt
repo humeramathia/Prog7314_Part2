@@ -31,7 +31,13 @@ data class SessionEntity(
     fun toRequest() = CreatePerformanceRequest(sportId, recordedAt, notes, metrics(), localId)
 
     fun toLocal() = PerformanceSession(
-        localId, sportId, recordedAt, metrics(), notes, syncState
+        id = localId,
+        sportId = sportId,
+        recordedAt = recordedAt,
+        metrics = metrics(),
+        notes = notes,
+        syncState = syncState,
+        pending = syncState != SyncPolicy.SYNCED
     )
 
     companion object {

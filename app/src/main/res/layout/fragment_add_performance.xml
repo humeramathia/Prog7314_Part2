@@ -18,6 +18,15 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPickDate"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/session_date"
+            android:text="@string/session_date" />
+
         <LinearLayout
             android:id="@+id/metricFields"
             android:layout_width="match_parent"
@@ -30,7 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:hint="Notes">
+            android:hint="@string/notes">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/notesInput"
@@ -38,6 +47,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="top"
                 android:inputType="textMultiLine"
+                android:maxLength="500"
                 android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 

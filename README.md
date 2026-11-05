@@ -1,5 +1,116 @@
 # SportSphere
 
+## Project demonstration
+
+Watch the complete SportSphere demonstration:
+
+**[SportSphere application demo — YouTube](https://youtu.be/tjFNfCUy-mA)**
+
+## PROG7314 - Group Members
+
+<table>
+  <thead>
+    <tr>
+      <th>Group member</th>
+      <th>Student number</th>
+      <th>Responsibilities and contribution</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Humera Mathia</strong><br>Group Leader</td>
+      <td><code>ST10276384</code></td>
+      <td>
+        <ul>
+          <li>Designed and implemented the Android user interface.</li>
+          <li>Created the Node.js and Express REST API.</li>
+          <li>Integrated the REST API with the Android application.</li>
+          <li>Wired the screens and Retrofit service to the hosted API.</li>
+          <li>Configured and integrated the Azure Cosmos DB database.</li>
+          <li>Prepared and maintained the project README documentation.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Mohammed Ba Yazed</strong></td>
+      <td><code>ST10174227</code></td>
+      <td>
+        <p><strong>Authentication Path A — Email and password</strong></p>
+        <ul>
+          <li>Built registration with display name, email, password, password confirmation, and acceptance of the terms and conditions.</li>
+          <li>Added inline validation for empty fields, invalid email addresses, short passwords, and passwords that do not match.</li>
+          <li>Created accounts with Firebase <code>createUserWithEmailAndPassword</code>.</li>
+          <li>Implemented Firebase email verification without allowing the user to continue directly to Home.</li>
+          <li>Built the confirmation screen with <strong>Resend</strong>, <strong>Open email app</strong>, and <strong>I have confirmed</strong> actions.</li>
+          <li>Kept unverified users in the confirmation flow until Firebase reports that the address is verified.</li>
+          <li>Implemented email/password login and redirected unverified accounts back to confirmation.</li>
+          <li>Used Firebase's authenticated session and ID token for API access.</li>
+          <li>Added <code>Authorization: Bearer &lt;token&gt;</code> to Retrofit requests through the OkHttp interceptor.</li>
+          <li>Handled first-time sport selection and profile updates through <code>PATCH /api/me</code> before entering Home.</li>
+        </ul>
+        <p><strong>Authentication Path B — Google SSO</strong></p>
+        <ul>
+          <li>Added the <strong>Continue with Google</strong> login option.</li>
+          <li>Connected Android Credential Manager and the Google account picker to Firebase Authentication.</li>
+          <li>Skipped the confirmation screen for Google accounts whose email is already verified.</li>
+          <li>Used the same Firebase ID-token and Bearer-header flow as email/password authentication.</li>
+          <li>Directed users without a saved profile or selected sport to Sport Select; returning users with a sport continue to Home.</li>
+          <li>Configured Firebase SHA-1 requirements for emulator and physical-device signing keys.</li>
+        </ul>
+        <p><strong>User-defined feature — Performance tracking and monthly graph</strong></p>
+        <ul>
+          <li>Built sport-specific performance forms instead of using a generic score field.</li>
+          <li>Loaded metric definitions from <code>GET /api/sports/:sportId</code>; for example, swimming uses distance/time while basketball uses points/rebounds.</li>
+          <li>Validated required metric fields and prevented empty submissions.</li>
+          <li>Saved sessions through <code>POST /api/performance</code> and persisted them in Cosmos DB.</li>
+          <li>Displayed chronological user history from <code>GET /api/performance?sportId=...</code>.</li>
+          <li>Built the monthly graph using <code>GET /api/performance/monthly?sportId=&amp;year=&amp;month=&amp;metric=</code>.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Imraan Nordien</strong></td>
+      <td><code>ST10434419</code></td>
+      <td>
+        <p><strong>Calendar and event details</strong></p>
+        <ul>
+          <li>Built the Calendar bottom-navigation screen.</li>
+          <li>Implemented the month view and teal event indicators on dates containing events.</li>
+          <li>Added the agenda view with events grouped by date.</li>
+          <li>Displayed each event's title, time, type, and venue.</li>
+          <li>Supported <code>PRACTICE</code>, <code>SOCIAL_EVENT</code>, and <code>ANNOUNCEMENT</code> type chips.</li>
+          <li>Applied the amber selected-state styling used throughout SportSphere.</li>
+          <li>Added safe empty-month and failed-load states with a Retry action.</li>
+          <li>Built Event Details with title, type, start/end time, venue, description, and notes.</li>
+          <li>Added the option to insert an event into the phone's calendar.</li>
+          <li>Maintained correct back navigation and bottom-navigation behaviour.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Lilitha Mlobi</strong></td>
+      <td><code>ST10454944</code></td>
+      <td>
+        <p><strong>Learn and resource details</strong></p>
+        <ul>
+          <li>Built the Learn bottom-navigation screen.</li>
+          <li>Implemented Rules, Techniques, Training, and Safety category chips with an amber selected state.</li>
+          <li>Filtered learning resources by the user's selected sport and category.</li>
+          <li>Displayed resource titles and short body previews.</li>
+          <li>Added safe empty-category and failed-load states with a Retry action.</li>
+          <li>Built Resource Details with title, category, body, optional image, and optional video link from <code>mediaUrl</code>.</li>
+          <li>Maintained correct back navigation and bottom-navigation behaviour.</li>
+        </ul>
+        <p><strong>Quality assurance</strong></p>
+        <ul>
+          <li>Configured GitHub Actions workflows.</li>
+          <li>Created and maintained unit tests for the project.</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 SportSphere is a native Android sports companion application built for PROG7314 / OPSC7312 Part 2. It gives athletes one place to choose a sport, view events, record sport-specific performance, follow monthly progress, read learning material, and manage their account.
 
 The Android application uses Firebase Authentication and communicates with a custom Node.js REST API. The production API is hosted on Render, while application data is stored in Azure Cosmos DB.
@@ -12,12 +123,14 @@ The Android application uses Firebase Authentication and communicates with a cus
 | Target SDK | 36 |
 | Production API | <https://sportsphere-st10276384.onrender.com/> |
 | API health check | <https://sportsphere-st10276384.onrender.com/health> |
-| Repository | <https://github.com/humeramathia/Prog7314_Part2> |
+| Repository | <https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia> |
 
 > SportSphere is not an Expo or React Native project. The mobile client in `app/` is a native Kotlin Android application.
 
 ## Table of contents
 
+- [Project demonstration](#project-demonstration)
+- [PROG7314 - Group Members](#prog7314---group-members)
 - [Overview](#overview)
 - [Main features](#main-features)
 - [Technology stack](#technology-stack)
@@ -64,31 +177,34 @@ The application uses sport-specific performance fields instead of one generic sc
 - Email verification before an email/password account can enter the app
 - Firebase ID tokens attached to protected API requests
 - Local session protection and account-aware sport selection
-- Logout and dark-mode preferences in Settings
+- Logout, editable display name, and dark-mode preferences in Settings
+- Dark mode is stored on the server and applied again on the next login
 
 ### Sport selection
 
 - A catalog of six supported sports is loaded from the API
 - Each sport defines its own performance metrics
-- A local `FakeRepository` provides a fallback sport list if the API is temporarily unavailable
+- Sport selection is saved through `PATCH /api/me`; if the API is down the user stays on the picker and can retry
 
 ### Calendar
 
-- Sport-specific events
+- Sport-specific fixtures with teal markers on days that have events
 - Event types: `PRACTICE`, `SOCIAL_EVENT`, and `ANNOUNCEMENT`
+- Create, edit, and delete fixtures you organised; seeded club events stay read-only
 - Event detail screen
 - Add an event to the phone's calendar with Android's calendar insert intent
 
 ### Performance
 
-- Add and remove personal performance sessions
+- Add and delete personal performance sessions
+- Choose the session date instead of always stamping "now"
 - Store sport-specific metrics and optional notes
 - View previous sessions
-- Display monthly data in a custom bar chart
+- Display monthly data in a custom bar chart, with a metric selector
 
 ### Learn
 
-- Learning material filtered by sport
+- Sport-specific learning material (not a shared template with the sport name swapped in)
 - Categories: `RULES`, `TECHNIQUES`, `TRAINING`, and `SAFETY`
 - Support for image or video links through `mediaUrl`
 
@@ -126,15 +242,7 @@ Render: SportSphere Express API
                                         learning
 ```
 
-For local development, the Android emulator uses `10.0.2.2`, Android's special alias for the host computer:
-
-```text
-Android emulator (debug build)
-        |
-        | HTTP http://10.0.2.2:3000/
-        v
-Node.js API running on the development computer
-```
+By default the Android app talks to the hosted Render API, including debug builds on a physical phone. To run the emulator against a local Node process, rebuild with `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/` (`10.0.2.2` is Android's alias for the host computer).
 
 The app follows a single-activity structure. `MainActivity` hosts Navigation Component fragments and the bottom navigation bar. Retrofit provides typed API calls, while an OkHttp interceptor obtains the current Firebase ID token and adds it to requests.
 
@@ -293,7 +401,7 @@ SKIP_AUTH=true
 
 Never enable `SKIP_AUTH` in a public or production deployment.
 
-If a valid `COSMOS_KEY` is not configured locally, the API uses its in-memory store. This is useful for development, but data disappears when the Node process restarts.
+If a valid `COSMOS_KEY` is not configured locally, the API uses its in-memory store and `/health` reports `"store": "memory"`. This is useful for development, but data disappears when the Node process restarts. Production (`NODE_ENV=production`) refuses to start without Cosmos so a hosted API cannot silently lose data.
 
 ## How to run the project
 
@@ -344,20 +452,20 @@ An expected development response resembles:
 
 ### Run the Android app on an emulator
 
-1. Use the hosted API, or start a local API with `npm start` and set the debug override below.
+1. Start the local API with `npm start`.
 2. Place `google-services.json` in `app/`.
 3. Open the repository in Android Studio.
 4. Open **Build → Select Build Variant** and choose `debug`.
 5. Start an Android emulator.
 6. Select the emulator in the device list and click **Run**.
 
-Both build variants use `https://sportsphere-st10276384.onrender.com/` by default. To connect a debug build to the API running on your computer instead, build with:
+Debug and release both use the hosted Render API by default so a physical phone can sign in without `10.0.2.2`. To point an emulator at a local Node process instead:
 
 ```powershell
 .\gradlew.bat assembleDebug -Psportsphere.apiBaseUrl=http://10.0.2.2:3000/
 ```
 
-`10.0.2.2` is the Android emulator's alias for the development computer. It is not a physical phone address.
+Do not replace `10.0.2.2` with `localhost` inside an emulator. `localhost` means the emulator itself, while `10.0.2.2` routes to the development computer.
 
 Useful Gradle commands:
 
@@ -385,27 +493,204 @@ The physical-device build uses the hosted Render API, so the phone and developme
 5. Connect the phone with a data-capable USB cable.
 6. Accept the RSA debugging prompt on the phone.
 
-#### Install a development build
+#### Android Studio
 
-Select `debug` in Android Studio and run on the connected phone, or use:
+1. Open **Build → Select Build Variant**.
+2. Select the `debug` or `release` variant for `app`. Both talk to Render, so a physical phone works with either.
+3. Choose the physical phone in the device selector.
+4. Click **Run**.
+
+#### Command line
+
+From the repository root:
 
 ```powershell
-.\gradlew.bat testDebugUnitTest assembleDebug
+# Confirm that the hosted service is available
+Invoke-RestMethod https://sportsphere-st10276384.onrender.com/health
+
+# Build the signed coursework release APK
+.\gradlew.bat assembleRelease
+
+# Confirm that ADB can see the phone
 adb devices
-adb install -r app\build\outputs\apk\debug\app-debug.apk
+
+# Install or update SportSphere
+adb install -r app\build\outputs\apk\release\app-release.apk
 ```
 
-Debug now uses the hosted API by default. For final evidence, build and test the signed production release using [the release guide](docs/play-store/README.md). Release builds require private signing values and the group's final Firebase application ID; they no longer use the debug signing key.
+On macOS or Linux, use:
+
+```bash
+curl https://sportsphere-st10276384.onrender.com/health
+./gradlew assembleRelease
+adb devices
+adb install -r app/build/outputs/apk/release/app-release.apk
+```
+
+The APK is created at:
+
+```text
+app/build/outputs/apk/release/app-release.apk
+```
+
+> Debug and release both use the hosted Render URL, so a physical phone works with either variant. Use `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/` only when you want an emulator to talk to a local API.
 
 ## Physical-device implementation
 
-- `BuildConfig.API_BASE_URL` uses the hosted Render HTTPS URL in both variants. A debug-only Gradle property can select a local API.
-- Retrofit shares one OkHttp client. Connect/write timeouts are 15 seconds and read timeout is 60 seconds to allow a sleeping server to wake.
-- `INTERNET` and `ACCESS_NETWORK_STATE` permissions support API calls and offline status.
-- The main network security policy rejects cleartext traffic. A debug resource overlay permits local HTTP during development.
-- Firebase ID tokens authenticate protected API routes. The offline worker explicitly pins the request token to the queue owner, preventing uploads under another signed-in account.
-- Performance screens save/read through Room. WorkManager uploads pending sessions to the API; the API verifies the owner and persists in Cosmos. Other screens continue to use Retrofit directly.
-- Release signing reads an ignored `keystore.properties`, uses minification and has no debug-key fallback. See [release preparation](docs/play-store/README.md).
+Running on a phone required more than producing an APK. The app must use a network address the phone can reach, request internet access, use the correct transport security, authenticate hosted requests, and produce an installable signed package.
+
+### 1. Build-specific API addresses
+
+`app/build.gradle.kts` creates `BuildConfig.API_BASE_URL` with a different value for each build type:
+
+```kotlin
+val hostedApi = "https://sportsphere-st10276384.onrender.com/"
+val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: hostedApi
+buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+```
+
+Both debug and release use the public Render HTTPS URL so a physical phone can reach the API. `10.0.2.2` is an emulator-only alias and is no longer the default debug address.
+
+No URL has to be entered by the user. Gradle places the correct value in the generated `BuildConfig` class when it builds the selected variant.
+
+### 2. Retrofit consumes the generated URL
+
+`ApiClient.kt` passes the generated value to Retrofit:
+
+```kotlin
+val service: SportSphereApi by lazy {
+    Retrofit.Builder()
+        .baseUrl(BuildConfig.API_BASE_URL)
+        .client(httpClient)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(SportSphereApi::class.java)
+}
+```
+
+All interface paths in `SportSphereApi.kt`, such as `api/me` and `api/performance`, are relative to this base URL, so debug and release both talk to Render unless `apiBaseUrl` is overridden.
+
+The OkHttp client uses 60-second connect, read, and write timeouts. A free Render service can take longer than 15 seconds to wake after idle, so the longer window covers the first request after a cold start.
+
+### 3. Android internet permission
+
+`AndroidManifest.xml` grants the application network access:
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
+`INTERNET` is a normal Android permission, so the user is not shown a runtime permission dialog.
+
+### 4. Network security
+
+The application links its network policy in `AndroidManifest.xml`:
+
+```xml
+<application
+    android:networkSecurityConfig="@xml/network_security_config"
+    android:usesCleartextTraffic="true"
+    ... >
+```
+
+The intended policy in `network_security_config.xml` is to reject cleartext traffic by default and permit the local HTTP endpoint only during debugging:
+
+```xml
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <debug-overrides>
+        <base-config cleartextTrafficPermitted="true" />
+    </debug-overrides>
+</network-security-config>
+```
+
+Production device traffic uses `https://sportsphere-st10276384.onrender.com/`, so credentials and Firebase tokens are encrypted in transit.
+
+### 5. Firebase token authentication
+
+The production API has `SKIP_AUTH=false`. Every protected request from the phone must therefore include a valid Firebase ID token.
+
+`FirebaseAuthInterceptor.kt` obtains the current token on OkHttp's background thread:
+
+```kotlin
+val token = Tasks.await(
+    user.getIdToken(false),
+    15,
+    TimeUnit.SECONDS
+).token
+
+val authenticatedRequest = chain.request()
+    .newBuilder()
+    .header("Authorization", "Bearer $token")
+    .build()
+```
+
+The resulting request has this form:
+
+```http
+Authorization: Bearer <firebase-id-token>
+```
+
+The Express `requireAuth` middleware verifies the token with Firebase Admin. It then makes the verified user identity available to routes so records such as performance sessions can be scoped to the correct user.
+
+### 6. The API listens on a hosted interface
+
+The Node server uses the platform's port and binds to all interfaces:
+
+```javascript
+const host = process.env.HOST || "0.0.0.0";
+app.listen(config.port, host, () => {
+  // Server ready
+});
+```
+
+Binding to `0.0.0.0` is required on hosted platforms. Binding only to `localhost` would make the process unavailable to Render's public routing layer.
+
+### 7. Installable release signing
+
+The coursework release currently uses Android's debug keystore:
+
+```kotlin
+signingConfig = signingConfigs.getByName("debug")
+```
+
+This makes `app-release.apk` installable on a demonstration phone without storing a private production keystore in the repository.
+
+This signing choice is appropriate for a class demonstration only. A Play Store release must use a securely managed release key and should not use the debug keystore.
+
+### 8. Physical-device request path
+
+After installation, a protected request follows this sequence:
+
+```text
+Screen/Fragment
+  → SportSphereApi Retrofit method
+  → FirebaseAuthInterceptor
+  → BuildConfig.API_BASE_URL
+  → HTTPS request to Render
+  → Firebase Admin token verification
+  → Route handler
+  → Azure Cosmos DB
+  → JSON response
+  → Retrofit/Gson model
+  → Android screen
+```
+
+This design removes the phone's dependency on the development computer. Once the release APK is installed and the Render service is available, the app only requires an internet connection.
+
+## Biometric unlock
+
+Biometrics sit on top of Firebase SSO. They do not replace Google or email/password sign-in, and SportSphere never stores a password on the phone (PROG7314 POE tips, s. 3; Android Developers, [s.a.]).
+
+1. The user signs in with Google or a verified email.
+2. After that first sign-in, SportSphere asks whether they want fingerprint or face unlock next time.
+3. The answer is stored in Jetpack DataStore and also on `PATCH /api/me` as `biometricEnabled`.
+4. Settings has an on/off switch. Turning it on must succeed on a `BiometricPrompt` first. The status line under the switch changes immediately so the setting is visibly used.
+5. On the next cold start (app killed from Recents), `MainActivity` opens `BiometricLockFragment` **before** Home loads any club data.
+6. `BiometricManager.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)` is checked first. If the phone has no sensor, nothing enrolled, or is locked out, the user sees a plain-language reason and is not locked out of their account.
+7. Cancel on the lock screen leaves **Unlock** (try again / device PIN) and **Sign in again**.
+
+The prompt is hosted on `MainActivity`, which is an `AppCompatActivity`, as required by `BiometricPrompt`.
 
 ## Firebase authentication and email verification
 
@@ -534,9 +819,8 @@ private fun handleEmailLink(intent: Intent?) {
 | Environment | Base URL |
 | --- | --- |
 | Local computer | `http://localhost:3000/` |
-| Android default (both variants) | `https://sportsphere-st10276384.onrender.com/` |
-| Android emulator (optional debug override) | `http://10.0.2.2:3000/` |
-| Production | `https://sportsphere-st10276384.onrender.com/` |
+| Android emulator (optional local API) | `http://10.0.2.2:3000/` via `-Psportsphere.apiBaseUrl` |
+| Android app default (debug and release) | `https://sportsphere-st10276384.onrender.com/` |
 
 ### Authentication
 
@@ -574,7 +858,7 @@ When local `SKIP_AUTH=true`, the middleware uses the configured development iden
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/me` | Get or create the signed-in user's profile |
-| `PATCH` | `/api/me` | Update display name, selected sport, or dark mode |
+| `PATCH` | `/api/me` | Update display name, selected sport, dark mode, or biometric unlock |
 
 ### Sport endpoints
 
@@ -594,7 +878,7 @@ When local `SKIP_AUTH=true`, the middleware uses the configured development iden
 | `PUT` | `/api/events/:eventId` | Update an event |
 | `DELETE` | `/api/events/:eventId` | Delete an event |
 
-The Android interface currently reads events. Event create, update, and delete routes are available on the API but are not exposed through the current mobile UI.
+The Android calendar can create fixtures and can edit or delete fixtures the signed-in user organised. Seeded club events (`createdBy: "seed"`) stay read-only. Text fields are length-limited on the API.
 
 ### Performance endpoints
 
@@ -687,6 +971,30 @@ Set-Location api
 npm run seed
 ```
 
+`npm run seed` **upserts** learning documents, so re-running it after a media-URL change updates Cosmos even when sports already exist.
+
+### Azure Blob Storage
+
+Learn still images are served from Azure Blob Storage, which is the POE blob-storage outcome (Microsoft, [s.a.]). YouTube links stay on Safety cards.
+
+| Detail | Value |
+| --- | --- |
+| Storage account | `st10276384media` |
+| Container | `learn` (anonymous blob read) |
+| Public base URL | `https://st10276384media.blob.core.windows.net/learn/` |
+| Example | `https://st10276384media.blob.core.windows.net/learn/football-techniques.jpg` |
+
+Techniques and Training each have a sport-specific JPEG. Create the account and upload the files with:
+
+```powershell
+az login
+powershell -File api\scripts\provision-learn-blob.ps1
+Set-Location api
+npm run seed
+```
+
+Then open a Techniques card in the app and confirm the image URL in Azure Portal → Storage browser. Glide loads the HTTPS blob; the Safety button still opens YouTube.
+
 ### Optional Azure App Service deployment
 
 `api/deploy-azure.ps1` is an alternative deployment path for the Express API. It:
@@ -744,11 +1052,11 @@ The Android workflow runs unit tests and creates a debug APK. Unit tests cover a
 
 ### The phone cannot load data
 
-- Confirm that the installed build uses the hosted API (the default in both variants).
+- Confirm that the installed app is the `release` build.
 - Open the Render health check and wait for `"ok": true`.
 - Confirm that the phone has internet access.
 - Confirm that Firebase sign-in completed successfully.
-- Rebuild and reinstall the APK if the base URL changed.
+- Reinstall the latest release APK if the base URL changed.
 
 ### The emulator cannot reach the local API
 
@@ -803,9 +1111,18 @@ Additional safeguards:
 - Use the debug keystore only for coursework/demo installation.
 - Do not publish verification links because they contain one-time action codes.
 
+## Part 3: offline performance and Play Store prep
 
-## Part 3: Mo — offline performance and release preparation
+Performance saves go to Room first. WorkManager uploads pending sessions when the phone is online; see [implementation notes](docs/PART3-MO.md). Deploy the API `clientId` changes before testing sync.
 
-Offline performance saves, account-scoped background uploads and safe upload retries are implemented on the Mo Part 3 branch. See [implementation, integration and device checks](docs/PART3-MO.md). Deploy the included API changes before testing sync.
+Signed production builds, Firebase package coordination and store listing copy are documented in [Play Store readiness](docs/play-store/README.md). A local API override for debug builds uses `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/`.
 
-See [Play Store readiness preparation](docs/play-store/README.md) for private signing, Firebase package coordination and the outstanding release evidence. Signed production files, screenshots and device proof are still pending; this is not a final POE release.
+## References
+
+Android Developers, [s.a.]. *Show a biometric authentication dialog*. [online] Available at: https://developer.android.com/identity/sign-in/biometric-auth [Accessed 25 October 2026].
+
+Android Developers, [s.a.a]. *Biometric library*. [online] Available at: https://developer.android.com/jetpack/androidx/releases/biometric [Accessed 25 October 2026].
+
+Android Developers, [s.a.b]. *Jetpack DataStore*. [online] Available at: https://developer.android.com/topic/libraries/architecture/datastore [Accessed 25 October 2026].
+
+Microsoft, [s.a.]. *Introduction to Azure Blob Storage*. [online] Available at: https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction [Accessed 2 November 2026].

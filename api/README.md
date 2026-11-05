@@ -1,6 +1,6 @@
 # SportSphere REST API
 
-Express API for PROG7314 Part 2. The Android app sends a Firebase ID token as `Authorization: Bearer <token>`. Data is stored in Azure Cosmos DB (`sportsphere`). If `COSMOS_KEY` is not set, the API uses in-memory data so you can develop offline.
+Express API for PROG7314 Part 2. The Android app sends a Firebase ID token as `Authorization: Bearer <token>`. Data is stored in Azure Cosmos DB (`sportsphere`). If `COSMOS_KEY` is not set in development, the API uses in-memory data so you can develop offline. Production refuses to start without Cosmos.
 
 ## Run locally
 

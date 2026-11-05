@@ -1,17 +1,23 @@
 package com.example.prog7314_part2
 
 import android.app.Application
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
-import com.example.prog7314_part2.data.SessionPrefs
 import androidx.room.Room
 import com.example.prog7314_part2.data.PerformanceRepository
+import com.example.prog7314_part2.data.SessionPrefs
 import com.example.prog7314_part2.data.SyncWorker
+import com.example.prog7314_part2.data.biometric.BiometricStore
 import com.example.prog7314_part2.data.local.AppDatabase
 import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.logging.AppLog
+import com.example.prog7314_part2.logging.LifecycleLogger
+import com.example.prog7314_part2.notifications.NotificationChannels
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.runBlocking
 
 /**
  * Application entry point.
@@ -36,9 +42,19 @@ class SportSphereApp : Application() {
     lateinit var session: SessionPrefs
         private set
 
+    /** DataStore cache for the biometric unlock switch. */
+    lateinit var biometrics: BiometricStore
+        private set
+
     override fun onCreate() {
         super.onCreate()
         session = SessionPrefs(this)
+        biometrics = BiometricStore(this)
+        runBlocking { biometrics.refresh() }
+        Log.i(TAG, "app start biometricEnabled=${biometrics.enabled}")
+        registerActivityLifecycleCallbacks(LifecycleLogger())
+        AppLog.i("App", "SportSphere process started (dark mode = ${session.darkMode})")
+        NotificationChannels.create(this)
         var previousUid: String? = null
         FirebaseAuth.getInstance().addAuthStateListener { auth ->
             val uid = auth.currentUser?.uid
@@ -58,5 +74,9 @@ class SportSphereApp : Application() {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
         )
+    }
+
+    private companion object {
+        const val TAG = "Biometric"
     }
 }

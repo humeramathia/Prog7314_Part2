@@ -26,6 +26,7 @@ data class UserProfileDto(
     val sportId: String,
     val sportName: String,
     val darkMode: Boolean,
+    val biometricEnabled: Boolean = false,
     val createdAt: Long,
     val updatedAt: Long
 )
@@ -40,7 +41,8 @@ data class UpdateProfileRequest(
     val displayName: String? = null,
     val sportId: String? = null,
     val sportName: String? = null,
-    val darkMode: Boolean? = null
+    val darkMode: Boolean? = null,
+    val biometricEnabled: Boolean? = null
 )
 
 /** A single metric column returned inside a [SportDto]. */
@@ -125,6 +127,19 @@ data class CalendarEventDto(
     val title: String,
     val type: String,
     val startsAt: Long,
+    val endsAt: Long? = null,
+    val location: String? = null,
+    val description: String? = null,
+    val notes: String? = null,
+    val createdBy: String? = null
+)
+
+/** Body for `POST /api/events` and `PUT /api/events/:id`. */
+data class UpsertEventRequest(
+    val sportId: String? = null,
+    val title: String? = null,
+    val type: String? = null,
+    val startsAt: Long? = null,
     val endsAt: Long? = null,
     val location: String? = null,
     val description: String? = null,

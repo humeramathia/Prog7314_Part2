@@ -15,7 +15,8 @@ class MappersTest {
         endsAt = 2_000L,
         location = "Pitch",
         description = "Warm-up",
-        notes = "Boots"
+        notes = "Boots",
+        createdBy = "seed"
     )
 
     @Test
@@ -36,6 +37,7 @@ class MappersTest {
         assertEquals(1_000L, local.startsAt)
         assertEquals(2_000L, local.endsAt)
         assertEquals("Warm-up", local.description)
+        assertEquals("seed", local.createdBy)
     }
 
     @Test

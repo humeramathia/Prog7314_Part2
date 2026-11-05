@@ -7,11 +7,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.prog7314_part2.R
+import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.UserProfileDto
 import com.example.prog7314_part2.databinding.FragmentConfirmEmailBinding
+import com.example.prog7314_part2.ui.biometrics
 import com.example.prog7314_part2.ui.session
+import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 /**
  * Post-registration / pre-login screen shown when the current Firebase
@@ -43,6 +51,8 @@ class ConfirmEmailFragment : Fragment() {
 
     /** Elapsed-realtime timestamp of the last resend attempt. */
     private var lastResendAt = 0L
+
+    private var profileCall: Call<UserProfileDto>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -137,13 +147,44 @@ class ConfirmEmailFragment : Fragment() {
         }
 
         localSession.signIn(email, refreshedUser.displayName.orEmpty())
+        setLoading(true)
+        profileCall?.cancel()
+        val call = ApiClient.service.getMyProfile()
+        profileCall = call
+        call.enqueue(object : Callback<UserProfileDto> {
+            override fun onResponse(call: Call<UserProfileDto>, response: Response<UserProfileDto>) {
+                if (_binding == null) return
+                setLoading(false)
+                val profile = response.body()
+                if (response.isSuccessful && profile != null) {
+                    ProfileSync.apply(session(), profile)
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        ProfileSync.applyBiometrics(biometrics(), profile)
+                        goNext()
+                    }
+                    return
+                }
+                goNext()
+            }
 
-        val destination = if (localSession.sportId.isBlank()) {
-            R.id.action_confirm_to_sport
-        } else {
-            R.id.action_confirm_to_home
+            override fun onFailure(call: Call<UserProfileDto>, error: Throwable) {
+                if (_binding == null || call.isCanceled) return
+                setLoading(false)
+                showMessage(ProfileSync.UNAVAILABLE)
+            }
+        })
+    }
+
+    private fun goNext() {
+        BiometricEnrollment.offerAfterSignIn(this) {
+            if (_binding == null) return@offerAfterSignIn
+            val destination = if (session().sportId.isBlank()) {
+                R.id.action_confirm_to_sport
+            } else {
+                R.id.action_confirm_to_home
+            }
+            findNavController().navigate(destination)
         }
-        findNavController().navigate(destination)
     }
 
     /**
@@ -214,6 +255,8 @@ class ConfirmEmailFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        profileCall?.cancel()
+        profileCall = null
         _binding = null
         super.onDestroyView()
     }

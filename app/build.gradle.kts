@@ -114,9 +114,14 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(platform("com.google.firebase:firebase-bom:34.19.0"))
     implementation("com.google.firebase:firebase-auth")
+    // Push notifications (Part 3). Version comes from the Firebase BoM above.
+    implementation("com.google.firebase:firebase-messaging")
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    // BiometricPrompt must be hosted on an AppCompatActivity (Android Developers, [s.a.]).
+    implementation("androidx.biometric:biometric:1.1.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
 }
 
 ksp {

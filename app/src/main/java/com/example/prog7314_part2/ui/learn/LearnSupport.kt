@@ -48,4 +48,8 @@ object LearnSupport {
     /** True when a mediaUrl should be rendered as a still image. */
     fun isImageUrl(mediaUrl: String?): Boolean =
         !mediaUrl.isNullOrBlank() && !isVideoUrl(mediaUrl)
+
+    /** True when the still is served from Azure Blob Storage. */
+    fun isBlobUrl(mediaUrl: String?): Boolean =
+        !mediaUrl.isNullOrBlank() && mediaUrl.contains(".blob.core.windows.net/")
 }
