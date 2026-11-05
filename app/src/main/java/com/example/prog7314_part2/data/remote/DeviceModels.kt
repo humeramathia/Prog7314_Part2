@@ -3,7 +3,7 @@ package com.example.prog7314_part2.data.remote
 /**
  * Request and response bodies for push notifications and language
  * settings. Kept apart from [UserProfileDto] / [UpdateProfileRequest] so
- * the Part 3 features do not change the existing profile contract.
+ * device settings do not change the existing profile contract.
  *
  * Gson leaves out null fields, so each request only sends what changed.
  * See `api/src/routes/deviceSettings.js` for the server-side rules.

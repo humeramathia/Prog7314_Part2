@@ -61,7 +61,7 @@ router.patch(
       user.sportName = String(sportName);
     }
 
-    // Push token, language and notification switch (Lilitha's Part 3 work).
+    // Push token, language and notification switches.
     const deviceError = applyDeviceSettings(user, req.body || {});
     if (deviceError) throw new HttpError(400, deviceError);
 

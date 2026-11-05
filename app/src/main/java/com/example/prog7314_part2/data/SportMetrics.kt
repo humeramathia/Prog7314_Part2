@@ -78,25 +78,6 @@ object SportMetrics {
     fun primaryKey(sportId: String): String = fields(sportId).first().key
 
     /**
-     * Builds a plausible fake metric map for the seeded sample sessions
-     * used by [FakeRepository]. Never called on real user data.
-     *
-     * The primary metric gets [base] verbatim; secondary metrics get a
-     * rounded third of it so the numbers look coherent (e.g. 72 points
-     * with 24 rebounds).
-     */
-    fun sample(sportId: String, base: Double): Map<String, Double> {
-        val keys = fields(sportId)
-        return keys.mapIndexed { index, field ->
-            field.key to if (index == 0) {
-                base
-            } else {
-                (base / 3).toInt().toDouble()
-            }
-        }.toMap()
-    }
-
-    /**
      * Renders a compact one-line summary of a session's metrics, used by
      * the Home tile and the Performance history list.
      *

@@ -112,7 +112,7 @@
     <string name="welcome_kicker">Kampus-sportklub</string>
     <string name="login_kicker">Terug op die veld</string>
 
-    <!-- Part 3: push notifications -->
+    <!-- Push notifications -->
     <string name="notifications">Kennisgewings</string>
     <string name="notifications_switch">Laat kennisgewings toe</string>
     <string name="notifications_practice">Oefeningherinneringe</string>
@@ -130,7 +130,7 @@
     <string name="notification_channel_fixtures">Wedstryde en aankondigings</string>
     <string name="notification_channel_fixtures_description">Waarskuwings wanneer \'n oefening, geleentheid of aankondiging vir jou sport bygevoeg of verander word.</string>
 
-    <!-- Part 3: multi-language support -->
+    <!-- Language picker -->
     <string name="language">Taal</string>
     <string name="language_subtitle">Kies die taal vir SportSphere op hierdie foon.</string>
     <string name="language_note">Klubinhoud soos wedstrydtitels en gidse bly in die taal waarin dit geskryf is.</string>

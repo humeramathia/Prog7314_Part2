@@ -128,7 +128,8 @@ The Android application uses Firebase Authentication and talks to a custom Node.
 | Target SDK | 36 |
 | Production API | <https://sportsphere-st10276384.onrender.com/> |
 | API health check | <https://sportsphere-st10276384.onrender.com/health> |
-| Repository | <https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia> |
+| Coursework repository | <https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia> |
+| Working repository | <https://github.com/humeramathia/Prog7314_Part2> |
 
 > SportSphere is not an Expo or React Native project. The mobile client in `app/` is a native Kotlin Android application.
 
@@ -330,7 +331,7 @@ Prog7314_Part2/
 │       └── api.yml                   # API Jest tests
 ├── docs/
 │   ├── images/email-verification.svg
-│   ├── play-store/                   # Listing copy and signing notes (not a live Play listing)
+│   ├── play-store/                   # Icon, feature graphic, listing copy, privacy, rating
 │   ├── PART3-MO.md                   # Offline performance notes
 │   └── learn-media/
 ├── app/                              # Native Android application
@@ -353,7 +354,7 @@ Prog7314_Part2/
 │       │       ├── values/ / values-af/ / values-xh/
 │       │       └── xml/network_security_config.xml
 │       ├── debug/res/xml/            # Debug-only cleartext override for a local API
-│       ├── test/                     # Local JUnit tests (FakeRepository is tests-only)
+│       ├── test/                     # Local JUnit tests
 │       └── androidTest/
 └── api/                              # Node.js REST API
     ├── package.json
@@ -1077,7 +1078,7 @@ From the repository root:
 .\gradlew.bat assembleDebug
 ```
 
-The Android workflow runs unit tests and creates a debug APK. Unit tests cover metrics, mappers, learning URLs, biometric decisions, languages, push topics, and Room session entities. `FakeRepository` exists only for those tests; the running app does not use it.
+The Android workflow runs unit tests and creates a debug APK. Unit tests cover metrics, mappers, learning URLs, biometric decisions, languages, push topics, and Room session entities.
 
 ## Troubleshooting
 
@@ -1145,7 +1146,7 @@ Additional safeguards:
 
 The installed package is `za.co.sportsphere.app`. Kotlin source still uses the `com.example.prog7314_part2` namespace; Play Store looks at `applicationId`, not the Kotlin package.
 
-Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. That is a signed local build, not a listing on Google Play. Store screenshots, the 512 PNG, the feature graphic, and a privacy-policy URL are still listed in [Play Store readiness](docs/play-store/README.md) as evidence to prepare, not as files already in this folder.
+Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. Listing copy, privacy policy, content rating, data safety, the 512 PNG icon, and the 1024×500 feature graphic are in [Play Store pack](docs/play-store/README.md). Phone screenshots still have to be captured on the signed APK. This is a signed coursework build, not a live Google Play listing.
 
 There is no `v1.0.0-final-poe` tag or GitHub Release until `merge` is on `main`. Do not treat this README as claiming those exist.
 

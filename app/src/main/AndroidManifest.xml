@@ -7,6 +7,10 @@
     <!-- Android 13+ asks the user before an app may show notifications. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- Play Console: this app does not use the advertising ID. -->
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
 
     <application
         android:name=".SportSphereApp"

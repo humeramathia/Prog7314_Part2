@@ -164,7 +164,7 @@
     <string name="welcome_kicker">Campus sports club</string>
     <string name="login_kicker">Back on the pitch</string>
 
-    <!-- Part 3: push notifications (Lilitha) -->
+    <!-- Push notifications -->
     <string name="notifications">Notifications</string>
     <string name="notifications_switch">Allow notifications</string>
     <string name="notifications_practice">Practice reminders</string>
@@ -182,7 +182,7 @@
     <string name="notification_channel_fixtures">Fixtures and announcements</string>
     <string name="notification_channel_fixtures_description">Alerts when a practice, event or announcement is added or changed for your sport.</string>
 
-    <!-- Part 3: multi-language support (Lilitha). Language names stay in their own language. -->
+    <!-- Language picker. Language names stay in their own language. -->
     <string name="language">Language</string>
     <string name="language_subtitle">Choose the language for SportSphere on this phone.</string>
     <string name="language_english" translatable="false">English</string>

@@ -63,7 +63,7 @@
             android:layout_marginTop="12dp"
             android:text="@string/selected_sport" />
 
-        <!-- Part 3: push notification settings -->
+        <!-- Push notification settings -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/notificationsCard"
             android:layout_width="match_parent"
@@ -139,7 +139,7 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Part 3: language picker (English, Afrikaans, isiXhosa) -->
+        <!-- Language picker (English, Afrikaans, isiXhosa) -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/languageCard"
             android:layout_width="match_parent"

@@ -1,20 +1,52 @@
-# Store listing draft — review against the final build
+# Play Console store listing — SportSphere
 
-App name (30-character limit): **SportSphere**
+Copy these fields into Play Console. They match the current app.
 
-Short description (80-character limit):
+**Default language:** English (South Africa)  
+**App name (30):** SportSphere  
+**Application ID:** `za.co.sportsphere.app`
+
+## Short description (80)
+
 Track sport sessions, explore guides and keep your training organised.
 
-Full description (4,000-character limit):
+## Full description
 
-SportSphere helps athletes keep their sporting activities in one place.
+SportSphere helps campus athletes keep club sport in one place.
 
-Choose your sport, record training or match performance using sport-specific metrics, and review your session history and monthly progress. Record performance sessions without a connection; saved sessions upload automatically when you reconnect.
+Choose your sport, record training or match performance with sport-specific metrics, and review session history and a monthly graph. Save a session without a connection; it uploads when the phone is back online.
 
-Use the calendar to view sporting activities and explore learning guides covering rules, techniques, training and safety. Unlock the app with fingerprint or device PIN, receive fixture alerts, and switch the interface between English, Afrikaans and isiXhosa. Personalise your experience with light and dark themes.
+Use the calendar for practices, social events and announcements. Open Learn for rules, techniques, training and safety, including stills hosted on Azure Blob Storage. Unlock the app with fingerprint, face or device PIN. Receive fixture alerts and choose, per type, whether you want practice, event or announcement pushes. Switch the interface between English, Afrikaans and isiXhosa. Light and dark themes are available in Settings.
 
-An account is required. Online features and synchronisation require an internet connection. Offline support covers recording and viewing performance sessions; calendar and learning content require connectivity.
+An account is required. Online features need an internet connection. Offline support covers recording and viewing performance sessions. Calendar and Learn need connectivity.
 
-## Required before Play upload
+You can delete the account from Settings.
 
-Add the real public privacy-policy URL, support contact, screenshots and feature graphic after the group agrees them. The in-app adaptive icon is the branded teal ball mark.
+## Graphics in this folder
+
+| Play field | File | Size |
+| --- | --- | --- |
+| High-res icon | `icon-512.png` | 512 × 512 PNG |
+| Feature graphic | `feature-graphic-1024x500.png` | 1024 × 500 PNG |
+| Phone screenshots | `screenshots/` | add at least four captures from the signed APK |
+
+## Privacy policy URL
+
+Until this file is on `main`, use the public blob URL for the branch that contains it:
+
+- https://github.com/humeramathia/Prog7314_Part2/blob/merge/docs/play-store/privacy-policy.md
+- https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/blob/merge/docs/play-store/privacy-policy.md
+
+Play Console needs a URL that opens without a GitHub login. If both repositories are private, host `privacy-policy.md` on a public page (GitHub Pages or the Render site) and paste that URL instead.
+
+## Support
+
+- Working repository: https://github.com/humeramathia/Prog7314_Part2
+- Coursework repository: https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia
+- Email: the group leader’s campus address for ST10276384
+
+## Categorisation
+
+- App category: Sports
+- Tags: sports, fitness, campus, training
+- Contact: see privacy policy

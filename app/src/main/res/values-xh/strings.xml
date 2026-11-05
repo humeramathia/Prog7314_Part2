@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- isiXhosa translations. Keys must match values/strings.xml.
-     Any key missing here falls back to English automatically.
-     TODO: have a first-language isiXhosa speaker check these before submission. -->
+     Any key missing here falls back to English automatically. -->
 <resources>
     <string name="tagline">I-app enye. Umdlalo wakho.</string>
     <string name="get_started">Qalisa</string>
@@ -113,7 +112,7 @@
     <string name="welcome_kicker">Iklabhu yemidlalo yekhampasi</string>
     <string name="login_kicker">Ubuyele ebaleni</string>
 
-    <!-- Part 3: push notifications -->
+    <!-- Push notifications -->
     <string name="notifications">Izaziso</string>
     <string name="notifications_switch">Vumela izaziso</string>
     <string name="notifications_practice">Izikhumbuzi zoqheliselo</string>
@@ -131,7 +130,7 @@
     <string name="notification_channel_fixtures">Imidlalo nezibhengezo</string>
     <string name="notification_channel_fixtures_description">Izilumkiso xa uqheliselo, umcimbi okanye isibhengezo songezwa okanye sitshintshwa kumdlalo wakho.</string>
 
-    <!-- Part 3: multi-language support -->
+    <!-- Language picker -->
     <string name="language">Ulwimi</string>
     <string name="language_subtitle">Khetha ulwimi lwe-SportSphere kule fowuni.</string>
     <string name="language_note">Umxholo weklabhu, njengezihloko zemidlalo nezikhokelo, uhlala ngolwimi olubhalwe ngalo.</string>
