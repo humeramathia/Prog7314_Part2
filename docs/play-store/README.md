@@ -16,7 +16,14 @@ Use Android Studio: Build > Generate Signed App Bundle or APK > create a new key
 
 Copy `keystore.properties.example` to `keystore.properties` and fill in the private values. The build reads this ignored file; there is no fallback to a debug key. The key and passwords must not be committed or attached to a GitHub Release.
 
-Run `keytool -list -v -keystore /path/to/your-upload.jks -alias sportsphere-upload` and give Humera the SHA-1/SHA-256 fingerprints (not the key/passwords) for Firebase. Test Google login with this certificate. If Play App Signing is later used, register its app-signing certificate as well.
+The local upload keystore lives outside Git at `C:/Users/Humera Mathia/keys/sportsphere-upload.jks`. Register these fingerprints on the Firebase Android app `za.co.sportsphere.app` so Google sign-in works on the minified release:
+
+```text
+SHA-1:   8F:DB:6D:6E:59:EE:02:03:FD:27:A7:75:4E:88:92:76:82:D2:C2:BE
+SHA-256: 0E:15:77:19:F5:2C:79:29:35:E7:0B:66:A2:6E:4E:D2:2C:5B:51:15:5A:F1:EB:7C:E8:07:E0:7C:B1:35:DF:E6
+```
+
+If Play App Signing is later used, register its app-signing certificate as well. Never commit `keystore.properties` or the `.jks`.
 
 ## 3. Build both release artifacts
 
