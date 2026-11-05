@@ -72,6 +72,12 @@
     <string name="graph_day_content">%1$s for %2$s. %3$s</string>
     <string name="graph_day_point">Day %1$d: %2$s</string>
     <string name="graph_day_of_month">Day of month</string>
+    <string name="graph_load_failed">Could not load the monthly graph.</string>
+    <string name="graph_caption">%1$s by date</string>
+    <string name="graph_description">"%1$s for %2$s. "</string>
+    <string name="graph_point_description">Day %1$d: %2$s</string>
+    <string name="graph_no_connection">Could not connect to the API.</string>
+    <string name="graph_axis_day">Day of month</string>
     <string name="cd_pending_session">Session waiting to sync</string>
     <string name="metric_goals">Goals</string>
     <string name="metric_assists">Assists</string>
