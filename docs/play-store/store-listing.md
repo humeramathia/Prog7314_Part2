@@ -34,15 +34,13 @@ You can delete the account from Settings.
 
 Until this file is on `main`, use the public blob URL for the branch that contains it:
 
-- https://github.com/humeramathia/Prog7314_Part2/blob/merge/docs/play-store/privacy-policy.md
-- https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/blob/merge/docs/play-store/privacy-policy.md
+https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/blob/merge/docs/play-store/privacy-policy.md
 
-Play Console needs a URL that opens without a GitHub login. If both repositories are private, host `privacy-policy.md` on a public page (GitHub Pages or the Render site) and paste that URL instead.
+Play Console needs a URL that opens without a GitHub login. If the repository is private, host `privacy-policy.md` on a public page (GitHub Pages or the Render site) and paste that URL instead.
 
 ## Support
 
-- Working repository: https://github.com/humeramathia/Prog7314_Part2
-- Coursework repository: https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia
+- Website / issues: https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia
 - Email: the group leader’s campus address for ST10276384
 
 ## Categorisation

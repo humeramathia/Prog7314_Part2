@@ -13,10 +13,8 @@ SportSphere is built by:
 - Imraan Nordien (ST10434419)
 - Lilitha Mlobi (ST10454944)
 
-Contact: open an issue on either project repository
-
-- <https://github.com/humeramathia/Prog7314_Part2/issues>
-- <https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/issues>
+Contact: open an issue on the project repository  
+<https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/issues>
 
 ## What the app collects
 

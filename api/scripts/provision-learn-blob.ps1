@@ -14,11 +14,7 @@ $container = "learn"
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $mediaDir = $env:LEARN_MEDIA_DIR
 if (-not $mediaDir) {
-  $candidates = @(
-    (Join-Path $repoRoot "docs\learn-media"),
-    "C:\Users\Humera Mathia\.cursor\projects\c-Users-Humera-Mathia-Documents-BCAD3-2nd-Sem-PROG7314-AMBER-Prog7314-Part2\assets"
-  )
-  $mediaDir = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+  $mediaDir = Join-Path $repoRoot "docs\learn-media"
 }
 
 Write-Host "Resource group $rg"

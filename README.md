@@ -128,8 +128,7 @@ The Android application uses Firebase Authentication and talks to a custom Node.
 | Target SDK | 36 |
 | Production API | <https://sportsphere-st10276384.onrender.com/> |
 | API health check | <https://sportsphere-st10276384.onrender.com/health> |
-| Coursework repository | <https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia> |
-| Working repository | <https://github.com/humeramathia/Prog7314_Part2> |
+| Repository | <https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia> |
 
 > SportSphere is not an Expo or React Native project. The mobile client in `app/` is a native Kotlin Android application.
 
