@@ -49,6 +49,10 @@ interface SportSphereApi {
         @Body request: UpdateProfileRequest
     ): Call<UserProfileDto>
 
+    /** Removes the Cosmos profile. Firebase Auth deletion happens on the phone. */
+    @DELETE("api/me")
+    fun deleteMyAccount(): Call<Void>
+
     // ─────────────────────────── Sports ──────────────────────────
 
     /** All sports in the catalog, in the order they were seeded. */

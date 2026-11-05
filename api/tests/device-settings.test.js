@@ -33,10 +33,18 @@ describe("PATCH /api/me device settings", () => {
 
   test("saves language and notification preferences", async () => {
     const { app } = await setup();
-    const res = await request(app).patch("/api/me").send({ language: "XH", notificationsEnabled: false });
+    const res = await request(app).patch("/api/me").send({
+      language: "XH",
+      notificationsEnabled: false,
+      notifyPractice: false,
+      notifyAnnouncements: true
+    });
     expect(res.status).toBe(200);
     expect(res.body.language).toBe("xh");
     expect(res.body.notificationsEnabled).toBe(false);
+    expect(res.body.notifyPractice).toBe(false);
+    expect(res.body.notifyAnnouncements).toBe(true);
+    expect(res.body.notifyEvents).toBe(true);
   });
 
   test("defaults language to English and notifications on", async () => {
@@ -44,6 +52,17 @@ describe("PATCH /api/me device settings", () => {
     const res = await request(app).get("/api/me");
     expect(res.body.language).toBe("en");
     expect(res.body.notificationsEnabled).toBe(true);
+    expect(res.body.notifyPractice).toBe(true);
+    expect(res.body.notifyEvents).toBe(true);
+    expect(res.body.notifyAnnouncements).toBe(true);
+  });
+
+  test("DELETE /api/me removes the profile", async () => {
+    const { app, store } = await setup();
+    await request(app).patch("/api/me").send({ displayName: "Athlete" });
+    const res = await request(app).delete("/api/me");
+    expect(res.status).toBe(204);
+    expect(await store.getUser("dev-user")).toBeNull();
   });
 
   test("rejects an unsupported language", async () => {
@@ -98,7 +117,7 @@ describe("fixture pushes", () => {
       .send({ sportId: "football", title: "Derby", type: "SOCIAL_EVENT", startsAt: Date.now() + 86_400_000 });
     expect(res.status).toBe(201);
     expect(notifier.sent).toHaveLength(1);
-    expect(notifier.sent[0].topic).toBe("sport_football");
+    expect(notifier.sent[0].topic).toBe("sport_football_event");
     expect(notifier.sent[0].data.eventId).toBe(res.body.id);
   });
 

@@ -12,15 +12,32 @@ class NotificationPrefs(context: Context) {
     private val prefs =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    /** The Settings switch. On by default; Android 13+ still needs the runtime permission. */
+    /** Master Settings switch. On by default; Android 13+ still needs the runtime permission. */
     var enabled: Boolean
         get() = prefs.getBoolean(KEY_ENABLED, true)
         set(value) = prefs.edit().putBoolean(KEY_ENABLED, value).apply()
 
-    /** Sport topic this phone is currently subscribed to, or "" for none. */
-    var subscribedTopic: String
-        get() = prefs.getString(KEY_TOPIC, "").orEmpty()
-        set(value) = prefs.edit().putString(KEY_TOPIC, value).apply()
+    var notifyPractice: Boolean
+        get() = prefs.getBoolean(KEY_PRACTICE, true)
+        set(value) = prefs.edit().putBoolean(KEY_PRACTICE, value).apply()
+
+    var notifyEvents: Boolean
+        get() = prefs.getBoolean(KEY_EVENTS, true)
+        set(value) = prefs.edit().putBoolean(KEY_EVENTS, value).apply()
+
+    var notifyAnnouncements: Boolean
+        get() = prefs.getBoolean(KEY_ANNOUNCEMENTS, true)
+        set(value) = prefs.edit().putBoolean(KEY_ANNOUNCEMENTS, value).apply()
+
+    /** Topics this phone is currently subscribed to. */
+    var subscribedTopics: Set<String>
+        get() = prefs.getString(KEY_TOPICS, "")
+            .orEmpty()
+            .split(',')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
+        set(value) = prefs.edit().putString(KEY_TOPICS, value.sorted().joinToString(",")).apply()
 
     /** Last FCM token the API accepted, so we only upload when it changes. */
     var uploadedToken: String
@@ -32,15 +49,18 @@ class NotificationPrefs(context: Context) {
         get() = prefs.getBoolean(KEY_ASKED, false)
         set(value) = prefs.edit().putBoolean(KEY_ASKED, value).apply()
 
-    /** Forget the per-account state on sign-out. The switch itself is a device preference. */
+    /** Forget the per-account state on sign-out. The switches themselves stay on the phone. */
     fun clearAccountState() {
-        prefs.edit().remove(KEY_TOPIC).remove(KEY_TOKEN).apply()
+        prefs.edit().remove(KEY_TOPICS).remove(KEY_TOKEN).apply()
     }
 
     private companion object {
         const val PREFS_NAME = "sportsphere_notifications"
         const val KEY_ENABLED = "enabled"
-        const val KEY_TOPIC = "subscribed_topic"
+        const val KEY_PRACTICE = "notify_practice"
+        const val KEY_EVENTS = "notify_events"
+        const val KEY_ANNOUNCEMENTS = "notify_announcements"
+        const val KEY_TOPICS = "subscribed_topics"
         const val KEY_TOKEN = "uploaded_token"
         const val KEY_ASKED = "permission_asked"
     }

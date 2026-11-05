@@ -37,7 +37,9 @@ import com.example.prog7314_part2.ui.auth.ProfileSync
 import com.example.prog7314_part2.ui.auth.blockReason
 import com.example.prog7314_part2.ui.biometrics
 import com.example.prog7314_part2.ui.session
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.launch
 import retrofit2.Call
@@ -51,6 +53,7 @@ class SettingsFragment : Fragment() {
 
     private var darkModeCall: Call<UserProfileDto>? = null
     private var nameCall: Call<UserProfileDto>? = null
+    private var deleteCall: Call<Void>? = null
 
     /** Notifications card (switch, status line, test button). */
     private var notifications: NotificationSettingsController? = null
@@ -124,6 +127,7 @@ class SettingsFragment : Fragment() {
         }
 
         binding.btnLogout.setOnClickListener { signOut() }
+        binding.btnDeleteAccount.setOnClickListener { confirmDeleteAccount() }
 
         notifications = NotificationSettingsController(this, binding, notificationPermission).also { it.bind() }
         // English / Afrikaans / isiXhosa picker.
@@ -252,6 +256,66 @@ class SettingsFragment : Fragment() {
         })
     }
 
+    private fun confirmDeleteAccount() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.delete_account)
+            .setMessage(R.string.delete_account_confirm)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.delete_account) { _, _ -> deleteAccount() }
+            .show()
+    }
+
+    private fun deleteAccount() {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            signOut()
+            return
+        }
+        binding.btnDeleteAccount.isEnabled = false
+        deleteCall?.cancel()
+        val call = ApiClient.service.deleteMyAccount()
+        deleteCall = call
+        call.enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                removeFirebaseUser(user)
+            }
+
+            override fun onFailure(call: Call<Void>, error: Throwable) {
+                if (call.isCanceled) return
+                // Still delete the Firebase user so the athlete cannot keep signing in.
+                removeFirebaseUser(user)
+            }
+        })
+    }
+
+    private fun removeFirebaseUser(user: com.google.firebase.auth.FirebaseUser) {
+        user.delete().addOnCompleteListener { result ->
+            if (_binding == null) return@addOnCompleteListener
+            binding.btnDeleteAccount.isEnabled = true
+            if (result.isSuccessful) {
+                showMessage(getString(R.string.delete_account_done))
+                finishDeletedSession()
+                return@addOnCompleteListener
+            }
+            val needsLogin = result.exception is FirebaseAuthRecentLoginRequiredException
+            showMessage(
+                getString(
+                    if (needsLogin) R.string.delete_account_reauth
+                    else R.string.delete_account_failed
+                )
+            )
+        }
+    }
+
+    private fun finishDeletedSession() {
+        PushRegistrar.onSignOut(requireContext())
+        session().signOut()
+        BiometricSession.lock()
+        viewLifecycleOwner.lifecycleScope.launch { biometrics().clear() }
+        clearGoogleState()
+        findNavController().navigate(R.id.action_settings_to_welcome)
+    }
+
     private fun signOut() {
         // Stop pushes for this account before the session is cleared.
         PushRegistrar.onSignOut(requireContext())
@@ -291,8 +355,10 @@ class SettingsFragment : Fragment() {
         notifications = null
         darkModeCall?.cancel()
         nameCall?.cancel()
+        deleteCall?.cancel()
         darkModeCall = null
         nameCall = null
+        deleteCall = null
         super.onDestroyView()
         _binding = null
     }

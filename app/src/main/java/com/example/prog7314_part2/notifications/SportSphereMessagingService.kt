@@ -55,9 +55,10 @@ class SportSphereMessagingService : FirebaseMessagingService() {
         }
         NotificationChannels.create(this)
 
-        // Tapping the notification brings the existing app window forward.
+        // Tapping a fixture alert opens Calendar, as the POE tips require.
         val openApp = Intent(this, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(MainActivity.EXTRA_OPEN, MainActivity.OPEN_CALENDAR)
         val tapIntent = PendingIntent.getActivity(
             this,
             0,

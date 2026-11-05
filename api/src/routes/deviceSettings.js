@@ -1,7 +1,8 @@
 /**
  * Per-user device settings stored on the profile document:
  *  - fcmToken: the phone's Firebase Cloud Messaging registration token
- *  - notificationsEnabled: the Settings → Notifications switch
+ *  - notificationsEnabled: master Settings → Notifications switch
+ *  - notifyPractice / notifyEvents / notifyAnnouncements: per-type opt-in
  *  - language: the Settings → Language choice (en, af or xh)
  *
  * Kept in its own module so `routes/me.js` only needs one call.
@@ -20,7 +21,7 @@ const MAX_TOKEN_LENGTH = 4096;
  * or switches notifications off).
  */
 function applyDeviceSettings(user, body) {
-  const { fcmToken, notificationsEnabled, language } = body;
+  const { fcmToken, notificationsEnabled, notifyPractice, notifyEvents, notifyAnnouncements, language } = body;
 
   if (fcmToken !== undefined && fcmToken !== null) {
     if (typeof fcmToken !== "string") return "fcmToken must be a string";
@@ -37,6 +38,15 @@ function applyDeviceSettings(user, body) {
 
   if (notificationsEnabled !== undefined && notificationsEnabled !== null) {
     user.notificationsEnabled = Boolean(notificationsEnabled);
+  }
+  if (notifyPractice !== undefined && notifyPractice !== null) {
+    user.notifyPractice = Boolean(notifyPractice);
+  }
+  if (notifyEvents !== undefined && notifyEvents !== null) {
+    user.notifyEvents = Boolean(notifyEvents);
+  }
+  if (notifyAnnouncements !== undefined && notifyAnnouncements !== null) {
+    user.notifyAnnouncements = Boolean(notifyAnnouncements);
   }
 
   if (language !== undefined && language !== null) {
@@ -59,6 +69,9 @@ function publicUser(user) {
     ...rest,
     language: rest.language || "en",
     notificationsEnabled: rest.notificationsEnabled !== false,
+    notifyPractice: rest.notifyPractice !== false,
+    notifyEvents: rest.notifyEvents !== false,
+    notifyAnnouncements: rest.notifyAnnouncements !== false,
     hasDeviceToken: Boolean(fcmToken)
   };
 }

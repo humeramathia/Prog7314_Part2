@@ -70,6 +70,14 @@ router.patch(
   })
 );
 
+router.delete(
+  "/",
+  asyncHandler(async (req, res) => {
+    await req.app.locals.store.deleteUser(req.user.uid);
+    res.status(204).send();
+  })
+);
+
 /**
  * Sends a push to the caller's own phone so they can confirm that FCM is
  * wired end to end. Used by Settings → "Send test notification".

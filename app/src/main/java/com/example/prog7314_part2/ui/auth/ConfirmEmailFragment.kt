@@ -158,6 +158,7 @@ class ConfirmEmailFragment : Fragment() {
                 val profile = response.body()
                 if (response.isSuccessful && profile != null) {
                     ProfileSync.apply(session(), profile)
+                    ProfileSync.applyNotifications(requireContext(), profile)
                     viewLifecycleOwner.lifecycleScope.launch {
                         ProfileSync.applyBiometrics(biometrics(), profile)
                         goNext()

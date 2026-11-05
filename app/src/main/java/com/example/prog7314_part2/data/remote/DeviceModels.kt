@@ -13,8 +13,11 @@ package com.example.prog7314_part2.data.remote
 data class DeviceSettingsRequest(
     /** FCM registration token. Send "" to remove the phone's registration. */
     val fcmToken: String? = null,
-    /** Settings → Notifications switch. */
+    /** Master Settings → Notifications switch. */
     val notificationsEnabled: Boolean? = null,
+    val notifyPractice: Boolean? = null,
+    val notifyEvents: Boolean? = null,
+    val notifyAnnouncements: Boolean? = null,
     /** Settings → Language: `en`, `af` or `xh`. */
     val language: String? = null
 )

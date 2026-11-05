@@ -25,7 +25,7 @@ class FirebaseAuthInterceptor : Interceptor {
         // Offline sync pins the token to the owner of the queued row. Never
         // replace it with another account's token during an account switch.
         if (chain.request().header("Authorization") != null) {
-            return chain.proceed(chain.request())
+            return proceedAndWatch(chain, chain.request())
         }
         val user = FirebaseAuth.getInstance().currentUser
 
@@ -65,6 +65,14 @@ class FirebaseAuthInterceptor : Interceptor {
             .header("Authorization", "Bearer $token")
             .build()
 
-        return chain.proceed(authenticatedRequest)
+        return proceedAndWatch(chain, authenticatedRequest)
+    }
+
+    private fun proceedAndWatch(chain: Interceptor.Chain, request: okhttp3.Request): Response {
+        val response = chain.proceed(request)
+        if (response.code == 401 && !request.url.encodedPath.endsWith("/health")) {
+            AuthExpiry.notifyUnauthorized()
+        }
+        return response
     }
 }

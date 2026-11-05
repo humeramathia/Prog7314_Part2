@@ -14,10 +14,9 @@ import retrofit2.Response
 /**
  * Keeps this phone's push registration in step with the signed-in user:
  *
- *  1. Subscribes to the FCM topic for the user's sport (and leaves the old
- *     one when the sport changes), so fixture alerts arrive.
- *  2. Uploads the FCM token to `PATCH /api/me` so the API can send
- *     direct messages such as the Settings test notification.
+ *  1. Subscribes to FCM topics for the fixture types the user opted into,
+ *     and leaves the rest, so practice/event/announcement alerts match Settings.
+ *  2. Uploads the FCM token and type switches to `PATCH /api/me`.
  *  3. Undoes both when notifications are switched off or the user logs out.
  *
  * [sync] is cheap and idempotent: it only talks to Firebase or the API
@@ -41,13 +40,29 @@ object PushRegistrar {
             return
         }
 
-        val wantedTopic = if (prefs.enabled) PushTopics.forSport(app.session.sportId) else ""
-        updateTopic(prefs, wantedTopic)
+        val wanted = PushTopics.wanted(
+            app.session.sportId,
+            prefs.enabled,
+            prefs.notifyPractice,
+            prefs.notifyEvents,
+            prefs.notifyAnnouncements
+        )
+        updateTopics(prefs, wanted)
 
         if (!prefs.enabled) {
             if (prefs.uploadedToken.isNotEmpty()) {
                 AppLog.i(AREA, "Notifications off: removing this phone from the account")
-                upload(prefs, DeviceSettingsRequest(fcmToken = "", notificationsEnabled = false), "")
+                upload(
+                    prefs,
+                    DeviceSettingsRequest(
+                        fcmToken = "",
+                        notificationsEnabled = false,
+                        notifyPractice = prefs.notifyPractice,
+                        notifyEvents = prefs.notifyEvents,
+                        notifyAnnouncements = prefs.notifyAnnouncements
+                    ),
+                    ""
+                )
             }
             return
         }
@@ -75,19 +90,34 @@ object PushRegistrar {
      */
     fun onSignOut(context: Context) {
         val prefs = NotificationPrefs(context)
-        updateTopic(prefs, "")
+        updateTopics(prefs, emptySet())
         FirebaseMessaging.getInstance().deleteToken()
             .addOnCompleteListener { AppLog.i(AREA, "FCM token deleted on sign-out") }
         prefs.clearAccountState()
     }
 
+    fun applyFromProfile(context: Context, profile: UserProfileDto) {
+        val prefs = NotificationPrefs(context)
+        prefs.enabled = profile.notificationsEnabled
+        prefs.notifyPractice = profile.notifyPractice
+        prefs.notifyEvents = profile.notifyEvents
+        prefs.notifyAnnouncements = profile.notifyAnnouncements
+        sync(context)
+    }
+
     private fun uploadIfChanged(prefs: NotificationPrefs, token: String) {
-        if (token == prefs.uploadedToken) {
-            AppLog.d(AREA, "FCM token unchanged; nothing to upload")
-            return
-        }
-        AppLog.i(AREA, "Uploading FCM token (…${token.takeLast(6)}) to the API")
-        upload(prefs, DeviceSettingsRequest(fcmToken = token, notificationsEnabled = true), token)
+        AppLog.i(AREA, "Uploading FCM token (…${token.takeLast(6)}) and type switches")
+        upload(
+            prefs,
+            DeviceSettingsRequest(
+                fcmToken = token,
+                notificationsEnabled = true,
+                notifyPractice = prefs.notifyPractice,
+                notifyEvents = prefs.notifyEvents,
+                notifyAnnouncements = prefs.notifyAnnouncements
+            ),
+            token
+        )
     }
 
     private fun upload(prefs: NotificationPrefs, request: DeviceSettingsRequest, tokenToRemember: String) {
@@ -102,31 +132,30 @@ object PushRegistrar {
             }
 
             override fun onFailure(call: Call<UserProfileDto>, error: Throwable) {
-                // Not remembered, so the next sync() retries automatically.
                 AppLog.w(AREA, "Could not reach the API to save device settings", error)
             }
         })
     }
 
-    private fun updateTopic(prefs: NotificationPrefs, wanted: String) {
-        val (leave, join) = PushTopics.plan(prefs.subscribedTopic, wanted)
+    private fun updateTopics(prefs: NotificationPrefs, wanted: Set<String>) {
+        val (leave, join) = PushTopics.plan(prefs.subscribedTopics, wanted)
         val messaging = FirebaseMessaging.getInstance()
-        leave?.let { topic ->
+        leave.forEach { topic ->
             messaging.unsubscribeFromTopic(topic).addOnCompleteListener { task ->
                 AppLog.i(AREA, "Unsubscribe from $topic: ${if (task.isSuccessful) "ok" else "failed"}")
             }
         }
-        if (join == null) {
-            if (leave != null) prefs.subscribedTopic = ""
-            return
-        }
-        messaging.subscribeToTopic(join).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                prefs.subscribedTopic = join
-                AppLog.i(AREA, "Subscribed to $join")
-            } else {
-                AppLog.w(AREA, "Subscribe to $join failed; will retry on next sync", task.exception)
+        join.forEach { topic ->
+            messaging.subscribeToTopic(topic).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    AppLog.i(AREA, "Subscribed to $topic")
+                } else {
+                    AppLog.w(AREA, "Subscribe to $topic failed; will retry on next sync", task.exception)
+                }
             }
+        }
+        if (leave.isNotEmpty() || join.isNotEmpty()) {
+            prefs.subscribedTopics = wanted
         }
     }
 }

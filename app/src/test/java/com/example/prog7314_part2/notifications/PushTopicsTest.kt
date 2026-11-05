@@ -1,7 +1,7 @@
 package com.example.prog7314_part2.notifications
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -11,47 +11,56 @@ import org.junit.Test
 class PushTopicsTest {
 
     @Test
-    fun forSport_prefixesTheSportId() {
-        assertEquals("sport_football", PushTopics.forSport("football"))
+    fun forType_matchesApiSuffixes() {
+        assertEquals("sport_football_practice", PushTopics.forType("football", "PRACTICE"))
+        assertEquals("sport_football_event", PushTopics.forType("football", "SOCIAL_EVENT"))
+        assertEquals("sport_football_announcement", PushTopics.forType("football", "ANNOUNCEMENT"))
     }
 
     @Test
-    fun forSport_matchesApiSanitising() {
-        // Same input and expected value as api/tests/notify.test.js.
-        assertEquals("sport_ultimate_frisbee_", PushTopics.forSport(" Ultimate Frisbee! "))
+    fun forType_matchesApiSanitising() {
+        assertEquals(
+            "sport_ultimate_frisbee__practice",
+            PushTopics.forType(" Ultimate Frisbee! ", "PRACTICE")
+        )
     }
 
     @Test
-    fun forSport_blankSportHasNoTopic() {
-        assertEquals("", PushTopics.forSport(""))
-        assertEquals("", PushTopics.forSport(null))
+    fun forType_blankSportHasNoTopic() {
+        assertEquals("", PushTopics.forType("", "PRACTICE"))
+        assertEquals("", PushTopics.forType(null, "PRACTICE"))
     }
 
     @Test
-    fun plan_sameTopicDoesNothing() {
-        val (leave, join) = PushTopics.plan("sport_football", "sport_football")
-        assertNull(leave)
-        assertNull(join)
+    fun wanted_offMeansNoTopics() {
+        assertTrue(
+            PushTopics.wanted("football", enabled = false, practice = true, events = true, announcements = true)
+                .isEmpty()
+        )
     }
 
     @Test
-    fun plan_changingSportLeavesOldAndJoinsNew() {
-        val (leave, join) = PushTopics.plan("sport_football", "sport_archery")
-        assertEquals("sport_football", leave)
-        assertEquals("sport_archery", join)
+    fun wanted_onlyEnabledTypes() {
+        val topics = PushTopics.wanted(
+            "football",
+            enabled = true,
+            practice = true,
+            events = false,
+            announcements = true
+        )
+        assertEquals(
+            setOf("sport_football_practice", "sport_football_announcement"),
+            topics
+        )
     }
 
     @Test
-    fun plan_firstSubscriptionOnlyJoins() {
-        val (leave, join) = PushTopics.plan("", "sport_netball")
-        assertNull(leave)
-        assertEquals("sport_netball", join)
-    }
-
-    @Test
-    fun plan_switchingOffOnlyLeaves() {
-        val (leave, join) = PushTopics.plan("sport_netball", "")
-        assertEquals("sport_netball", leave)
-        assertNull(join)
+    fun plan_leavesOldAndJoinsNew() {
+        val (leave, join) = PushTopics.plan(
+            setOf("sport_football_practice", "sport_football_event"),
+            setOf("sport_football_event", "sport_football_announcement")
+        )
+        assertEquals(setOf("sport_football_practice"), leave)
+        assertEquals(setOf("sport_football_announcement"), join)
     }
 }

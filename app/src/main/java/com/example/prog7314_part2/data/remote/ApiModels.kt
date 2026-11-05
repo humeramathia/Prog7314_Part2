@@ -27,6 +27,11 @@ data class UserProfileDto(
     val sportName: String,
     val darkMode: Boolean,
     val biometricEnabled: Boolean = false,
+    val language: String = "en",
+    val notificationsEnabled: Boolean = true,
+    val notifyPractice: Boolean = true,
+    val notifyEvents: Boolean = true,
+    val notifyAnnouncements: Boolean = true,
     val createdAt: Long,
     val updatedAt: Long
 )

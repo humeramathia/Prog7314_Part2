@@ -19,6 +19,9 @@ function createMemoryStore() {
       users.set(user.userId, clone(user));
       return clone(user);
     },
+    async deleteUser(userId) {
+      return users.delete(userId);
+    },
 
     async listSports() {
       return [...sports.values()].map(clone);

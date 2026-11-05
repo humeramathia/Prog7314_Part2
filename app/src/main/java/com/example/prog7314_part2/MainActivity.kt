@@ -100,8 +100,12 @@ class MainActivity : AppCompatActivity() {
             val showToolbar = destination.id !in tabs && destination.id !in hideChrome
             binding.toolbar.visibility = if (showToolbar) View.VISIBLE else View.GONE
             binding.toolbar.title = destination.label
+            if (destination.id == R.id.homeFragment) {
+                openFromNotification(intent, navController)
+            }
         }
         handleEmailLink(intent)
+        openFromNotification(intent, navController)
     }
 
     /**
@@ -112,6 +116,25 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleEmailLink(intent)
+        val navHost = supportFragmentManager
+            .findFragmentById(R.id.navHostFragment) as NavHostFragment
+        openFromNotification(intent, navHost.navController)
+    }
+
+    /**
+     * Fixture pushes set [EXTRA_OPEN] to [OPEN_CALENDAR]. After unlock,
+     * land on Calendar so tapping the notification opens the right screen.
+     */
+    private fun openFromNotification(
+        intent: Intent?,
+        navController: androidx.navigation.NavController
+    ) {
+        if (intent?.getStringExtra(EXTRA_OPEN) != OPEN_CALENDAR) return
+        val app = application as SportSphereApp
+        if (!app.session.isLoggedIn || needsBiometricGate(app)) return
+        intent.removeExtra(EXTRA_OPEN)
+        if (navController.currentDestination?.id == R.id.calendarFragment) return
+        navController.navigate(R.id.calendarFragment)
     }
 
     /** Applies a `verifyEmail` oobCode when the app is opened from an email link. */
@@ -165,7 +188,10 @@ class MainActivity : AppCompatActivity() {
                     popUpTo(R.id.nav_graph) { inclusive = true }
                 }
             )
+            return
         }
+
+        openFromNotification(intent, navController)
     }
 
     private fun startDestination(app: SportSphereApp): Int {
@@ -188,7 +214,9 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private companion object {
-        const val TAG = "Biometric"
+    companion object {
+        const val EXTRA_OPEN = "open"
+        const val OPEN_CALENDAR = "calendar"
+        private const val TAG = "Biometric"
     }
 }

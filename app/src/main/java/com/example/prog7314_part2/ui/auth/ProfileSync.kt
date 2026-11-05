@@ -1,9 +1,12 @@
 package com.example.prog7314_part2.ui.auth
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.prog7314_part2.data.SessionPrefs
 import com.example.prog7314_part2.data.biometric.BiometricStore
 import com.example.prog7314_part2.data.remote.UserProfileDto
+import com.example.prog7314_part2.notifications.PushRegistrar
+import com.example.prog7314_part2.ui.settings.AppLanguage
 import com.google.firebase.auth.FirebaseAuth
 
 object ProfileSync {
@@ -25,6 +28,14 @@ object ProfileSync {
                 AppCompatDelegate.MODE_NIGHT_NO
             }
         )
+        val language = AppLanguage.fromTag(profile.language)
+        if (language != AppLanguage.current()) {
+            AppLanguage.apply(language)
+        }
+    }
+
+    fun applyNotifications(context: Context, profile: UserProfileDto) {
+        PushRegistrar.applyFromProfile(context, profile)
     }
 
     suspend fun applyBiometrics(store: BiometricStore, profile: UserProfileDto) {

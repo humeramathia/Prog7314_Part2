@@ -7,12 +7,14 @@ const {
 } = require("../src/notify");
 
 describe("topicForSport", () => {
-  test("prefixes the sport id", () => {
-    expect(topicForSport("football")).toBe("sport_football");
+  test("prefixes the sport id and fixture type", () => {
+    expect(topicForSport("football", "PRACTICE")).toBe("sport_football_practice");
+    expect(topicForSport("football", "SOCIAL_EVENT")).toBe("sport_football_event");
+    expect(topicForSport("football", "ANNOUNCEMENT")).toBe("sport_football_announcement");
   });
 
   test("replaces characters FCM does not allow in topic names", () => {
-    expect(topicForSport(" Ultimate Frisbee! ")).toBe("sport_ultimate_frisbee_");
+    expect(topicForSport(" Ultimate Frisbee! ", "PRACTICE")).toBe("sport_ultimate_frisbee__practice");
   });
 
   test("returns an empty string when there is no sport", () => {
@@ -82,6 +84,6 @@ describe("notifiers", () => {
     const notifier = createMemoryNotifier();
     await notifyFixture(notifier, { id: "e", sportId: "netball", title: "Match", type: "SOCIAL_EVENT", startsAt: 0 }, "Netball");
     expect(notifier.sent).toHaveLength(1);
-    expect(notifier.sent[0].topic).toBe("sport_netball");
+    expect(notifier.sent[0].topic).toBe("sport_netball_event");
   });
 });

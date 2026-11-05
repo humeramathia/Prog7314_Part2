@@ -1,10 +1,15 @@
 # SportSphere
 
+[![Android build and tests](https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/actions/workflows/android.yml/badge.svg)](https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/actions/workflows/android.yml)
+[![API tests](https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/actions/workflows/api.yml/badge.svg)](https://github.com/EMWCCN/prog7314-g1-2026-formative-2-part-2-humeramathia/actions/workflows/api.yml)
+
 ## Project demonstration
 
-Watch the complete SportSphere demonstration:
+A Part 2 walkthrough of login, Calendar, Performance, and Learn:
 
-**[SportSphere application demo — YouTube](https://youtu.be/tjFNfCUy-mA)**
+**[SportSphere Part 2 demo — YouTube](https://youtu.be/tjFNfCUy-mA)**
+
+That clip does not show the later POE work (biometric unlock, Room offline performance, FCM, or languages). The POE phone video is recorded separately.
 
 ## PROG7314 - Group Members
 
@@ -111,9 +116,9 @@ Watch the complete SportSphere demonstration:
   </tbody>
 </table>
 
-SportSphere is a native Android sports companion application built for PROG7314 / OPSC7312 Part 2. It gives athletes one place to choose a sport, view events, record sport-specific performance, follow monthly progress, read learning material, and manage their account.
+SportSphere is a native Android sports companion for PROG7314. After sign-in the athlete picks one sport, then uses Home, Calendar, Performance, Learn, and Settings for that sport. Performance sessions can be saved on the phone when the API is unreachable. Calendar, Learn, and the monthly graph still need the network.
 
-The Android application uses Firebase Authentication and communicates with a custom Node.js REST API. The production API is hosted on Render, while application data is stored in Azure Cosmos DB.
+The Android application uses Firebase Authentication and talks to a custom Node.js REST API. The production API is on Render. Club data lives in Azure Cosmos DB. Learn stills are served from Azure Blob Storage. Performance history is also cached on the phone in Room.
 
 | Project detail | Value |
 | --- | --- |
@@ -143,6 +148,7 @@ The Android application uses Firebase Authentication and communicates with a cus
   - [Run the Android app on an emulator](#run-the-android-app-on-an-emulator)
   - [Run the Android app on a physical device](#run-the-android-app-on-a-physical-device)
 - [Physical-device implementation](#physical-device-implementation)
+- [Biometric unlock](#biometric-unlock)
 - [Firebase authentication and email verification](#firebase-authentication-and-email-verification)
 - [REST API](#rest-api)
 - [Render hosting](#render-hosting)
@@ -150,23 +156,29 @@ The Android application uses Firebase Authentication and communicates with a cus
 - [Testing and continuous integration](#testing-and-continuous-integration)
 - [Troubleshooting](#troubleshooting)
 - [Security notes](#security-notes)
+- [Play Store identifier and signed release](#play-store-identifier-and-signed-release)
+- [Release notes since Part 2](#release-notes-since-part-2)
+- [References](#references)
 
 ## Overview
 
 SportSphere is split into two applications:
 
-1. `app/` is the Android client. It contains the screens, navigation, Firebase sign-in, Retrofit networking, local session preferences, and Android-specific integrations.
-2. `api/` is the Express REST API. It validates Firebase ID tokens, applies business rules, and reads or writes data in Azure Cosmos DB.
+1. `app/` is the Android client. It contains the screens, Firebase sign-in, Retrofit, Room performance cache, FCM, biometric unlock, and local session preferences.
+2. `api/` is the Express REST API. It validates Firebase ID tokens, applies business rules, and reads or writes data in Azure Cosmos DB. Learn stills are URLs into Azure Blob Storage, not files served by Express.
 
 The normal user journey is:
 
 1. Register with an email and password, or sign in with Google.
 2. Verify the email address when email/password registration is used.
-3. Select a sport.
-4. Use the Home, Calendar, Performance, and Learn sections.
-5. Open Settings from Home to update preferences or sign out.
+3. Select one sport from the six-sport catalogue.
+4. Optionally turn on fingerprint or face unlock after that first sign-in.
+5. Use Home, Calendar, Performance, and Learn. On a later cold start with biometrics on, the lock screen opens before Home loads club data.
+6. Open Settings from Home to change name, sport, language, notifications, dark mode, biometrics, or to sign out.
 
-The application uses sport-specific performance fields instead of one generic score. For example, a basketball record can contain points and rebounds, while swimming can use distance and time. The API sends each sport's metric schema to the app so the performance form and graph can use the correct measurements.
+The application uses sport-specific performance fields instead of one generic score. For example, a basketball record can contain points and rebounds, while swimming can use distance and time. The API sends each sport's metric schema to the app; the form also has a local copy of those fields so it can still open if Render is waking up.
+
+The app does not delete Firebase accounts from Settings. Club event titles and Learn bodies stay in the language they were written in; only the app chrome (menus, buttons, status lines) switches with English, Afrikaans, or isiXhosa.
 
 ## Main features
 
@@ -174,50 +186,93 @@ The application uses sport-specific performance fields instead of one generic sc
 
 - Email/password registration and login through Firebase Authentication
 - Google sign-in through Android Credential Manager
-- Email verification before an email/password account can enter the app
+- Email verification before an email/password account can enter Home
 - Firebase ID tokens attached to protected API requests
-- Local session protection and account-aware sport selection
-- Logout, editable display name, and dark-mode preferences in Settings
-- Dark mode is stored on the server and applied again on the next login
+- Sign-out clears the Firebase session, Credential Manager state, FCM token, and local biometric flag
+- Settings: editable display name, change sport, dark mode, biometric switch, language, notification types, **Sync now**, sign out, and delete account
+- Display name, dark mode, language, and notification types are stored on `PATCH /api/me` and applied again on the next login
+- A 401 from the API signs the user out. The app pings `/health` on process start so Render can wake
 
 ### Sport selection
 
-- A catalog of six supported sports is loaded from the API
+- Six sports from `GET /api/sports`: Football, Cricket, Tennis, Basketball, Swimming, Athletics
 - Each sport defines its own performance metrics
-- Sport selection is saved through `PATCH /api/me`; if the API is down the user stays on the picker and can retry
+- Sport selection is saved through `PATCH /api/me`. If the API is down the picker shows Retry; there is no local fake catalogue
+
+### Home
+
+- Greeting with the saved display name and a chip for the selected sport
+- Next-practice tile from `GET /api/events/next` (needs the network)
+- Latest-session tile from the local Room queue (still visible when the API is down)
+- Shortcuts into Calendar, Performance, Learn, and Settings
 
 ### Calendar
 
-- Sport-specific fixtures with teal markers on days that have events
+- Month view with a custom day grid and teal markers on dates that have events
+- Agenda tab with events grouped by date
 - Event types: `PRACTICE`, `SOCIAL_EVENT`, and `ANNOUNCEMENT`
-- Create, edit, and delete fixtures you organised; seeded club events stay read-only
-- Event detail screen
-- Add an event to the phone's calendar with Android's calendar insert intent
+- Create, edit, and delete fixtures you organised; seeded club events (`createdBy: "seed"`) stay read-only
+- Event detail: title, type, start/end, venue, description, notes
+- Add an event to the phone calendar with Android's insert intent
+- Calendar loads from the API. There is no offline event store
 
 ### Performance
 
-- Add and delete personal performance sessions
-- Choose the session date instead of always stamping "now"
-- Store sport-specific metrics and optional notes
-- View previous sessions
-- Display monthly data in a custom bar chart, with a metric selector
+- Add and delete personal sessions. The add form includes a date picker and sport-specific metric fields
+- History reads Room, so a network failure does not wipe saved sessions
+- A new session is written to Room first, then WorkManager uploads it. Pending rows show a "Pending sync" badge
+- Settings has **Sync performance now** and a last-sync timestamp
+- Monthly graph is a custom bar chart with a metric spinner. It still calls `GET /api/performance/monthly` and needs the network
 
 ### Learn
 
-- Sport-specific learning material (not a shared template with the sport name swapped in)
+- Sport-specific cards, not a shared template with the sport name swapped in
 - Categories: `RULES`, `TECHNIQUES`, `TRAINING`, and `SAFETY`
-- Support for image or video links through `mediaUrl`
+- Techniques and Training stills load from Azure Blob Storage through Glide
+- Safety cards open a YouTube link; the app does not play video in-app
+- Learn lists and details come from the API. There is no offline guide cache
+
+### Notifications
+
+- Master **Allow notifications** switch, then separate switches for Practice reminders, Social event alerts, and Club announcements
+- Android 13+ asks for `POST_NOTIFICATIONS`
+- Creating or editing a fixture sends FCM to `sport_<sportId>_<type>`. The phone only subscribes to the types that are switched on
+- Tapping a fixture notification opens Calendar
+- **Send test notification** calls `POST /api/me/test-notification` (for a wiring check). The marked demo is still a real fixture create
+- Sign-out unsubscribes and deletes the FCM token so the previous account cannot keep pushing to this phone
+
+### Languages
+
+- Settings toggle: English, Afrikaans, isiXhosa (not isiZulu)
+- The choice is applied immediately with `AppCompatDelegate` and saved on the profile
+- Fixture titles and Learn bodies are not translated
+
+### Biometric unlock
+
+- Optional fingerprint, face, or device PIN after a successful Firebase sign-in
+- Passwords are never stored on the phone. The switch lives in DataStore and on `biometricEnabled`
+- Cold start with the switch on opens `BiometricLockFragment` before Home
+- Cancel leaves **Unlock** and **Sign in again**. A phone with no sensor is not locked out of the account
+
+### Look and feel
+
+- Teal/pitch Material theme and a custom adaptive launcher
+- Cold start uses Android's SplashScreen API (`Theme.SportSphere.Splash`)
+- Dark mode is a Settings switch, stored on the profile, and applied again on login
 
 ## Technology stack
 
 | Layer | Technologies |
 | --- | --- |
-| Android client | Kotlin, AndroidX, Material Components, Navigation Component, ViewBinding |
+| Android client | Kotlin, AndroidX, Material Components, Navigation Component, ViewBinding, SplashScreen |
 | Networking | Retrofit 2.11, OkHttp 4.12, Gson |
-| Authentication | Firebase Authentication, Firebase Admin SDK, Google Credential Manager |
-| Images | Glide |
+| Authentication | Firebase Authentication, Firebase Admin SDK, Google Credential Manager, BiometricPrompt, DataStore |
+| Offline performance | Room, WorkManager |
+| Push | Firebase Cloud Messaging |
+| Images | Glide (Azure Blob HTTPS URLs) |
 | API | Node.js 20, Express 4, CORS, dotenv |
 | Database | Azure Cosmos DB |
+| Media | Azure Blob Storage (`st10276384media/learn`) |
 | Production hosting | Render |
 | Optional API hosting | Azure App Service |
 | Testing | JUnit, Jest, SuperTest |
@@ -226,7 +281,7 @@ The application uses sport-specific performance fields instead of one generic sc
 ## System architecture
 
 ```text
-Physical Android phone (release build)
+Physical Android phone
         |
         | HTTPS + Firebase Bearer token
         v
@@ -235,11 +290,16 @@ Render: SportSphere Express API
         | Firebase Admin verifies the token
         |
         +---------------------------> Azure Cosmos DB
-                                        users
-                                        sports
-                                        events
-                                        performance
-                                        learning
+        |                               users, sports, events,
+        |                               performance, learning
+        |
+        +---------------------------> Azure Blob Storage (Learn stills)
+        |
+        +---------------------------> Firebase Cloud Messaging
+
+On the phone, performance history also lives in Room.
+WorkManager uploads pending sessions when the network returns.
+Calendar, Learn, and the monthly graph do not use that Room store.
 ```
 
 By default the Android app talks to the hosted Render API, including debug builds on a physical phone. To run the emulator against a local Node process, rebuild with `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/` (`10.0.2.2` is Android's alias for the host computer).
@@ -269,10 +329,13 @@ Prog7314_Part2/
 │       ├── android.yml               # Android tests and debug build
 │       └── api.yml                   # API Jest tests
 ├── docs/
-│   └── images/
-│       └── email-verification.svg
+│   ├── images/email-verification.svg
+│   ├── play-store/                   # Listing copy and signing notes (not a live Play listing)
+│   ├── PART3-MO.md                   # Offline performance notes
+│   └── learn-media/
 ├── app/                              # Native Android application
-│   ├── build.gradle.kts              # SDKs, dependencies, API URLs
+│   ├── build.gradle.kts              # SDKs, Play applicationId, API URLs, signing
+│   ├── google-services.json          # Firebase clients (committed)
 │   ├── proguard-rules.pro
 │   └── src/
 │       ├── main/
@@ -280,31 +343,18 @@ Prog7314_Part2/
 │       │   ├── java/com/example/prog7314_part2/
 │       │   │   ├── MainActivity.kt
 │       │   │   ├── SportSphereApp.kt
-│       │   │   ├── data/
-│       │   │   │   ├── Models.kt
-│       │   │   │   ├── SessionPrefs.kt
-│       │   │   │   ├── SportMetrics.kt
-│       │   │   │   ├── FakeRepository.kt
-│       │   │   │   └── remote/
-│       │   │   │       ├── ApiClient.kt
-│       │   │   │       ├── ApiModels.kt
-│       │   │   │       ├── FirebaseAuthInterceptor.kt
-│       │   │   │       ├── Mappers.kt
-│       │   │   │       └── SportSphereApi.kt
-│       │   │   └── ui/
-│       │   │       ├── auth/
-│       │   │       ├── home/
-│       │   │       ├── calendar/
-│       │   │       ├── performance/
-│       │   │       ├── learn/
-│       │   │       └── settings/
+│       │   │   ├── data/             # Room, WorkManager, metrics, Retrofit
+│       │   │   ├── notifications/    # FCM registration and messaging service
+│       │   │   └── ui/               # auth, home, calendar, performance, learn, settings
 │       │   └── res/
 │       │       ├── layout/
 │       │       ├── navigation/nav_graph.xml
 │       │       ├── menu/menu_bottom_nav.xml
+│       │       ├── values/ / values-af/ / values-xh/
 │       │       └── xml/network_security_config.xml
-│       ├── test/                      # Local JUnit tests
-│       └── androidTest/               # Instrumented Android tests
+│       ├── debug/res/xml/            # Debug-only cleartext override for a local API
+│       ├── test/                     # Local JUnit tests (FakeRepository is tests-only)
+│       └── androidTest/
 └── api/                              # Node.js REST API
     ├── package.json
     ├── .env.example
@@ -534,17 +584,15 @@ Running on a phone required more than producing an APK. The app must use a netwo
 
 ### 1. Build-specific API addresses
 
-`app/build.gradle.kts` creates `BuildConfig.API_BASE_URL` with a different value for each build type:
+`app/build.gradle.kts` writes `BuildConfig.API_BASE_URL`. Debug and release both default to the hosted Render URL so a physical phone can sign in without `10.0.2.2`. Debug can be pointed at a local Node process with `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/`.
 
 ```kotlin
-val hostedApi = "https://sportsphere-st10276384.onrender.com/"
-val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: hostedApi
-buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+val debugUrl = providers.gradleProperty("sportsphere.apiBaseUrl")
+    .orElse("https://sportsphere-st10276384.onrender.com/").get()
+buildConfigField("String", "API_BASE_URL", "\"$debugUrl\"")
 ```
 
-Both debug and release use the public Render HTTPS URL so a physical phone can reach the API. `10.0.2.2` is an emulator-only alias and is no longer the default debug address.
-
-No URL has to be entered by the user. Gradle places the correct value in the generated `BuildConfig` class when it builds the selected variant.
+No URL is typed in the app. Gradle puts the value into `BuildConfig` when it builds the selected variant.
 
 ### 2. Retrofit consumes the generated URL
 
@@ -561,7 +609,7 @@ val service: SportSphereApi by lazy {
 }
 ```
 
-All interface paths in `SportSphereApi.kt`, such as `api/me` and `api/performance`, are relative to this base URL, so debug and release both talk to Render unless `apiBaseUrl` is overridden.
+All interface paths in `SportSphereApi.kt`, such as `api/me` and `api/performance`, are relative to this base URL, so debug and release both talk to Render unless `-Psportsphere.apiBaseUrl` is set.
 
 The OkHttp client uses 60-second connect, read, and write timeouts. A free Render service can take longer than 15 seconds to wake after idle, so the longer window covers the first request after a cold start.
 
@@ -582,22 +630,19 @@ The application links its network policy in `AndroidManifest.xml`:
 ```xml
 <application
     android:networkSecurityConfig="@xml/network_security_config"
-    android:usesCleartextTraffic="true"
+    android:usesCleartextTraffic="false"
     ... >
 ```
 
-The intended policy in `network_security_config.xml` is to reject cleartext traffic by default and permit the local HTTP endpoint only during debugging:
+Release (`app/src/main/res/xml/network_security_config.xml`) rejects cleartext:
 
 ```xml
 <network-security-config>
     <base-config cleartextTrafficPermitted="false" />
-    <debug-overrides>
-        <base-config cleartextTrafficPermitted="true" />
-    </debug-overrides>
 </network-security-config>
 ```
 
-Production device traffic uses `https://sportsphere-st10276384.onrender.com/`, so credentials and Firebase tokens are encrypted in transit.
+Debug overlays that file with `app/src/debug/res/xml/network_security_config.xml` so an emulator can reach `http://10.0.2.2:3000/`. Release traffic uses `https://sportsphere-st10276384.onrender.com/`, so credentials and Firebase tokens are encrypted in transit.
 
 ### 5. Firebase token authentication
 
@@ -641,15 +686,11 @@ Binding to `0.0.0.0` is required on hosted platforms. Binding only to `localhost
 
 ### 7. Installable release signing
 
-The coursework release currently uses Android's debug keystore:
+Release builds do not fall back to the debug keystore. When ignored `keystore.properties` and the private `.jks` are present, Gradle uses the `production` signing config. `preReleaseBuild` fails if those values are missing. The keystore is not in Git. See [Play Store readiness](docs/play-store/README.md).
 
 ```kotlin
-signingConfig = signingConfigs.getByName("debug")
+if (releaseSigningReady) signingConfig = signingConfigs.getByName("production")
 ```
-
-This makes `app-release.apk` installable on a demonstration phone without storing a private production keystore in the repository.
-
-This signing choice is appropriate for a class demonstration only. A Play Store release must use a securely managed release key and should not use the debug keystore.
 
 ### 8. Physical-device request path
 
@@ -669,7 +710,7 @@ Screen/Fragment
   → Android screen
 ```
 
-This design removes the phone's dependency on the development computer. Once the release APK is installed and the Render service is available, the app only requires an internet connection.
+This design removes the phone's dependency on the development computer. Sign-in, Calendar, Learn, and the monthly graph still need Render to be awake. Performance rows already saved in Room stay on the history screen if the API is down.
 
 ## Biometric unlock
 
@@ -711,20 +752,15 @@ The app does not treat account creation as full access. Login and session checks
 
 ### Creating the verification link
 
-`EmailVerification.kt` defines the Render landing page and the Android package that can handle the result:
+`EmailVerification.kt` sends the user to the hosted success page. The Android package is not wrapped into the Firebase link (that wrapping was breaking the return after verification):
 
 ```kotlin
-const val VERIFY_URL =
-    "https://sportsphere-st10276384.onrender.com/verify-email"
+const val CONTINUE_URL =
+    "https://sportsphere-st10276384.onrender.com/verified"
 
 val settings = ActionCodeSettings.newBuilder()
-    .setUrl(VERIFY_URL)
+    .setUrl(CONTINUE_URL)
     .setHandleCodeInApp(false)
-    .setAndroidPackageName(
-        "com.example.prog7314_part2",
-        false,
-        null
-    )
     .build()
 
 user.sendEmailVerification(settings)
@@ -851,7 +887,9 @@ When local `SKIP_AUTH=true`, the middleware uses the configured development iden
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/me` | Get or create the signed-in user's profile |
-| `PATCH` | `/api/me` | Update display name, selected sport, dark mode, or biometric unlock |
+| `PATCH` | `/api/me` | Update display name, selected sport, dark mode, biometric unlock, language, FCM token, or notification type switches |
+| `DELETE` | `/api/me` | Delete the Cosmos profile (Firebase Auth deletion happens on the phone) |
+| `POST` | `/api/me/test-notification` | Push a test message to this account's registered phone |
 
 ### Sport endpoints
 
@@ -949,7 +987,7 @@ Cosmos DB is the production data store, even when the API itself runs on Render.
 
 | Container | Partition key | Stores |
 | --- | --- | --- |
-| `users` | `/userId` | Profiles, selected sport, preferences |
+| `users` | `/userId` | Profiles, selected sport, dark mode, biometric flag, language, FCM token |
 | `sports` | `/sportId` | Sport catalog and metric definitions |
 | `events` | `/sportId` | Calendar events |
 | `performance` | `/userId` | User performance sessions |
@@ -1039,17 +1077,17 @@ From the repository root:
 .\gradlew.bat assembleDebug
 ```
 
-The Android workflow runs unit tests and creates a debug APK. Unit tests cover areas including metrics, mappers, learning support, and the fallback repository.
+The Android workflow runs unit tests and creates a debug APK. Unit tests cover metrics, mappers, learning URLs, biometric decisions, languages, push topics, and Room session entities. `FakeRepository` exists only for those tests; the running app does not use it.
 
 ## Troubleshooting
 
 ### The phone cannot load data
 
-- Confirm that the installed app is the `release` build.
-- Open the Render health check and wait for `"ok": true`.
+- Open the Render health check and wait for `"ok": true` (the free service sleeps).
 - Confirm that the phone has internet access.
 - Confirm that Firebase sign-in completed successfully.
-- Reinstall the latest release APK if the base URL changed.
+- Debug and release both use Render unless you overrode the debug URL.
+- Calendar, Learn, and the monthly graph need the network. Performance history can still show Room rows that have not uploaded yet.
 
 ### The emulator cannot reach the local API
 
@@ -1100,20 +1138,41 @@ Additional safeguards:
 - Rotate a Cosmos key immediately if it is exposed.
 - Store Render and Azure secrets in their platform settings.
 - Use HTTPS for every production API request.
-- Use the debug keystore only for coursework/demo installation.
+- Do not commit `keystore.properties` or the `.jks`. There is no debug-keystore fallback on release.
 - Do not publish verification links because they contain one-time action codes.
-
-## Part 3: offline performance and Play Store prep
-
-Performance saves go to Room first. WorkManager uploads pending sessions when the phone is online; see [implementation notes](docs/PART3-MO.md). Deploy the API `clientId` changes before testing sync.
-
-Signed production builds, Firebase package coordination and store listing copy are documented in [Play Store readiness](docs/play-store/README.md). A local API override for debug builds uses `-Psportsphere.apiBaseUrl=http://10.0.2.2:3000/`.
 
 ## Play Store identifier and signed release
 
-The installed package is `za.co.sportsphere.app`. Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. See [Play Store readiness](docs/play-store/README.md).
+The installed package is `za.co.sportsphere.app`. Kotlin source still uses the `com.example.prog7314_part2` namespace; Play Store looks at `applicationId`, not the Kotlin package.
 
-After the `merge` branch is on `main`, tag `v1.0.0-final-poe` and attach the signed APK and AAB to the GitHub Release.
+Release builds enable R8 minify and resource shrinking. Signing reads ignored `keystore.properties` and a private `.jks` that is not in Git. That is a signed local build, not a listing on Google Play. Store screenshots, the 512 PNG, the feature graphic, and a privacy-policy URL are still listed in [Play Store readiness](docs/play-store/README.md) as evidence to prepare, not as files already in this folder.
+
+There is no `v1.0.0-final-poe` tag or GitHub Release until `merge` is on `main`. Do not treat this README as claiming those exist.
+
+## Release notes since Part 2
+
+**New**
+- Fingerprint / face / device-PIN unlock on cold start, with a Settings switch
+- Room + WorkManager offline performance saves, pending badge, sync now, last-sync time
+- FCM fixture pushes by type (practice, social event, announcement) and a Settings test send
+- English, Afrikaans, and isiXhosa UI, including errors, biometrics, and notifications
+- Azure Blob stills on Techniques and Training Learn cards
+- Delete account in Settings
+- Signed Play identifier `za.co.sportsphere.app`, splash, and custom launcher
+
+**Improved**
+- Settings round-trip for display name, dark mode, language, and notification types
+- Calendar create / edit / delete for fixtures the user organised
+- Performance date picker, metric spinner, and Home latest-session tile
+- 60 s API timeouts and a `/health` ping on app start
+- Friendly login errors (`Incorrect password, please try again`) instead of Firebase codes
+- Notification tap opens Calendar
+
+**Fixed**
+- Part 2 SSO Credential Manager clear on sign-out
+- Event ownership (`createdBy`) and text-length limits
+- Debug builds use the hosted API by default (no `10.0.2.2`)
+- Learn no longer uses Wikipedia / Big Buck Bunny placeholders
 
 ## References
 

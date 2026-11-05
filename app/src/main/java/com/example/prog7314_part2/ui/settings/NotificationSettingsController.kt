@@ -25,14 +25,9 @@ import retrofit2.Response
 
 /**
  * Drives the Notifications card on the Settings screen:
- *  - the "Fixture alerts" switch (saved on the phone and on the API),
- *  - a status line that explains the current state in plain words and,
- *    when Android is blocking notifications, opens the system settings,
+ *  - master switch plus Practice / Events / Announcements (tips: one switch per type),
+ *  - a status line that explains the current state,
  *  - a "Send test notification" button that asks the API to push to this phone.
- *
- * Lives outside [SettingsFragment] so the fragment only needs three calls.
- *
- * @param permissionLauncher registered by the fragment (must be done before onStart)
  */
 class NotificationSettingsController(
     private val fragment: Fragment,
@@ -45,9 +40,27 @@ class NotificationSettingsController(
     private var testCall: Call<TestNotificationResponse>? = null
 
     fun bind() {
-        // Set the initial state before attaching the listener so it does not fire.
         binding.notificationsSwitch.isChecked = prefs.enabled
-        binding.notificationsSwitch.setOnCheckedChangeListener { _, checked -> onSwitchChanged(checked) }
+        binding.notifyPracticeSwitch.isChecked = prefs.notifyPractice
+        binding.notifyEventsSwitch.isChecked = prefs.notifyEvents
+        binding.notifyAnnouncementsSwitch.isChecked = prefs.notifyAnnouncements
+
+        binding.notificationsSwitch.setOnCheckedChangeListener { _, checked -> onMasterChanged(checked) }
+        binding.notifyPracticeSwitch.setOnCheckedChangeListener { _, checked ->
+            prefs.notifyPractice = checked
+            PushRegistrar.sync(context)
+            refresh()
+        }
+        binding.notifyEventsSwitch.setOnCheckedChangeListener { _, checked ->
+            prefs.notifyEvents = checked
+            PushRegistrar.sync(context)
+            refresh()
+        }
+        binding.notifyAnnouncementsSwitch.setOnCheckedChangeListener { _, checked ->
+            prefs.notifyAnnouncements = checked
+            PushRegistrar.sync(context)
+            refresh()
+        }
         binding.notificationsStatus.setOnClickListener {
             if (prefs.enabled && !NotificationChannels.canNotify(context)) openSystemSettings()
         }
@@ -55,11 +68,13 @@ class NotificationSettingsController(
         refresh()
     }
 
-    /** Called from onResume: the user may have changed the permission in Android settings. */
     fun refresh() {
         val enabled = prefs.enabled
         val allowed = NotificationChannels.canNotify(context)
         val sportName = fragment.session().sportName
+        binding.notifyPracticeSwitch.isEnabled = enabled
+        binding.notifyEventsSwitch.isEnabled = enabled
+        binding.notifyAnnouncementsSwitch.isEnabled = enabled
         binding.notificationsStatus.text = when {
             !enabled -> context.getString(R.string.notifications_status_off)
             !allowed -> context.getString(R.string.notifications_status_blocked)
@@ -69,7 +84,6 @@ class NotificationSettingsController(
         binding.btnTestNotification.isEnabled = enabled && allowed
     }
 
-    /** Result of the POST_NOTIFICATIONS request launched from [onSwitchChanged]. */
     fun onPermissionResult(granted: Boolean) {
         AppLog.i(AREA, "Settings permission request: ${if (granted) "granted" else "denied"}")
         refresh()
@@ -81,14 +95,13 @@ class NotificationSettingsController(
         testCall = null
     }
 
-    private fun onSwitchChanged(checked: Boolean) {
-        AppLog.i(AREA, "Fixture alerts switched ${if (checked) "ON" else "OFF"}")
+    private fun onMasterChanged(checked: Boolean) {
+        AppLog.i(AREA, "Notifications switched ${if (checked) "ON" else "OFF"}")
         prefs.enabled = checked
         if (checked && !NotificationChannels.hasPermission(context)) {
             prefs.permissionAsked = true
             permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-        // Subscribes/unsubscribes the sport topic and updates the API.
         PushRegistrar.sync(context)
         refresh()
     }
@@ -109,7 +122,6 @@ class NotificationSettingsController(
                 val message = when {
                     response.isSuccessful -> R.string.notifications_test_sent
                     response.code() == 409 || response.code() == 410 -> {
-                        // The API has no (valid) token yet: register now so the next tap works.
                         NotificationPrefs(context).uploadedToken = ""
                         PushRegistrar.sync(context)
                         R.string.notifications_test_registering
@@ -129,7 +141,6 @@ class NotificationSettingsController(
         })
     }
 
-    /** Opens SportSphere's notification page in Android settings. */
     private fun openSystemSettings() {
         val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)

@@ -97,6 +97,27 @@
                     android:text="@string/notifications_switch"
                     android:textColor="@color/slate" />
 
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/notifyPracticeSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notifications_practice"
+                    android:textColor="@color/slate" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/notifyEventsSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notifications_events"
+                    android:textColor="@color/slate" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/notifyAnnouncementsSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notifications_announcements"
+                    android:textColor="@color/slate" />
+
                 <TextView
                     android:id="@+id/notificationsStatus"
                     android:layout_width="match_parent"
@@ -252,5 +273,14 @@
             android:layout_height="56dp"
             android:layout_marginTop="32dp"
             android:text="@string/log_out" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDeleteAccount"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/delete_account"
+            android:textColor="@color/error" />
     </LinearLayout>
 </ScrollView>

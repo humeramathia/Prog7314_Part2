@@ -49,6 +49,15 @@ async function createCosmosStore() {
       const { resource } = await handles.users.items.upsert(user);
       return resource;
     },
+    async deleteUser(userId) {
+      try {
+        await handles.users.item(userId, userId).delete();
+        return true;
+      } catch (err) {
+        if (err.code === 404) return false;
+        throw err;
+      }
+    },
 
     async listSports() {
       return queryAll(handles.sports, "SELECT * FROM c");

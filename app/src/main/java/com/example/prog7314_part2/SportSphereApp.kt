@@ -9,7 +9,9 @@ import com.example.prog7314_part2.data.SessionPrefs
 import com.example.prog7314_part2.data.SyncWorker
 import com.example.prog7314_part2.data.biometric.BiometricStore
 import com.example.prog7314_part2.data.local.AppDatabase
+import com.example.prog7314_part2.data.biometric.BiometricSession
 import com.example.prog7314_part2.data.remote.ApiClient
+import com.example.prog7314_part2.data.remote.AuthExpiry
 import com.example.prog7314_part2.logging.AppLog
 import com.example.prog7314_part2.logging.LifecycleLogger
 import com.example.prog7314_part2.notifications.NotificationChannels
@@ -17,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -55,6 +58,19 @@ class SportSphereApp : Application() {
         registerActivityLifecycleCallbacks(LifecycleLogger())
         AppLog.i("App", "SportSphere process started (dark mode = ${session.darkMode})")
         NotificationChannels.create(this)
+        AuthExpiry.install {
+            FirebaseAuth.getInstance().signOut()
+            session.signOut()
+            BiometricSession.lock()
+        }
+        // Wake a sleeping Render instance as soon as the process starts.
+        performanceScope.launch {
+            try {
+                ApiClient.service.health().execute()
+            } catch (error: Exception) {
+                AppLog.w("App", "health ping failed: ${error.message}")
+            }
+        }
         var previousUid: String? = null
         FirebaseAuth.getInstance().addAuthStateListener { auth ->
             val uid = auth.currentUser?.uid

@@ -45,6 +45,12 @@
     <string name="training">Training</string>
     <string name="safety">Safety</string>
     <string name="log_out">Log out</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_account">Delete account</string>
+    <string name="delete_account_confirm">This removes your SportSphere profile and Firebase sign-in on this phone. Sessions already in the cloud stay until an administrator deletes them. This cannot be undone.</string>
+    <string name="delete_account_done">Account deleted.</string>
+    <string name="delete_account_failed">Could not delete the account. Try again.</string>
+    <string name="delete_account_reauth">Sign in again, then tap Delete account. Firebase needs a recent login before it will remove the user.</string>
     <string name="selected_sport">Selected sport</string>
     <string name="dark_mode">Dark mode</string>
     <string name="empty_events">No practices or events this month</string>
@@ -160,8 +166,11 @@
 
     <!-- Part 3: push notifications (Lilitha) -->
     <string name="notifications">Notifications</string>
-    <string name="notifications_switch">Fixture alerts</string>
-    <string name="notifications_status_on">On. You will get an alert when a %1$s fixture is added or changed.</string>
+    <string name="notifications_switch">Allow notifications</string>
+    <string name="notifications_practice">Practice reminders</string>
+    <string name="notifications_events">Social event alerts</string>
+    <string name="notifications_announcements">Club announcements</string>
+    <string name="notifications_status_on">On. Alerts follow the type switches below for %1$s.</string>
     <string name="notifications_status_on_no_sport">On. Choose a sport to start getting fixture alerts.</string>
     <string name="notifications_status_off">Off. You will not get fixture alerts on this phone.</string>
     <string name="notifications_status_blocked">Blocked by Android. Tap here to allow SportSphere notifications.</string>
@@ -190,6 +199,23 @@
     <string name="error_register_failed">Registration failed. Please try again.</string>
     <string name="error_register_no_account">Account response unavailable. Try logging in.</string>
     <string name="error_register_name_not_saved">Account created, but your display name could not be saved.</string>
+    <string name="error_login_password">Incorrect password, please try again</string>
+    <string name="error_login_connection">No connection. Check your internet and try again.</string>
+    <string name="error_login_too_many">Too many attempts. Please try again later.</string>
+    <string name="error_login_password_blank">Enter your password.</string>
+    <string name="error_session_unavailable">Session unavailable. Please try again.</string>
+    <string name="error_check_account">Could not check your account. Check your connection.</string>
+    <string name="error_try_login_again">Please try logging in again.</string>
+    <string name="error_google_unsupported">An unsupported sign-in response was received.</string>
+    <string name="error_google_parse">Could not read the Google sign-in response.</string>
+    <string name="error_google_collision">This email already uses another sign-in method. Log in with that method first.</string>
+    <string name="error_google_failed">Google sign-in failed. Please try again.</string>
+    <string name="error_google_cancelled">Google sign-in cancelled.</string>
+    <string name="error_google_no_account">No Google account is available. Add one in the device\'s Settings, then try again.</string>
+    <string name="error_google_open">Could not open Google sign-in. Check your connection, Google Play services and Firebase configuration.</string>
+    <string name="error_reset_email_first">Enter your email address first.</string>
+    <string name="error_reset_sent">If this email has an account, check its inbox for reset instructions.</string>
+    <string name="error_reset_failed">Could not request a password reset. Please try again later.</string>
 
     <string name="biometric_unlock">Unlock with fingerprint</string>
     <string name="biometric_unlock_subtitle">When this is on, SportSphere asks for your fingerprint or face before opening your clubhouse. Your password is never stored on the phone.</string>

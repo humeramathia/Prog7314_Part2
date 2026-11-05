@@ -24,16 +24,26 @@ const TYPE_LABELS = {
   ANNOUNCEMENT: "Announcement"
 };
 
+const TYPE_TOPIC = {
+  PRACTICE: "practice",
+  SOCIAL_EVENT: "event",
+  ANNOUNCEMENT: "announcement"
+};
+
 /**
- * FCM topic for a sport. Must match `PushTopics.forSport` in the Android app.
+ * FCM topic for a sport and fixture type. Must match `PushTopics.forType`
+ * in the Android app. Phones only subscribe to the types they opted into,
+ * so a Practice reminder never lands on a user who only wants announcements.
  * FCM topic names may only use `[a-zA-Z0-9-_.~%]`.
  */
-function topicForSport(sportId) {
+function topicForSport(sportId, type) {
   const safe = String(sportId || "")
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9_.~-]/g, "_");
-  return safe ? `sport_${safe}` : "";
+  if (!safe) return "";
+  const suffix = TYPE_TOPIC[String(type || "").toUpperCase()] || "event";
+  return `sport_${safe}_${suffix}`;
 }
 
 function formatWhen(startsAt) {
@@ -120,7 +130,7 @@ function createMemoryNotifier() {
  * push problem can never stop a fixture from being saved.
  */
 function notifyFixture(notifier, event, sportName, action) {
-  const topic = topicForSport(event.sportId);
+  const topic = topicForSport(event.sportId, event.type);
   if (!notifier || !topic) return Promise.resolve({ sent: false });
   return notifier
     .toTopic(topic, fixtureMessage(event, sportName, action))
