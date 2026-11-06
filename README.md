@@ -9,7 +9,9 @@ A Part 2 walkthrough of login, Calendar, Performance, and Learn:
 
 **[SportSphere Part 2 demo — YouTube](https://youtu.be/tjFNfCUy-mA)**
 
-That clip does not show the later POE work (biometric unlock, Room offline performance, FCM, or languages). The POE phone video is recorded separately.
+Final POE walkthrough on a physical phone (biometric unlock, Room offline performance, FCM, languages):
+
+**[SportSphere Final POE demo — YouTube](https://youtu.be/vbYX0iNPNGE)**
 
 ## PROG7314 - Group Members
 
